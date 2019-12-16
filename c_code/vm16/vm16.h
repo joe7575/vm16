@@ -34,7 +34,7 @@ along with VM16.  If not, see <https://www.gnu.org/licenses/>.
 LUALIB_API int luaopen_vm16(lua_State *L);
 
 
-#define IDENT           (0x33314D56)
+#define IDENT           (0x36314D56)
 #define VERSION         (1)
 #define VM16_WORD_SIZE  (16)
 
