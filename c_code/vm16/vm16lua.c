@@ -40,11 +40,18 @@ static void setstrfield(lua_State *L, const char *reg, const char *s) {
     lua_settable(L, -3);
 }
 
+static vm16_t *check_vm(lua_State *L) {
+    void *ud = luaL_checkudata(L, 1, "vm16.cpu_dump");
+    luaL_argcheck(L, ud != NULL, 1, "'vm16 object' expected");
+    return (vm16_t*)ud;
+}
 static int create(lua_State *L) {
     lua_Integer size = luaL_checkinteger(L, 1);
     uint32_t nbytes = vm16_calc_size(size);
     vm16_t *C = (vm16_t *)lua_newuserdata(L, nbytes);
     if((C != NULL) && vm16_init(C, nbytes)) {
+        luaL_getmetatable(L, "vm16.cpu_dump");
+        lua_setmetatable(L, -2);
         return 1;
     }
     lua_pop(L, 1);
@@ -52,7 +59,7 @@ static int create(lua_State *L) {
 }
 
 static int clear(lua_State *L) {
-    vm16_t *C = (vm16_t*)lua_touserdata(L, 1);
+    vm16_t *C = check_vm(L);
     if(C != NULL) {
         vm16_clear(C);
         lua_pushboolean(L, 1);
@@ -63,7 +70,7 @@ static int clear(lua_State *L) {
 }
 
 static int loadaddr(lua_State *L) {
-    vm16_t *C = (vm16_t*)lua_touserdata(L, 1);
+    vm16_t *C = check_vm(L);
     lua_Integer addr = luaL_checkinteger(L, 2);
     if(C != NULL) {
         vm16_loadaddr(C, (uint16_t)addr);
@@ -75,7 +82,7 @@ static int loadaddr(lua_State *L) {
 }
 
 static int deposit(lua_State *L) {
-    vm16_t *C = (vm16_t*)lua_touserdata(L, 1);
+    vm16_t *C = check_vm(L);
     lua_Integer value = luaL_checkinteger(L, 2);
     if(C != NULL) {
         vm16_deposit(C, (uint16_t)value);
@@ -87,7 +94,7 @@ static int deposit(lua_State *L) {
 }
 
 static int examine(lua_State *L) {
-    vm16_t *C = (vm16_t*)lua_touserdata(L, 1);
+    vm16_t *C = check_vm(L);
     if(C != NULL) {
         vm16_examine(C);
         lua_pushboolean(L, 1);
@@ -98,7 +105,7 @@ static int examine(lua_State *L) {
 }
 
 static int get_vm(lua_State *L) {
-    vm16_t *C = (vm16_t*)lua_touserdata(L, 1);
+    vm16_t *C = check_vm(L);
     uint32_t size = vm16_real_size(C);
     if(size > 0) {
         void *p_data = malloc(size);
@@ -113,7 +120,7 @@ static int get_vm(lua_State *L) {
 }
 
 static int set_vm(lua_State *L) {
-    vm16_t *C = (vm16_t*)lua_touserdata(L, 1);
+    vm16_t *C = check_vm(L);
     if(lua_isstring(L, 2)) {
         size_t size;
         const void *p_data = lua_tolstring(L, 2, &size);
@@ -127,7 +134,7 @@ static int set_vm(lua_State *L) {
 }
 
 static int read_mem(lua_State *L) {
-    vm16_t *C = (vm16_t*)lua_touserdata(L, 1);
+    vm16_t *C = check_vm(L);
     lua_Integer addr = luaL_checkinteger(L, 2);
     lua_Integer num = luaL_checkinteger(L, 3);
     num = MIN(num, 0x80);
@@ -147,7 +154,7 @@ static int read_mem(lua_State *L) {
 }
 
 static int write_mem(lua_State *L) {
-    vm16_t *C = (vm16_t*)lua_touserdata(L, 1);
+    vm16_t *C = check_vm(L);
     uint16_t addr = (uint16_t)luaL_checkinteger(L, 2);
     if(lua_istable(L, 3)) {
         size_t num = lua_objlen(L, 3);
@@ -171,7 +178,7 @@ static int write_mem(lua_State *L) {
 }
 
 static int run(lua_State *L) {
-    vm16_t *C = (vm16_t*)lua_touserdata(L, 1);
+    vm16_t *C = check_vm(L);
     lua_Integer cycles = luaL_checkinteger(L, 2);
     if(C != NULL) {
         uint32_t ran;
@@ -185,7 +192,7 @@ static int run(lua_State *L) {
 }
 
 static int get_cpu_reg(lua_State *L) {
-    vm16_t *C = (vm16_t*)lua_touserdata(L, 1);
+    vm16_t *C = check_vm(L);
     if(C != NULL) {
         uint16_t mem[4];
         uint16_t words = vm16_read_mem(C, C->pcnt, 4, mem);
@@ -212,7 +219,7 @@ static int get_cpu_reg(lua_State *L) {
 }
 
 static int get_event(lua_State *L) {
-    vm16_t *C = (vm16_t*)lua_touserdata(L, 1);
+    vm16_t *C = check_vm(L);
     lua_Integer type = luaL_checkinteger(L, 2);
     if(C != NULL) {
         lua_newtable(L); /* creates a table */
@@ -256,7 +263,7 @@ static int get_event(lua_State *L) {
 }
 
 static int event_response(lua_State *L) {
-    vm16_t *C = (vm16_t*)lua_touserdata(L, 1);
+    vm16_t *C = check_vm(L);
     lua_Integer type = luaL_checkinteger(L, 2);
     lua_Integer data = luaL_checkinteger(L, 3);
     if(C != NULL) {
@@ -314,6 +321,7 @@ static const luaL_Reg vm16lib[] = {
 
 
 LUALIB_API int luaopen_vm16(lua_State *L) {
+    luaL_newmetatable(L, "vm16.cpu_dump");
     luaL_register(L, LUA_VM16LIBNAME, vm16lib);
     return 1;
 }

@@ -133,7 +133,6 @@ function vm16.run(vm, pos, cycles, input, output, system)
 		else
 			return resp
 		end
-		print(resp, credit)
 	end
 	return resp
 end
