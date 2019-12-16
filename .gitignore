@@ -1,0 +1,6 @@
+*.bak
+*.lst
+*.o
+*.pyc
+.pydevproject
+.project
