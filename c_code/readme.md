@@ -36,7 +36,9 @@ ModApiChannels::Initialize(L, top);
 luaopen_vm16(L);  						// <== add this line
 ```
 
-4. Goto the minetest root dir and call `cmake` with all your options
+4. Goto the minetest root dir and call `cmake` with all your options (something like: 
+cmake . -DRUN_IN_PLACE=TRUE -DBUILD_SERVER=TRUE -DCMAKE_BUILD_TYPE="Release" -DENABLE_GETTEXT=1 -DENABLE_FREETYPE=1 -DENABLE_LEVELDB=1
+)
 
 5. call `make`
 
