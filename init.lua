@@ -112,9 +112,9 @@ end
 -- system is a callback of type: u16_result, points = func(vm, pos, u16_num, u16_value)
 function vm16.run(vm, pos, cycles, input, output, system)
 	local credit = CREDIT
-	local resp
-	while credit > 0 do
-		resp = vm16lib.run(vm, cycles)
+	local resp, ran
+	while credit > 0 and cycles > 0 do
+		resp, ran = vm16lib.run(vm, cycles)
 		if resp == VM16_IN then
 			local evt = vm16lib.get_event(vm, resp)
 			local result, points = input(vm, pos, evt.addr)
@@ -133,6 +133,7 @@ function vm16.run(vm, pos, cycles, input, output, system)
 		else
 			return resp
 		end
+		cycles = cycles - ran
 	end
 	return resp
 end
