@@ -104,9 +104,11 @@ along with VM16.  If not, see <https://www.gnu.org/licenses/>.
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
 #define VMA(C, addr)            (((uint16_t)(addr)) & (C)->mem_mask)  // valid memory address
+//#define VMA(C, addr)            (C)->map[(addr) >> 12] + ((addr) & 0x0fff)
 #define MEM_READ(C, addr)       ((C)->memory[VMA(C, addr)])  // read a value
 #define MEM_WRITE(C, add, val)  (MEM_READ(C, add) = val)
-#define MEM_ADDR(C, addr)       &MEM_READ(C, addr)  // provide address
+//#define MEM_ADDR(C, addr)       &MEM_READ(C, addr)  // provide address
+#define MEM_ADDR(C, addr)       ((C)->p_map[(addr) >> 12] + ((addr) & 0x0fff))
 #define INC_PC(C)               ((C)->pcnt = VMA(C, (C)->pcnt + 1))
 #define INC_ADDR(C, addr)       ((addr) = VMA(C, (addr) + 1))
 #define VM_SIZE(size)           (sizeof(vm16_t) + (sizeof(uint16_t) * (size - 1)))
@@ -209,6 +211,9 @@ static uint16_t getoprnd(vm16_t *C, uint8_t addr_mod) {
 
 void vm16_clear(vm16_t *C) {
     if(VM_VALID(C)) {
+        for(int i=0; i<16; i++) {
+            C->p_map[i] = C->memory;
+        }
         memset(C->memory, 0, C->mem_size * 2);
         C->areg = 0;
         C->breg = 0;
@@ -418,8 +423,7 @@ int vm16_run(vm16_t *C, uint32_t num_cycles, uint32_t *ran) {
             }
             case NOT: {
                 uint16_t *p_opd1 = getaddr(C, addr_mode1);
-                uint16_t opd2 = getoprnd(C, addr_mode2);
-                *p_opd1 = ~opd2;
+                 *p_opd1 = ~*p_opd1;
                 break;
             }
             case BNZE: {

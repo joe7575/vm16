@@ -32,7 +32,7 @@ Opcodes = [
     "nop:-:-", "halt:-:-", "call:ADR:-", "ret:-:-",
     "move:DST:SRC", "jump:ADR:-", "inc:DST:-", "dec:DST:-",
     "add:DST:SRC", "sub:DST:SRC", "mul:DST:SRC", "div:DST:SRC",
-    "and:DST:SRC", "or:DST:SRC", "xor:DST:SRC", "not:DST:SRC",
+    "and:DST:SRC", "or:DST:SRC", "xor:DST:SRC", "not:DST:-",
     "bnze:DST:ADR", "bze:DST:ADR", "bpos:DST:ADR", "bneg:DST:ADR",
     "in:DST:CNST", "out:CNST:SRC", "push:SRC:-", "pop:DST:-", 
     "swap:DST:-", "dbnz:DST:ADR", "shl:DST:SRC", "shr:DST:SRC",

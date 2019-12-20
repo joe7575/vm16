@@ -185,7 +185,10 @@ class Assembler(object):
             words = words[1:]
             if len(words) == 0:
                 return False
-            line = line.split(" ", 1)[1]
+            try:
+                line = line.split(" ", 1)[1]
+            except:
+                pass
 
         # text segment
         if self.is_text:
@@ -198,22 +201,23 @@ class Assembler(object):
         else:
             if len(words) == 1:
                 num_opnds = self.opcode(words[0])
-                self.check_num_operands(0, num_opnds)
+                self.check_num_operands(num_opnds, 0)
                 self.codes[0] = self.codes[0] << 10
             elif len(words) == 2: # one operand
                 num_opnds = self.opcode(words[0])
-                self.check_num_operands(1, num_opnds)
+                self.check_num_operands(num_opnds, 1)
                 opnd = self.operand_correction(words[0], words[1])
                 self.operand(opnd)
                 self.codes[0] = self.codes[0] << 5
             elif len(words) == 3:
                 num_opnds = self.opcode(words[0])
-                self.check_num_operands(2, num_opnds)
+                self.check_num_operands(num_opnds, 2)
                 opnd1 = words[1]
                 opnd2 = self.operand_correction(words[0], words[2])
                 self.operand(opnd1)
                 self.operand(opnd2)
-            self.check_opcode(self.codes[0])
+            if self.codes != []:
+                self.check_opcode(self.codes[0])
         curr_addr = self.addr
         self.addr += len(self.codes)
         return curr_addr

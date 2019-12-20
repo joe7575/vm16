@@ -27,11 +27,11 @@ along with VM16.  If not, see <https://www.gnu.org/licenses/>.
 #include <assert.h>
 #include <stddef.h>
 
-#include "lua.h"
+//#include "lua.h"
 
-#define LUA_VM16LIBNAME "vm16lib"
+//#define LUA_VM16LIBNAME "vm16lib"
 
-LUALIB_API int luaopen_vm16(lua_State *L);
+//LUALIB_API int luaopen_vm16(lua_State *L);
 
 
 #define IDENT           (0x36314D56)
@@ -67,6 +67,7 @@ typedef struct {
     uint16_t mem_mask;
     uint32_t mem_size;
     uint16_t *p_in_dest;    // for IN command
+    uint16_t *p_map[16];    // memory mapping
     uint16_t memory[1];     // program/data memory (16 bit)
 }vm16_t;
 

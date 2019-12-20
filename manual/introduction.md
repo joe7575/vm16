@@ -70,7 +70,7 @@ Table of instructions with addressing modes:
 | and    | DST    | SRC     | AND operation with SRC and DST. The result is stored in DST  |
 | or     | DST    | SRC     | OR operation with SRC and DST. The result is stored in DST   |
 | xor    | DST    | SRC     | XOR operation with SRC and DST. The result is stored in DST  |
-| not    | DST    | SRC     | NOT operation with SRC and DST. The result is stored in DST  |
+| not    | DST    | -       | NOT operation with DST. The result is stored in DST          |
 | bnze   | REG    | ABS,REL | Branch to the operand2 address  if REG is not zero.          |
 | bze    | REG    | ABS,REL | Branch to the operand2 address  if REG is zero.              |
 | bpos   | REG    | ABS,REL | Branch to the operand2 address  if REG is positive (bit 15 is 0). |
