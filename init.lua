@@ -61,6 +61,14 @@ function vm16.clear(vm)
 	return vm16lib.clear(vm)
 end	
 	
+-- Mark the given block (1..15) as ROM (read only) block
+-- Hint: The block has to be a valid ram area, initialized via vm16.create
+-- returns true/false
+function vm16.mark_rom_block(vm, block_num)
+	return vm16lib.mark_rom_block(vm, block_num)
+end	
+
+
 -- Load PC of the VM with the given 16-bit address
 -- returns true/false
 function vm16.loadaddr(vm, addr)

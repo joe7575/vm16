@@ -69,6 +69,18 @@ static int clear(lua_State *L) {
     return 1;
 }
 
+static int mark_rom_block(lua_State *L) {
+    vm16_t *C = check_vm(L);
+    lua_Integer block = luaL_checkinteger(L, 2);
+    if(C != NULL) {
+        bool res = vm16_mark_block_as_rom(C, (uint8_t) block);
+        lua_pushboolean(L, res);
+        return 1;
+    }
+    lua_pushboolean(L, 0);
+    return 1;
+}
+
 static int loadaddr(lua_State *L) {
     vm16_t *C = check_vm(L);
     lua_Integer addr = luaL_checkinteger(L, 2);
@@ -302,6 +314,7 @@ static const luaL_Reg vm16lib[] = {
     {"create",          create},
     {"clear",           clear},
     {"loadaddr",        loadaddr},
+    {"mark_rom_block",  mark_rom_block},
     {"deposit",         deposit},
     {"examine",         examine},
     {"get_vm",        	get_vm},

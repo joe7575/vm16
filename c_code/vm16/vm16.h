@@ -27,12 +27,14 @@ along with VM16.  If not, see <https://www.gnu.org/licenses/>.
 #include <assert.h>
 #include <stddef.h>
 
-//#include "lua.h"
+#ifndef _UNIT_TEST_
 
-//#define LUA_VM16LIBNAME "vm16lib"
+#include "lua.h"
 
-//LUALIB_API int luaopen_vm16(lua_State *L);
+#define LUA_VM16LIBNAME "vm16lib"
+LUALIB_API int luaopen_vm16(lua_State *L);
 
+#endif
 
 #define IDENT           (0x36314D56)
 #define VERSION         (1)
