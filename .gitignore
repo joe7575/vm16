@@ -4,4 +4,4 @@
 *.pyc
 .pydevproject
 .project
-./c_code/vm16test/bin/
+c_code/vm16test/bin/**
