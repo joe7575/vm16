@@ -4,4 +4,5 @@
 *.pyc
 .pydevproject
 .project
+.layout
 c_code/vm16test/bin/**
