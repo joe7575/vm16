@@ -103,14 +103,11 @@ along with VM16.  If not, see <https://www.gnu.org/licenses/>.
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
-#define VMA(C, addr)            (((uint16_t)(addr)) & (C)->mem_mask)  // valid memory address
-//#define VMA(C, addr)            (C)->map[(addr) >> 12] + ((addr) & 0x0fff)
-#define MEM_READ(C, addr)       ((C)->memory[VMA(C, addr)])  // read a value
-#define MEM_WRITE(C, add, val)  (MEM_READ(C, add) = val)
-//#define MEM_ADDR(C, addr)       &MEM_READ(C, addr)  // provide address
-#define MEM_ADDR(C, addr)       ((C)->p_map[(addr) >> 12] + ((addr) & 0x0fff))
-#define INC_PC(C)               ((C)->pcnt = VMA(C, (C)->pcnt + 1))
-#define INC_ADDR(C, addr)       ((addr) = VMA(C, (addr) + 1))
+
+#define ADDR_SRC(C, addr)       ((C)->p_src[(addr) >> 12] + ((addr) & 0x0fff))
+#define ADDR_DST(C, addr)       ((C)->p_dst[(addr) >> 12] + ((addr) & 0x0fff))
+
+
 #define VM_SIZE(size)           (sizeof(vm16_t) + (sizeof(uint16_t) * (size - 1)))
 #define MEM_SIZE(vm_size)       ((vm_size - sizeof(vm16_t) + sizeof(uint16_t)) / sizeof(uint16_t))
 #define VM_VALID(C)             ((C != 0) && (C->ident == IDENT) && (C->version == VERSION))
@@ -129,31 +126,31 @@ static uint16_t *getaddr(vm16_t *C, uint8_t addr_mod) {
     case YREG: return &C->yreg;
     case PCNT: return &C->pcnt;
     case SPTR: return &C->sptr;
-    case XIND: return MEM_ADDR(C, C->xreg);
-    case YIND: return MEM_ADDR(C, C->yreg);
+    case XIND: return ADDR_DST(C, C->xreg);
+    case YIND: return ADDR_DST(C, C->yreg);
     case XINC: {
-        uint16_t *p_res = MEM_ADDR(C, C->xreg);
-        INC_ADDR(C, C->xreg);
+        uint16_t *p_res = ADDR_DST(C, C->xreg);
+        C->xreg++;
         return p_res;
     }
     case YINC: {
-        uint16_t *p_res = MEM_ADDR(C, C->yreg);
-        INC_ADDR(C, C->yreg);
+        uint16_t *p_res = ADDR_DST(C, C->yreg);
+        C->yreg++;
         return p_res;
     }
-    case CNST: return MEM_ADDR(C, 0); // invalid
+    case CNST: return ADDR_DST(C, 0); // invalid
     case ABS: {
-        uint16_t addr = MEM_READ(C, C->pcnt);
-        INC_PC(C);
-        return MEM_ADDR(C, addr);
+        uint16_t addr = *ADDR_DST(C, C->pcnt);
+        C->pcnt++;
+        return ADDR_DST(C, addr);
     }
-    case REL: return MEM_ADDR(C, 0); // invalid
+    case REL: return ADDR_DST(C, 0); // invalid
     case SREL: {
-        uint16_t offs = MEM_READ(C, C->pcnt);
-        INC_PC(C);
-        return MEM_ADDR(C, C->sptr + offs);
+        uint16_t offs = *ADDR_DST(C, C->pcnt);
+        C->pcnt++;
+        return ADDR_DST(C, C->sptr + offs);
     }
-    default: return MEM_ADDR(C, 0);
+    default: return ADDR_DST(C, 0);
   }
 }
 
@@ -170,40 +167,40 @@ static uint16_t getoprnd(vm16_t *C, uint8_t addr_mod) {
     case YREG: return C->yreg;
     case PCNT: return C->pcnt;
     case SPTR: return C->sptr;
-    case XIND: return MEM_READ(C, C->xreg);
-    case YIND: return MEM_READ(C, C->yreg);
+    case XIND: return *ADDR_SRC(C, C->xreg);
+    case YIND: return *ADDR_SRC(C, C->yreg);
     case XINC: {
-        uint16_t val = MEM_READ(C, C->xreg);
-        INC_ADDR(C, C->xreg);
+        uint16_t val = *ADDR_SRC(C, C->xreg);
+        C->xreg++;
         return val;
     }
     case YINC: {
-        uint16_t val = MEM_READ(C, C->yreg);
-        INC_ADDR(C, C->yreg);
+        uint16_t val = *ADDR_SRC(C, C->yreg);
+        C->yreg++;
         return val;
     }
     case REG0: return 0;
     case REG1: return 1;
     case CNST: {
-        uint16_t val = MEM_READ(C, C->pcnt);
-        INC_PC(C);
+        uint16_t val = *ADDR_SRC(C, C->pcnt);
+        C->pcnt++;
         return val;
     }
     case ABS: {
-        uint16_t addr = MEM_READ(C, C->pcnt);
-        INC_PC(C);
-        return MEM_READ(C, addr);
+        uint16_t addr = *ADDR_SRC(C, C->pcnt);
+        C->pcnt++;
+        return *ADDR_SRC(C, addr);
     }
     case REL: {
-        uint16_t offs = MEM_READ(C, C->pcnt);
-        offs = VMA(C, C->pcnt + offs - 1);
-        INC_PC(C);
+        uint16_t offs = *ADDR_SRC(C, C->pcnt);
+        offs = C->pcnt + offs - 1;
+        C->pcnt++;
         return offs;
     }
     case SREL: {
-        uint16_t offs = MEM_READ(C, C->pcnt);
-        INC_PC(C);
-        return MEM_READ(C, C->sptr + offs);
+        uint16_t offs = *ADDR_SRC(C, C->pcnt);
+        C->pcnt++;
+        return C->sptr + offs;
     }
     default: return 0;
   }
@@ -211,8 +208,15 @@ static uint16_t getoprnd(vm16_t *C, uint8_t addr_mod) {
 
 void vm16_clear(vm16_t *C) {
     if(VM_VALID(C)) {
+        uint8_t num_blocks = C->mem_size / MEM_BLOCK_SIZE;
         for(int i=0; i<16; i++) {
-            C->p_map[i] = C->memory;
+            if(i < num_blocks) {
+                C->p_dst[i] = &(C->memory)[i * MEM_BLOCK_SIZE];
+                C->p_src[i] = &(C->memory)[i * MEM_BLOCK_SIZE];
+            } else {
+                C->p_dst[i] = C->memory;
+                C->p_src[i] = C->memory;
+            }
         }
         memset(C->memory, 0, C->mem_size * 2);
         C->areg = 0;
@@ -226,8 +230,9 @@ void vm16_clear(vm16_t *C) {
     }
 }
 
+// size in number of 4K blocks
 uint32_t vm16_calc_size(uint8_t size) {
-    uint32_t mem_size = (1 << MIN(size, 16));
+    uint32_t mem_size = MIN(size, MAX_MEM_BLOCKS) * MEM_BLOCK_SIZE;
     return VM_SIZE(mem_size);
 }
 
@@ -240,33 +245,39 @@ bool vm16_init(vm16_t *C, uint32_t vm_size) {
         C->ident = IDENT;
         C->version = VERSION;
         C->mem_size = MEM_SIZE(vm_size);
-        C->mem_mask = MEM_SIZE(vm_size) - 1;
         vm16_clear(C);
         return true;
     }
     return false;
 }
 
+bool vm16_mark_block_as_rom(vm16_t *C, uint8_t block) {
+    uint8_t num_blocks = C->mem_size / MEM_BLOCK_SIZE;
+    if(block < num_blocks) {
+        C->p_dst[block] = C->memory; // use first RAM block instead
+    }
+}
+
 void vm16_loadaddr(vm16_t *C, uint16_t addr) {
     if(VM_VALID(C)) {
-        C->pcnt = VMA(C, addr);
+        C->pcnt = addr;
     }
 }
 
 void vm16_deposit(vm16_t *C, uint16_t value) {
     if(VM_VALID(C)) {
-        MEM_WRITE(C, C->pcnt, value);
+        *ADDR_DST(C, C->pcnt) = value;
         C->l_addr = C->pcnt;
         C->l_data = value;
-        INC_PC(C);
+        C->pcnt++;
     }
 }
 
 void vm16_examine(vm16_t *C) {
     if(VM_VALID(C)) {
         C->l_addr = C->pcnt;
-        C->l_data = MEM_READ(C, C->pcnt);
-        INC_PC(C);
+        C->l_data = *ADDR_SRC(C, C->pcnt);
+        C->pcnt++;
     }
 }
 
@@ -285,13 +296,11 @@ uint32_t vm16_set_vm(vm16_t *C, uint32_t size_buffer, uint8_t *p_buffer) {
     if(VM_VALID(C)) {
         uint32_t size = MIN(VM_SIZE(C->mem_size), size_buffer);
         if(p_buffer != NULL) {
-            uint16_t mem_mask = C->mem_mask;
             uint32_t mem_size = C->mem_size;
             memcpy(C, p_buffer, size);
             // restore the header again
             C->ident = IDENT;
             C->version = VERSION;
-            C->mem_mask = mem_mask;
             C->mem_size = mem_size;
             return size;
         }
@@ -301,11 +310,10 @@ uint32_t vm16_set_vm(vm16_t *C, uint32_t size_buffer, uint8_t *p_buffer) {
 
 uint32_t vm16_read_mem(vm16_t *C, uint16_t addr, uint16_t num, uint16_t *p_buffer) {
     if(VM_VALID(C)) {
-        if((p_buffer != NULL) && (num > 0)) {
-            addr = VMA(C, addr);
+        if((p_buffer != NULL) && (num > 0) && (C->mem_size > addr)) {
             num = MIN(num, 0x80);
             num = MIN(num, C->mem_size - addr);
-            memcpy(p_buffer, MEM_ADDR(C, addr), num * 2);
+            memcpy(p_buffer, ADDR_SRC(C, addr), num * 2);
             return num;
         }
     }
@@ -314,11 +322,10 @@ uint32_t vm16_read_mem(vm16_t *C, uint16_t addr, uint16_t num, uint16_t *p_buffe
 
 uint32_t vm16_write_mem(vm16_t *C, uint16_t addr, uint16_t num, uint16_t *p_buffer) {
     if(VM_VALID(C)) {
-        if((p_buffer != NULL) && (num > 0)) {
-            addr = VMA(C, addr);
+        if((p_buffer != NULL) && (num > 0) && (C->mem_size > addr)) {
             num = MIN(num, 0x80);
             num = MIN(num, C->mem_size - addr);
-            memcpy(MEM_ADDR(C, addr), p_buffer, num * 2);
+            memcpy(ADDR_SRC(C, addr), p_buffer, num * 2);
             return num;
         }
     }
@@ -332,9 +339,10 @@ int vm16_run(vm16_t *C, uint32_t num_cycles, uint32_t *ran) {
     }
     uint32_t num = num_cycles;
     while(num-- > 0) {
-        uint16_t code = MEM_READ(C, C->pcnt);
+        uint16_t code = *ADDR_SRC(C, C->pcnt);
 
-        INC_PC(C);
+        C->pcnt++;
+
         uint8_t opcode  = (uint8_t)((code >> 10) & 0x003f);
         uint8_t addr_mode1 = (uint8_t)((code >>  5) & 0x001f);
         uint8_t addr_mode2 = (uint8_t)((code >>  0) & 0x001f);
@@ -348,15 +356,15 @@ int vm16_run(vm16_t *C, uint32_t num_cycles, uint32_t *ran) {
             case CALL: {
                 // addr = opd(), push PC, PC = addr
                 uint16_t addr = getoprnd(C, addr_mode1);
-                C->sptr = VMA(C, C->sptr - 1);
-                *MEM_ADDR(C, C->sptr) = C->pcnt;
+                C->sptr = C->sptr - 1;
+                *ADDR_DST(C, C->sptr) = C->pcnt;
                 C->pcnt = addr;
                 break;
             }
             case RETN: {
                 // PC = pop()
-                uint16_t addr = *MEM_ADDR(C, C->sptr);
-                C->sptr = VMA(C, C->sptr + 1);
+                uint16_t addr = *ADDR_DST(C, C->sptr);
+                C->sptr = C->sptr + 1;
                 C->pcnt = addr;
                 break;
             }
@@ -472,14 +480,14 @@ int vm16_run(vm16_t *C, uint32_t num_cycles, uint32_t *ran) {
             }
             case PUSH: {
                 uint16_t opd1 = getoprnd(C, addr_mode1);
-                C->sptr = VMA(C, C->sptr - 1);
-                *MEM_ADDR(C, C->sptr) = opd1;
+                C->sptr = C->sptr - 1;
+                *ADDR_DST(C, C->sptr) = opd1;
                 break;
             }
             case POP: {
                uint16_t *p_opd1 = getaddr(C, addr_mode1);
-                *p_opd1 = *MEM_ADDR(C, C->sptr);
-                C->sptr = VMA(C, C->sptr + 1);
+                *p_opd1 = *ADDR_DST(C, C->sptr);
+                C->sptr = C->sptr + 1;
                 break;
             }
             case SWAP: {

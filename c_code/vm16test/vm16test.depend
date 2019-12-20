@@ -1,10 +1,11 @@
 # depslib dependency file v1.0
-1576865135 source:/home/joachim/minetest51/mods/vm16/c_code/vm16test/main.c
+1576873124 source:/home/joachim/minetest51/mods/vm16/c_code/vm16test/main.c
 	<stdio.h>
 	<stdlib.h>
+	<time.h>
 	"../vm16/vm16.h"
 
-1576864752 source:/home/joachim/minetest51/mods/vm16/c_code/vm16/vm16core.c
+1576873222 source:/home/joachim/minetest51/mods/vm16/c_code/vm16/vm16core.c
 	<stdio.h>
 	<stdlib.h>
 	<stdint.h>
@@ -12,7 +13,7 @@
 	<string.h>
 	"vm16.h"
 
-1576693009 /home/joachim/minetest51/mods/vm16/c_code/vm16/vm16.h
+1576873094 /home/joachim/minetest51/mods/vm16/c_code/vm16/vm16.h
 	<stdint.h>
 	<stdbool.h>
 	<assert.h>

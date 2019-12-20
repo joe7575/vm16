@@ -41,7 +41,7 @@ vm16.ERROR  = VM16_ERROR
 
 local CREDIT = 100
 
--- ram_size is one of 12 (4K), 13 (8K), 14 (16K), 15 (32KB), or 16 (64KB)
+-- ram_size is from 1 (4K) to 16 (64KB)
 function vm16.create(pos, ram_size)
 	local meta = M(pos)
 	meta:set_string("vm16", "")

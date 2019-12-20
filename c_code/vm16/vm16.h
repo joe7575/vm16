@@ -37,7 +37,8 @@ along with VM16.  If not, see <https://www.gnu.org/licenses/>.
 #define IDENT           (0x36314D56)
 #define VERSION         (1)
 #define VM16_WORD_SIZE  (16)
-
+#define MEM_BLOCK_SIZE  (4096)
+#define MAX_MEM_BLOCKS  (16)     // 16 x MEM_BLOCK_SIZE
 
 /*
 ** VM return values
@@ -64,10 +65,10 @@ typedef struct {
     uint16_t sptr;      // stack pointer
     uint16_t l_addr;    // latched addr (I/O, examine)
     uint16_t l_data;    // latched data (I/O, examine)
-    uint16_t mem_mask;
     uint32_t mem_size;
     uint16_t *p_in_dest;    // for IN command
-    uint16_t *p_map[16];    // memory mapping
+    uint16_t *p_dst[16];    // RAM memory mapping
+    uint16_t *p_src[16];    // ROM memory mapping
     uint16_t memory[1];     // program/data memory (16 bit)
 }vm16_t;
 
@@ -91,6 +92,11 @@ uint32_t vm16_real_size(vm16_t *C);
 ** Initialize the allocation VM memory.
 */
 bool vm16_init(vm16_t *C, uint32_t mem_size);
+
+/*
+** Mark given block number as write protected.
+*/
+bool vm16_mark_block_as_rom(vm16_t *C, uint8_t block);
 
 /*
 ** Clear registers and memory (set to zero)
