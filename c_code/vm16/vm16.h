@@ -39,8 +39,8 @@ LUALIB_API int luaopen_vm16(lua_State *L);
 #define IDENT           (0x36314D56)
 #define VERSION         (1)
 #define VM16_WORD_SIZE  (16)
-#define MEM_BLOCK_SIZE  (4096)
-#define MAX_MEM_BLOCKS  (16)     // 16 x MEM_BLOCK_SIZE
+#define MEM_BANK_SIZE   (4096)
+#define MAX_MEM_BANKS   (16)     // 16 x MEM_BANK_SIZE
 
 /*
 ** VM return values
@@ -96,9 +96,9 @@ uint32_t vm16_real_size(vm16_t *C);
 bool vm16_init(vm16_t *C, uint32_t mem_size);
 
 /*
-** Mark given block number as write protected.
+** Mark given memory bank as write protected.
 */
-bool vm16_mark_block_as_rom(vm16_t *C, uint8_t block);
+bool vm16_mark_rom_bank(vm16_t *C, uint8_t bank);
 
 /*
 ** Clear registers and memory (set to zero)

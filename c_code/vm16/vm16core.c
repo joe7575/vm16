@@ -208,11 +208,11 @@ static uint16_t getoprnd(vm16_t *C, uint8_t addr_mod) {
 
 void vm16_clear(vm16_t *C) {
     if(VM_VALID(C)) {
-        uint8_t num_blocks = C->mem_size / MEM_BLOCK_SIZE;
+        uint8_t num_blocks = C->mem_size / MEM_BANK_SIZE;
         for(int i=0; i<16; i++) {
             if(i < num_blocks) {
-                C->p_dst[i] = &(C->memory)[i * MEM_BLOCK_SIZE];
-                C->p_src[i] = &(C->memory)[i * MEM_BLOCK_SIZE];
+                C->p_dst[i] = &(C->memory)[i * MEM_BANK_SIZE];
+                C->p_src[i] = &(C->memory)[i * MEM_BANK_SIZE];
             } else {
                 C->p_dst[i] = C->memory;
                 C->p_src[i] = C->memory;
@@ -232,7 +232,7 @@ void vm16_clear(vm16_t *C) {
 
 // size in number of 4K blocks
 uint32_t vm16_calc_size(uint8_t size) {
-    uint32_t mem_size = MIN(size, MAX_MEM_BLOCKS) * MEM_BLOCK_SIZE;
+    uint32_t mem_size = MIN(size, MAX_MEM_BANKS) * MEM_BANK_SIZE;
     return VM_SIZE(mem_size);
 }
 
@@ -251,11 +251,13 @@ bool vm16_init(vm16_t *C, uint32_t vm_size) {
     return false;
 }
 
-bool vm16_mark_block_as_rom(vm16_t *C, uint8_t block) {
-    uint8_t num_blocks = C->mem_size / MEM_BLOCK_SIZE;
-    if(block < num_blocks) {
-        C->p_dst[block] = C->memory; // use first RAM block instead
+bool vm16_mark_rom_bank(vm16_t *C, uint8_t bank) {
+    uint8_t num_banks = C->mem_size / MEM_BANK_SIZE;
+    if(bank < num_banks) {
+        C->p_dst[bank] = C->memory; // use first RAM bank instead
+        return true;
     }
+    return false;
 }
 
 void vm16_loadaddr(vm16_t *C, uint16_t addr) {
