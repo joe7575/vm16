@@ -21,7 +21,8 @@ along with VM16.  If not, see <https://www.gnu.org/licenses/>.
 -- for lazy programmers
 local M = minetest.get_meta
 
-vm16 = {}
+vm16 = vm16lib		-- rename the lib
+
 
 local VM16_OK     = 0  -- run to the end
 local VM16_DELAY  = 1  -- one cycle pause
@@ -47,7 +48,7 @@ function vm16.create(pos, ram_size)
 	meta:set_string("vm16", "")
 	meta:set_int("vm16size", ram_size)
 	meta:mark_as_private("vm16")
-	return vm16lib.create(ram_size)
+	return vm16.init(ram_size)
 end
 
 function vm16.destroy(vm, pos)
@@ -55,93 +56,27 @@ function vm16.destroy(vm, pos)
 	M(pos):set_string("vm16", "")
 end
 
--- Reset registers and memory
--- returns true/false
-function vm16.clear(vm)
-	return vm16lib.clear(vm)
-end	
-	
--- Mark the given block (1..15) as ROM (read only) block
--- Hint: The block has to be a valid ram area, initialized via vm16.create
--- returns true/false
-function vm16.mark_rom_bank(vm, block_num)
-	return vm16lib.mark_rom_bank(vm, block_num)
-end	
 
--- Initialize the memory addressing (to be called before the VM is used)
--- returns true/false
-function vm16.init_mem_banks(vm)
-	return vm16lib.init_mem_banks(vm)
-end
-
--- Load PC of the VM with the given 16-bit address
--- returns true/false
-function vm16.loadaddr(vm, addr)
-	return vm16lib.loadaddr(vm, addr)
-end	
-
--- Store the given value in the memory cell where the PC points to
--- and post-increment the PC.
--- returns true/false
-function vm16.deposit(vm, value)
-	return vm16lib.deposit(vm, value)
-end	
-	
--- Read the memory cell where the PC points to
--- and post-increment the PC.
--- returns the read value
-function vm16.examine(vm)
-	return vm16lib.examine(vm)
-end	
-
--- Read 'num' memory values starting at the given 'addr'.
--- returns an table/array with the read values
-function vm16.read_mem(vm, addr, num)
-	return vm16lib.read_mem(vm, addr, num)
-end	
-
--- Write the values of 'tbl' into the memory starting at the given 'addr'.
--- returns an array with the read values
-function vm16.write_mem(vm, addr, tbl)
-	return vm16lib.write_mem(vm, addr, tbl)
-end	
-
--- Return the complete register set as table with the keys A, B, C, D, X, Y, PC, SP, 
--- plua 4 memory cells mem0 to mem3 (the PC points to mem0)
-function vm16.get_cpu_reg(vm, addr, tbl)
-	return vm16lib.get_cpu_reg(vm, addr, tbl)
-end	
-
--- Test if the 'bit' number (0..15) is set in value
--- returns true/false
-function vm16.testbit(value, bit)
-	return vm16lib.testbit(value, bit)
-end	
-
--- Call the VM 
--- cycles are machine cycles (e.g. 10000) per call
--- input  is a callback of type: u16_result, points = func(vm, pos, u16_addr)
--- output is a callback of type: u16_result, points = func(vm, pos, u16_addr, u16_value)
--- system is a callback of type: u16_result, points = func(vm, pos, u16_num, u16_value)
-function vm16.run(vm, pos, cycles, input, output, system)
+function vm16.call(vm, pos, cycles, input, output, system)
 	local credit = CREDIT
 	local resp, ran
 	while credit > 0 and cycles > 0 do
-		resp, ran = vm16lib.run(vm, cycles)
+		resp, ran = vm16.run(vm, cycles)
 		if resp == VM16_IN then
-			local evt = vm16lib.get_event(vm, resp)
+			local evt = vm16.get_event(vm, resp)
 			local result, points = input(vm, pos, evt.addr)
-			vm16lib.event_response(vm, resp, result or 0xFFFF)
+			vm16.event_response(vm, resp, result or 0xFFFF)
 			credit = credit - (points or CREDIT)
 		elseif resp == VM16_OUT then
-			local evt = vm16lib.get_event(vm, resp)
+			local evt = vm16.get_event(vm, resp)
 			local result, points = output(vm, pos, evt.addr, evt.data)
-			vm16lib.event_response(vm, resp, result or 0xFFFF)
+			vm16.event_response(vm, resp, result or 0xFFFF)
 			credit = credit - (points or CREDIT)
 		elseif resp == VM16_SYS then
-			local evt = vm16lib.get_event(vm, resp)
-			local result, points = system(vm, pos, evt.addr, evt.data)
-			vm16lib.event_response(vm, resp, result or 0xFFFF)
+			local evt = vm16.get_event(vm, resp)
+			print("VM16_SYS", dump(evt))
+			local resA, resB, points = system(vm, pos, evt.addr, evt.A, evt.B)
+			vm16.event_response(vm, resp, resA or 0xFFFF, resB or evt.B)
 			credit = credit - (points or CREDIT)
 		else
 			return resp
@@ -151,23 +86,21 @@ function vm16.run(vm, pos, cycles, input, output, system)
 	return resp
 end
 
--- Store the complete VM as node meta data
 function vm16.vm_store(vm, pos)
-	local s = vm16lib.get_vm(vm)
+	local s = vm16.get_vm(vm)
 	M(pos):set_string("vm16", s)
 	M(pos):mark_as_private("vm16")
 end
 
--- Restore the complete VM from the node meta data
 function vm16.vm_restore(pos)
 	local meta = M(pos)
 	local s = meta:get_string("vm16")
 	local size = meta:get_int("vm16size")
 	if s ~= "" and size > 0 then
-		local vm = vm16lib.create(size)
+		local vm = vm16.init(size)
 		if vm then
-			vm16lib.set_vm(vm, s)
-			vm16lib.init_mem_banks(vm)
+			vm16.set_vm(vm, s)
+			vm16.init_mem_banks(vm)
 			return vm
 		end
 	end

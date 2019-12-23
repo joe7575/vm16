@@ -16,6 +16,11 @@ uint16_t code[] = {
 0x1101, 0x1880, 0x1142, 0x1143, 0x0400
 };
 
+uint16_t code2[] = {
+0x100C, 0x2410, 0x0014, 0x4C12, 0x0002, 0x2010, 0x0002, 0x4C12,
+0x0002, 0x2050, 0x0002, 0x4C12, 0xFFF3, 0x0400
+};
+
 int main() {
     clock_t t;
     uint32_t ran;
@@ -57,6 +62,14 @@ int main() {
             num_cycles = num_cycles - ran;
         }
     }
+
+    vm16_write_mem(C, 0, sizeof(code2) / 2, code2);
+    vm16_loadaddr(C, 0);
+    while(vm16_run(C, 1, &ran) != VM16_HALT) {
+        printf("A:%04X B:%04X C:%04X D:%04X X:%04X Y:%04X PC:%04X SP:%04X\n", C->areg, C->breg, C->creg, C->dreg, C->xreg, C->yreg, C->pcnt, C->sptr);
+        printf("%04X %04X %04X %04X %04X %04X %04X %04X\n", C->memory[0], C->memory[1], C->memory[2], C->memory[3], C->memory[0xFFE], C->memory[0xFFF], C->memory[0x1000], C->memory[0x1001]);
+    }
+
     free(C);
     return 0;
 }

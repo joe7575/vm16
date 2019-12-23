@@ -146,6 +146,17 @@ uint32_t vm16_read_mem(vm16_t *C, uint16_t addr, uint16_t num, uint16_t *p_buffe
 uint32_t vm16_write_mem(vm16_t *C, uint16_t addr, uint16_t num, uint16_t *p_buffer);
 
 /*
+** Read value from VM memory
+*/
+uint16_t vm16_peek(vm16_t *C, uint16_t addr);
+
+/*
+** Write value to VM memory
+*/
+bool vm16_poke(vm16_t *C, uint16_t addr, uint16_t val);
+
+
+/*
 ** Run the VM with the given number of machine cycles.
 ** The number of executed cycles is stored in 'ran'
 ** The reason for the abort is returned.

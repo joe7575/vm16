@@ -19,7 +19,7 @@
 | and    | DST    | SRC    | 3000 + Opnd1 + Opnd2 |
 | or     | DST    | SRC    | 3400 + Opnd1 + Opnd2 |
 | xor    | DST    | SRC    | 3800 + Opnd1 + Opnd2 |
-| not    | DST    | SRC    | 3C00 + Opnd1 + Opnd2 |
+| not    | DST    | --     | 3C00 + Opnd1         |
 | bnze   | DST    | ADR    | 4000 + Opnd1 + Opnd2 |
 | bze    | DST    | ADR    | 4400 + Opnd1 + Opnd2 |
 | bpos   | DST    | ADR    | 4800 + Opnd1 + Opnd2 |
@@ -29,11 +29,13 @@
 | push   | SRC    | --     | 5800 + Opnd1         |
 | pop    | DST    | --     | 5C00 + Opnd1         |
 | swap   | DST    | --     | 6000 + Opnd1         |
-| dbnz   | DST    | ADR    | 6400 + Opnd1 + Opnd2 |
-| shl    | DST    | SRC    | 6800 + Opnd1 + Opnd2 |
-| shr    | DST    | SRC    | 6C00 + Opnd1 + Opnd2 |
-| dly    | --     | --     | 7000                 |
-| sys    | CNST   | --     | 7400 + Opnd1         |
+| xchg   | DST    | DST    | 6400 + Opnd1 + Opnd2 |
+| dbnz   | DST    | ADR    | 6800 + Opnd1 + Opnd2 |
+| mod    | DST    | SRC    | 6C00 + Opnd1 + Opnd2 |
+| shl    | DST    | SRC    | 7000 + Opnd1 + Opnd2 |
+| shr    | DST    | SRC    | 7400 + Opnd1 + Opnd2 |
+| dly    | --     | --     | 7800                 |
+| sys    | CNST   | --     | 7C00 + Opnd1         |
 
 
 ### Addressing Modes
@@ -62,9 +64,9 @@
 |------|------|------|------|------|------|------|------|
 | 4000 | 4400 | 4800 | 4C00 | 5000 | 5400 | 5800 | 5C00 |
 
-| swap | dbnz | shl  | shr  | dly  | sys  |
-|------|------|------|------|------|------|
-| 6000 | 6400 | 6800 | 6C00 | 7000 | 7400 |
+| swap | xchg | dbnz | mod  | shl  | shr  | dly  | sys  |
+|------|------|------|------|------|------|------|------|
+| 6000 | 6400 | 6800 | 6C00 | 7000 | 7400 | 7800 | 7C00 |
 
 #### Operand 1 (Opnd1)
 

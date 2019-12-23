@@ -83,6 +83,10 @@ class Assembler(object):
             self.is_data = False
             self.is_text = True
             return True
+        elif words[0] == ".org" and len(words) > 1:
+            self.addr = self.value(words[1])
+            self.start_addr = self.addr
+            return True
         return False
     
     def num_operands(self, opcode):
@@ -141,7 +145,7 @@ class Assembler(object):
             elif s[0] in ["+", "-"]:
                 if self.dSymbols.has_key(s[1:]):
                     self.codes[0] = (self.codes[0] << 5) + Operands.index("REL") 
-                    offset = (0x10000 + self.dSymbols[s[1:]] - self.addr) & 0xFFFF
+                    offset = (0x10000 + self.dSymbols[s[1:]] - self.addr - 2) & 0xFFFF
                     self.codes.append(offset)
                     return
             else:
@@ -182,6 +186,9 @@ class Assembler(object):
         
         # address label
         if words[0][-1] == ":":
+            if not self.ispass2 and self.dSymbols.has_key(words[0][:-1]):
+                print("Error in line %u: Label '%s' used twice." % (self.no + 1, words[0][:-1]))
+                sys.exit(0)
             self.dSymbols[words[0][:-1]] = self.addr
             words = words[1:]
             if len(words) == 0:
@@ -227,12 +234,21 @@ class Assembler(object):
         lOut = []
         for idx, c in enumerate(lData):
             lOut.append("%04X" % c)
+            #if idx > 0 and idx % 8 == 0:
+            #    lOut[-1] = "\n" + lOut[-1]
+        return " ".join(lOut)
+                  
+    def hexcodes2(self, lData):
+        lOut = []
+        for idx, c in enumerate(lData):
+            lOut.append("0x%04X" % c)
             if idx > 0 and idx % 8 == 0:
                 lOut[-1] = "\n" + lOut[-1]
-        return " ".join(lOut)
+        return ", ".join(lOut)
                   
     def pass1(self):
         self.addr = 0
+        self.start_addr = 0
         self.ispass2 = False
         for self.no, line in enumerate(self.lines):
             self.decode(line)
@@ -257,8 +273,9 @@ class Assembler(object):
                 lOut.append("%-32s ; %s" % (s3, s4))
             else:
                 lOut.append("")
-        hex = self.hexcodes(lOctals)
-        return "\n".join(lOut), hex, len(lOctals)
+        hex1 = self.hexcodes(lOctals)
+        hex2 = self.hexcodes2(lOctals)
+        return "\n".join(lOut), hex1, hex2, len(lOctals)
             
 
 def assembler(fname):
@@ -266,7 +283,7 @@ def assembler(fname):
     print(" - read %s..." % fname)
     a = Assembler(fname)
     a.pass1()
-    lst, oct, size = a.pass2()
+    lst, hex1, hex2, size = a.pass2()
 
     dname = os.path.splitext(fname)[0] + ".lst"
     print(" - write %s..." % dname)
@@ -274,13 +291,18 @@ def assembler(fname):
 
     dname = os.path.splitext(fname)[0] + ".hex"
     print(" - write %s..." % dname)
-    file(dname, "wt").write(oct)
+    file(dname, "wt").write(hex1)
+
+    dname = os.path.splitext(fname)[0] + ".txt"
+    print(" - write %s..." % dname)
+    file(dname, "wt").write(hex2)
 
     print("\nSymbol table:")
     for key, line in a.dSymbols.items():
-        print(" - %s = %u" % (key.upper(), line))
+        print(" - %s = %04X" % (key.upper(), line))
 
-    print("Code size: %u words\n" % size)
+    print("Code start address: $%04X" % a.start_addr)
+    print("Code size: $%04X/%u words\n" % (size, size))
 
 if len(sys.argv) != 2:
     print("Syntax: asm13.py <asm-file>")

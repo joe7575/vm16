@@ -93,12 +93,14 @@ along with VM16.  If not, see <https://www.gnu.org/licenses/>.
 #define  POP    (0x17)
 
 #define  SWAP   (0x18)
-#define  DBNZ   (0x19)
-#define  SHL    (0x1A)
-#define  SHR    (0x1B)
+#define  XCHG   (0x19)
+#define  DBNZ   (0x1A)
+#define  MOD    (0x1B)
 
-#define  DLY    (0x1C)
-#define  SYS    (0x1D)
+#define  SHL    (0x1C)
+#define  SHR    (0x1D)
+#define  DLY    (0x1E)
+#define  SYS    (0x1F)
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
@@ -193,9 +195,8 @@ static uint16_t getoprnd(vm16_t *C, uint8_t addr_mod) {
     }
     case REL: {
         uint16_t offs = *ADDR_SRC(C, C->pcnt);
-        offs = C->pcnt + offs - 1;
         C->pcnt++;
-        return offs;
+        return C->pcnt + offs;
     }
     case SREL: {
         uint16_t offs = *ADDR_SRC(C, C->pcnt);
@@ -328,6 +329,25 @@ uint32_t vm16_write_mem(vm16_t *C, uint16_t addr, uint16_t num, uint16_t *p_buff
         }
     }
     return 0;
+}
+
+uint16_t vm16_peek(vm16_t *C, uint16_t addr) {
+    if(VM_VALID(C)) {
+        if(C->mem_size >= addr) {
+            return C->memory[addr];
+        }
+    }
+    return 0xFFFF;
+}
+
+bool vm16_poke(vm16_t *C, uint16_t addr, uint16_t val) {
+    if(VM_VALID(C)) {
+        if(C->mem_size >= addr) {
+            C->memory[addr] = val;
+            return true;
+        }
+    }
+    return false;
 }
 
 int vm16_run(vm16_t *C, uint32_t num_cycles, uint32_t *ran) {
@@ -471,6 +491,7 @@ int vm16_run(vm16_t *C, uint32_t num_cycles, uint32_t *ran) {
                 return VM16_IN;
             }
             case OUT: {
+                C->p_in_dest = &C->areg;
                 C->l_addr = getoprnd(C, addr_mode1);
                 C->l_data = getoprnd(C, addr_mode2);
                 *ran = num_cycles - num;
@@ -493,12 +514,28 @@ int vm16_run(vm16_t *C, uint32_t num_cycles, uint32_t *ran) {
               *p_opd1 = ((uint16_t)(*p_opd1) >> 8) | ((uint16_t)(*p_opd1) << 8);
               break;
             }
+            case XCHG: {
+                uint16_t *p_opd1 = getaddr(C, addr_mode1);
+                uint16_t *p_opd2 = getaddr(C, addr_mode2);
+                uint16_t temp = *p_opd1;
+                *p_opd1 = *p_opd2;
+                *p_opd2 = temp;
+                break;
+            }
             case DBNZ: {
                 uint16_t *p_opd1 = getaddr(C, addr_mode1);
                 (*p_opd1)--;
                 uint16_t opd2 = getoprnd(C, addr_mode2);
                 if(*p_opd1 != 0) {
                     C->pcnt = opd2;
+                }
+                break;
+            }
+            case MOD: {
+                uint16_t *p_opd1 = getaddr(C, addr_mode1);
+                uint16_t opd2 = getoprnd(C, addr_mode2);
+                if(opd2 > 0) {
+                    *p_opd1 = *p_opd1 % opd2;
                 }
                 break;
             }
@@ -519,7 +556,8 @@ int vm16_run(vm16_t *C, uint32_t num_cycles, uint32_t *ran) {
                 return VM16_DELAY;
             }
             case SYS: {
-                C->l_data = getoprnd(C, addr_mode1);
+                C->p_in_dest = &C->areg;
+                C->l_addr = getoprnd(C, addr_mode1);
                 *ran = num_cycles - num;
                 return VM16_SYS;
             }

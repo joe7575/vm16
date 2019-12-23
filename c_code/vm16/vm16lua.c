@@ -45,7 +45,7 @@ static vm16_t *check_vm(lua_State *L) {
     luaL_argcheck(L, ud != NULL, 1, "'vm16 object' expected");
     return (vm16_t*)ud;
 }
-static int create(lua_State *L) {
+static int init(lua_State *L) {
     lua_Integer size = luaL_checkinteger(L, 1);
     uint32_t nbytes = vm16_calc_size(size);
     vm16_t *C = (vm16_t *)lua_newuserdata(L, nbytes);
@@ -189,6 +189,23 @@ static int write_mem(lua_State *L) {
     return 0;
 }
 
+static int peek(lua_State *L) {
+    vm16_t *C = check_vm(L);
+    uint16_t addr = (uint16_t)luaL_checkinteger(L, 2);
+    uint16_t val = vm16_peek(C, addr);
+    lua_pushinteger(L, val);
+    return 1;
+}
+
+static int poke(lua_State *L) {
+    vm16_t *C = check_vm(L);
+    uint16_t addr = (uint16_t)luaL_checkinteger(L, 2);
+    uint16_t val = (uint16_t)luaL_checkinteger(L, 3);
+    bool res = vm16_poke(C, addr, val);
+    lua_pushboolean(L, res);
+    return 1;
+}
+
 static int run(lua_State *L) {
     vm16_t *C = check_vm(L);
     lua_Integer cycles = luaL_checkinteger(L, 2);
@@ -316,7 +333,7 @@ static int testbit(lua_State *L) {
 }
 
 static const luaL_Reg vm16lib[] = {
-    {"create",          create},
+    {"init",            init},
     {"loadaddr",        loadaddr},
     {"mark_rom_bank",   mark_rom_bank},
     {"init_mem_banks",  init_mem_banks},
@@ -326,6 +343,8 @@ static const luaL_Reg vm16lib[] = {
     {"set_vm",          set_vm},
     {"read_mem",        read_mem},
     {"write_mem",       write_mem},
+    {"peek",            peek},
+    {"poke",            poke},
     {"get_cpu_reg",     get_cpu_reg},
     {"run",             run},
     {"get_event",       get_event},

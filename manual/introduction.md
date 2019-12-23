@@ -66,7 +66,7 @@ Table of instructions with addressing modes:
 | add    | DST    | SRC     | Add contents/value of SRC to DST. The result is stored in DST |
 | sub    | DST    | SRC     | Subtract contents/value of SRC from DST. The result is stored in DST |
 | mul    | DST    | SRC     | Multiply contents/value of SRC with DST. The result is stored in DST |
-| div    | DST    | SRC     | Divide contents/value of DST by SRC. The result is stored in DST |
+| div    | DST    | SRC     | Divide contents/value of DST by SRC (`DST = DST / SRC`). The result is stored in DST |
 | and    | DST    | SRC     | AND operation with SRC and DST. The result is stored in DST  |
 | or     | DST    | SRC     | OR operation with SRC and DST. The result is stored in DST   |
 | xor    | DST    | SRC     | XOR operation with SRC and DST. The result is stored in DST  |
@@ -80,7 +80,9 @@ Table of instructions with addressing modes:
 | push   | SCR    | -       | Push a value onto the stack with a pre-decrement of the SP   |
 | pop    | DST    | -       | Pop a value from the stack with a post-increment of the SP   |
 | swap   | DST    | -       | Exchange high- and low-byte of DST                           |
+| xchg   | DST    | DST     | Exchange contents/values one DST with the other DST          |
 | dbnz   | REG    | ABS,REL | Decrement and branch to the operand2 address if REG has not become zero |
+| mod    | DST    | SRC     | Modulo operation of DST with SRC (`DST = DST mod SRC`). The result is stored in DST |
 | shl    | DST    | SRC     | Shift the bits of DST to the left, by the number of bits specified in SRC |
 | shr    | DST    | SRC     | Shift the bits of DST to the right, by the number of bits specified in SRC |
 | dly    | -      | -       | Perform a delay of one world cycle to slow down program execution |
