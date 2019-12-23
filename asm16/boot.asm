@@ -4,7 +4,7 @@
 
         .code
 
-START:  move    x, #0           ; code start address
+START:  move    x, 0            ; code start address from addr 0000
 
 LOOP:   in      A, #0           ; read status from input #0
         bze     A, +LOOP        ; No data => try again

@@ -3,7 +3,7 @@
 #include <time.h>
 #include "../vm16/vm16.h"
 
-#define MEM_SIZE       (1)
+#define MEM_SIZE       (2)
 #define CYCLES         (1000000)
 
 uint16_t code[] = {
@@ -24,13 +24,14 @@ int main() {
     uint32_t size = vm16_calc_size(MEM_SIZE);
     vm16_t *C = (vm16_t *)malloc(size);
     vm16_init(C, size);
+    vm16_mark_rom_bank(C, 1) ;
     vm16_write_mem(C, 0, sizeof(code) / 2, code);
+    vm16_init_mem_banks(C);
     while(vm16_run(C, 1, &ran) != VM16_HALT) {
         printf("A:%04X B:%04X C:%04X D:%04X X:%04X Y:%04X PC:%04X SP:%04X\n", C->areg, C->breg, C->creg, C->dreg, C->xreg, C->yreg, C->pcnt, C->sptr);
         printf("%04X %04X %04X %04X %04X %04X %04X %04X\n", C->memory[0], C->memory[1], C->memory[2], C->memory[3], C->memory[0xFFE], C->memory[0xFFF], C->memory[0x1000], C->memory[0x1001]);
     }
 
-    vm16_clear(C);
     t = clock();
     vm16_run(C, 500000000, &ran);
     t = clock() - t;

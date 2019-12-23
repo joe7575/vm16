@@ -58,10 +58,10 @@ static int create(lua_State *L) {
     return 0;
 }
 
-static int clear(lua_State *L) {
+static int init_mem_banks(lua_State *L) {
     vm16_t *C = check_vm(L);
     if(C != NULL) {
-        vm16_clear(C);
+        vm16_init_mem_banks(C);
         lua_pushboolean(L, 1);
         return 1;
     }
@@ -253,8 +253,9 @@ static int get_event(lua_State *L) {
 
             case VM16_SYS:
                 setstrfield(L, "type", "system");
-                setfield(L, "addr", C->l_data);
-                setfield(L, "data", C->areg);
+                setfield(L, "addr", C->l_addr);
+                setfield(L, "A", C->areg);
+                setfield(L, "B", C->breg);
                 break;
 
             case VM16_HALT:
@@ -281,6 +282,10 @@ static int event_response(lua_State *L) {
     if(C != NULL) {
         switch(type) {
             case VM16_IN:
+                *C->p_in_dest = (uint16_t)data;
+                break;
+
+            case VM16_OUT:
                 *C->p_in_dest = (uint16_t)data;
                 break;
 
@@ -312,9 +317,9 @@ static int testbit(lua_State *L) {
 
 static const luaL_Reg vm16lib[] = {
     {"create",          create},
-    {"clear",           clear},
     {"loadaddr",        loadaddr},
     {"mark_rom_bank",   mark_rom_bank},
+    {"init_mem_banks",  init_mem_banks},
     {"deposit",         deposit},
     {"examine",         examine},
     {"get_vm",          get_vm},

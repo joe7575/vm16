@@ -63,6 +63,7 @@ class Assembler(object):
     def string(self, s):
         lOut =[]
         s = s.replace("\\0", "\0")
+        s = s.replace("\\n", "\n")
         if s[0] == '"' and s[-1] == '"':
             for c in s[1:-1]:
                 lOut.append(ord(c))
@@ -225,10 +226,10 @@ class Assembler(object):
     def hexcodes(self, lData):
         lOut = []
         for idx, c in enumerate(lData):
-            lOut.append("0x%04X" % c)
+            lOut.append("%04X" % c)
             if idx > 0 and idx % 8 == 0:
                 lOut[-1] = "\n" + lOut[-1]
-        return ", ".join(lOut)
+        return " ".join(lOut)
                   
     def pass1(self):
         self.addr = 0

@@ -69,8 +69,9 @@ typedef struct {
     uint16_t l_data;    // latched data (I/O, examine)
     uint32_t mem_size;
     uint16_t *p_in_dest;    // for IN command
-    uint16_t *p_dst[16];    // RAM memory mapping
-    uint16_t *p_src[16];    // ROM memory mapping
+    bool     rom_bank[MAX_MEM_BANKS];  // mark bank as ROM
+    uint16_t *p_dst[MAX_MEM_BANKS];    // RAM memory mapping
+    uint16_t *p_src[MAX_MEM_BANKS];    // ROM memory mapping
     uint16_t memory[1];     // program/data memory (16 bit)
 }vm16_t;
 
@@ -101,9 +102,9 @@ bool vm16_init(vm16_t *C, uint32_t mem_size);
 bool vm16_mark_rom_bank(vm16_t *C, uint8_t bank);
 
 /*
-** Clear registers and memory (set to zero)
+** Initialize the memory bank pointers.
 */
-void vm16_clear(vm16_t *C);
+void vm16_init_mem_banks(vm16_t *C);
 
 /*
 ** Set PC to given memory address

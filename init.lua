@@ -68,6 +68,11 @@ function vm16.mark_rom_bank(vm, block_num)
 	return vm16lib.mark_rom_bank(vm, block_num)
 end	
 
+-- Initialize the memory addressing (to be called before the VM is used)
+-- returns true/false
+function vm16.init_mem_banks(vm)
+	return vm16lib.init_mem_banks(vm)
+end
 
 -- Load PC of the VM with the given 16-bit address
 -- returns true/false
@@ -162,6 +167,7 @@ function vm16.vm_restore(pos)
 		local vm = vm16lib.create(size)
 		if vm then
 			vm16lib.set_vm(vm, s)
+			vm16lib.init_mem_banks(vm)
 			return vm
 		end
 	end
