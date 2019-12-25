@@ -29,14 +29,15 @@ VERSION = "1.0"
 # OP-codes
 #
 Opcodes = [
-    "nop:-:-", "halt:-:-", "call:ADR:-", "ret:-:-",
-    "move:DST:SRC", "jump:ADR:-", "inc:DST:-", "dec:DST:-",
+    "dly:NUM:-", "sys:NUM:-", "rst:NUM:-", "res:-:-",
+    "jump:ADR:-", "call:ADR:-", "ret:-:-", "halt:-:-",
+    "move:DST:SRC", "xchg:DST:DST", "inc:DST:-", "dec:DST:-",
     "add:DST:SRC", "sub:DST:SRC", "mul:DST:SRC", "div:DST:SRC",
     "and:DST:SRC", "or:DST:SRC", "xor:DST:SRC", "not:DST:-",
     "bnze:DST:ADR", "bze:DST:ADR", "bpos:DST:ADR", "bneg:DST:ADR",
     "in:DST:CNST", "out:CNST:SRC", "push:SRC:-", "pop:DST:-", 
-    "swap:DST:-", "xchg:DST:DST", "dbnz:DST:ADR", "mod:DST:SRC",
-    "shl:DST:SRC", "shr:DST:SRC", "dly:-:-", "sys:CNST:-"
+    "swap:DST:-", "dbnz:DST:ADR", "mod:DST:SRC",
+    "shl:DST:SRC", "shr:DST:SRC"
 ]
 
 JumpInst = ["call", "jump", "bnze", "bze", "bpos", "bneg", "dbnz"]
@@ -56,8 +57,8 @@ RegOperands = Operands[0:-4]
 #
 REG = ["A", "B", "C", "D", "X", "Y", "PC", "SP"]
 MEM = ["[X]", "[Y]", "[X]+", "[Y]+", "IND", "[SP+n]"]
-ADR = ["IMM", "REL"]
+ADR = ["IMM", "REL", "#0", "#1"]
 CNST = ["#0", "#1", "IMM"]
 DST = REG + MEM
 SRC = DST + CNST 
-
+NUM = ["NUM"]

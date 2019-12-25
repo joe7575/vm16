@@ -3,6 +3,8 @@
 
         .code
 
+$include "itoa.asm"
+
 START:  move    X, #TEXT
 
 LOOP:   out     #0, [X]    

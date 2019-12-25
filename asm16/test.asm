@@ -1,31 +1,50 @@
-; VM Test Sequence v1.0
-;
-
         .code
+
+		sys 0
+		halt
+		rst 2
+		dly $10
+		dly $1000
+		move A, B
+		move B, #0
+		move C, #1
+		move D, 2
+		move X, #2
+		move Y, $2
+		move SP, #$2
+		move PC, 20
+		move [X], #20
+		move [Y], $20
+		move [X]+, #$20
+		move [Y]+, #$20
+		move [SP+0], 0000
+		move [SP+1], 1234
+		move [SP+2], 1234
+		move [SP+$10], 1234
 
 START:  move    A, #$1111
 		move    B, #$2222
 		move    C, #$3333
         move    D, #$4444
-		dly
+		dly     10
 
 		add		A,B			; 3333
 		sub 	D,C			; 1111
 		mul		D,#3		; 3333
-		div     a,#3        ; 1111
-		dly
+		div     A,#3        ; 1111
+		rst     $10
 
 		call	#subr1
-		nop
+		shl     A, #1
 		push    #lbl1
 		bnze	A,#subr2
-lbl1:	dly
+lbl1:	dly     0
 
 		push    #lbl2
         bpos    A,#subr3
 lbl2:   push    #lbl3
         bneg    A,#subr4
-lbl3:	dly
+lbl3:	sys     123
         
 		jump exit		
 
@@ -49,4 +68,7 @@ exit:   move $1000, A
         move [X]+, C
         move [X]+, D
         halt
-
+		jump 0
+		jump #0
+		jump $0
+		jump #$0

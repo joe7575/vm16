@@ -62,45 +62,47 @@ along with VM16.  If not, see <https://www.gnu.org/licenses/>.
 
 
 /* OP codes */
-#define  NOP    (0x00)
-#define  HALT   (0x01)
-#define  CALL   (0x02)
-#define  RETN   (0x03)
+#define  DLY    (0x00)
+#define  SYS    (0x01)
+#define  RST    (0x02)
+#define  RES    (0x03)
 
-#define  MOVE   (0x04)
-#define  JUMP   (0x05)
-#define  INC    (0x06)
-#define  DEC    (0x07)
+#define  JUMP   (0x04)
+#define  CALL   (0x05)
+#define  RETN   (0x06)
+#define  HALT   (0x07)
 
-#define  ADD    (0x08)
-#define  SUB    (0x09)
-#define  MUL    (0x0A)
-#define  DIV    (0x0B)
 
-#define  AND    (0x0C)
-#define  OR     (0x0D)
-#define  XOR    (0x0E)
-#define  NOT    (0x0F)
+#define  MOVE   (0x08)
+#define  XCHG   (0x09)
+#define  INC    (0x0A)
+#define  DEC    (0x0B)
 
-#define  BNZE   (0x10)
-#define  BZE    (0x11)
-#define  BPOS   (0x12)
-#define  BNEG   (0x13)
+#define  ADD    (0x0C)
+#define  SUB    (0x0D)
+#define  MUL    (0x0E)
+#define  DIV    (0x0F)
 
-#define  IN     (0x14)
-#define  OUT    (0x15)
-#define  PUSH   (0x16)
-#define  POP    (0x17)
+#define  AND    (0x10)
+#define  OR     (0x11)
+#define  XOR    (0x12)
+#define  NOT    (0x13)
 
-#define  SWAP   (0x18)
-#define  XCHG   (0x19)
-#define  DBNZ   (0x1A)
-#define  MOD    (0x1B)
+#define  BNZE   (0x14)
+#define  BZE    (0x15)
+#define  BPOS   (0x16)
+#define  BNEG   (0x17)
 
-#define  SHL    (0x1C)
-#define  SHR    (0x1D)
-#define  DLY    (0x1E)
-#define  SYS    (0x1F)
+#define  IN     (0x18)
+#define  OUT    (0x19)
+#define  PUSH   (0x1A)
+#define  POP    (0x1B)
+
+#define  SWAP   (0x1C)
+#define  DBNZ   (0x1D)
+#define  MOD    (0x1E)
+#define  SHL    (0x1F)
+#define  SHR    (0x20)
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
@@ -366,10 +368,30 @@ int vm16_run(vm16_t *C, uint32_t num_cycles, uint32_t *ran) {
         uint8_t addr_mode2 = (uint8_t)((code >>  0) & 0x001f);
 
         switch(opcode) {
-            case NOP: break;
-            case HALT: {
+           case DLY: {
+                C->l_addr = code & 0x03FF;
                 *ran = num_cycles - num;
-                return VM16_HALT;
+                return VM16_DELAY;
+            }
+            case SYS: {
+                C->p_in_dest = &C->areg;
+                C->l_addr = code & 0x03FF;
+                *ran = num_cycles - num;
+                return VM16_SYS;
+            }
+            case RST: {
+                uint16_t addr = (code & 0x03FF) * 4;
+                C->sptr = C->sptr - 1;
+                *ADDR_DST(C, C->sptr) = C->pcnt;
+                C->pcnt = addr;
+                break;
+            }
+            case RES: {
+                break;
+            }
+            case JUMP: {
+                C->pcnt = getoprnd(C, addr_mode1);
+                break;
             }
             case CALL: {
                 // addr = opd(), push PC, PC = addr
@@ -386,13 +408,24 @@ int vm16_run(vm16_t *C, uint32_t num_cycles, uint32_t *ran) {
                 C->pcnt = addr;
                 break;
             }
+            case HALT: {
+                *ran = num_cycles - num;
+                return VM16_HALT;
+            }
             case MOVE: {
                 uint16_t *p_opd1 = getaddr(C, addr_mode1);
                 uint16_t opd2 = getoprnd(C, addr_mode2);
                 *p_opd1 = opd2;
                 break;
             }
-            case JUMP: C->pcnt = getoprnd(C, addr_mode1); break;
+            case XCHG: {
+                uint16_t *p_opd1 = getaddr(C, addr_mode1);
+                uint16_t *p_opd2 = getaddr(C, addr_mode2);
+                uint16_t temp = *p_opd1;
+                *p_opd1 = *p_opd2;
+                *p_opd2 = temp;
+                break;
+            }
             case INC: {
                 uint16_t *p_opd1 = getaddr(C, addr_mode1);
                 (*p_opd1)++;
@@ -514,14 +547,6 @@ int vm16_run(vm16_t *C, uint32_t num_cycles, uint32_t *ran) {
               *p_opd1 = ((uint16_t)(*p_opd1) >> 8) | ((uint16_t)(*p_opd1) << 8);
               break;
             }
-            case XCHG: {
-                uint16_t *p_opd1 = getaddr(C, addr_mode1);
-                uint16_t *p_opd2 = getaddr(C, addr_mode2);
-                uint16_t temp = *p_opd1;
-                *p_opd1 = *p_opd2;
-                *p_opd2 = temp;
-                break;
-            }
             case DBNZ: {
                 uint16_t *p_opd1 = getaddr(C, addr_mode1);
                 (*p_opd1)--;
@@ -551,17 +576,7 @@ int vm16_run(vm16_t *C, uint32_t num_cycles, uint32_t *ran) {
                 *p_opd1 = *p_opd1 >> opd2;
                 break;
             }
-            case DLY: {
-                *ran = num_cycles - num;
-                return VM16_DELAY;
-            }
-            case SYS: {
-                C->p_in_dest = &C->areg;
-                C->l_addr = getoprnd(C, addr_mode1);
-                *ran = num_cycles - num;
-                return VM16_SYS;
-            }
-            default: {
+             default: {
                 break;
             }
         }

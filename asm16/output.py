@@ -30,20 +30,22 @@ def table1():
     for idx, item in enumerate(Opcodes):
         opc, addr_mode1, addr_mode2 = item.split(":")
         if addr_mode1 == "-" and addr_mode2 == "-":
-            lOut.append([" %-4s   " % opc, " --     ", " --     ", " %04X                 " % (idx << 10)])
-        if addr_mode1 != "-" and addr_mode2 == "-":
-            lOut.append([" %-4s   " % opc, " %-6s " % addr_mode1, " --     ", " %04X + Opnd1         " % (idx << 10)])
-        if addr_mode1 == "-" and addr_mode2 != "-":
-            lOut.append([" %-4s   " % opc, " --     ", " %-6s " % addr_mode2, " %04X + Opnd2         " % (idx << 10)])
-        if addr_mode1 != "-" and addr_mode2 != "-":
-            lOut.append([" %-4s   " % opc, " %-6s " % addr_mode1, " %-6s " % addr_mode2, " %04X + Opnd1 + Opnd2 " % (idx << 10)])
+            lOut.append([" %-4s   " % opc, " --     ", " --     ", " %04X                  " % (idx << 10)])
+        elif addr_mode1 == "NUM" and addr_mode2 == "-":
+            lOut.append([" %-4s   " % opc, " %-6s " % addr_mode1, " --     ", " %04X + number (10bit) " % (idx << 10)])
+        elif addr_mode1 != "-" and addr_mode2 == "-":
+            lOut.append([" %-4s   " % opc, " %-6s " % addr_mode1, " --     ", " %04X + Opnd1          " % (idx << 10)])
+        elif addr_mode1 == "-" and addr_mode2 != "-":
+            lOut.append([" %-4s   " % opc, " --     ", " %-6s " % addr_mode2, " %04X + Opnd2          " % (idx << 10)])
+        elif addr_mode1 != "-" and addr_mode2 != "-":
+            lOut.append([" %-4s   " % opc, " %-6s " % addr_mode1, " %-6s " % addr_mode2, " %04X + Opnd1 + Opnd2  " % (idx << 10)])
 
     print("# VM16 V1.0")
     print("")
     print("### Instruction Set")
     print("")
-    print("| Instr. | Opnd 1 | Opnd 2 | Opcode               |")
-    print("|--------|--------|--------|----------------------|")
+    print("| Instr. | Opnd 1 | Opnd 2 | Opcode                |")
+    print("|--------|--------|--------|-----------------------|")
     for item in lOut:
         print("|" + "|".join(item) + "|")
     print("")

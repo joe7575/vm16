@@ -25,10 +25,37 @@ import os
 import pprint
 from instructions import *
 
-reCONST = re.compile(r"#(\$?[0-9a-fx]+)$")
-reADDR = re.compile(r"(\$?[0-9a-fx]+)$")
-reREL  = re.compile(r"([\+\-])(\$?[0-9a-fx]+)$")
-reSTACK = re.compile(r"\[sp\+(\$?[0-9a-fx]+)\]$")
+reCONST = re.compile(r"#(\$?[0-9A-Fa-fx]+)$")
+reADDR = re.compile(r"(\$?[0-9A-Fa-fx]+)$")
+reREL  = re.compile(r"([\+\-])(\$?[0-9A-Fa-fx]+)$")
+reSTACK = re.compile(r"\[SP\+(\$?[0-9A-Fa-fx]+)\]$")
+reINCL =  re.compile(r'^\$include +"(.+?)"')
+reFILEINFO = re.compile(r'^#### include "(.+?)" ([0-9]+)')
+
+def import_file(fname):
+    """
+    Is called recursive to handle includes
+    """
+    def handle_includes(idx, fname, line):
+        m = reINCL.match(line)
+        if m:
+            path = os.path.dirname(fname)
+            inc_file = os.path.join(path, m.group(1))
+            print(" - import %s..." % inc_file)
+            lines = ['#### include "%s" %u START ################################' % (inc_file, 0)]
+            lines.extend(import_file(inc_file))
+            lines.append('#### include "%s" %u END ################################' % (fname, idx+1))
+            return lines
+        return [line]
+        
+    if not os.path.exists(fname):
+        print("Error: File '%s' does not exist" % fname)
+        sys.exit(0)
+    lines = []
+    for idx, line in enumerate(file(fname).readlines()):
+        lines.extend(handle_includes(idx, fname, line))
+    return lines
+  
 
 class Assembler(object):
     def __init__(self, fname):
@@ -37,11 +64,8 @@ class Assembler(object):
         self.is_data = False
         self.is_text = False
         self.addr = 0
-        self.lines = [] 
         self.dSymbols = {}
-        for line in file(fname).readlines():
-            self.lines.append(line)
-        
+        self.lines = import_file(fname)
         self.dOpcodes = {}
         for idx,s in enumerate(Opcodes):
             opc = s.split(":")[0] 
@@ -49,17 +73,24 @@ class Assembler(object):
             
         self.dOperands = {}
         for idx,s in enumerate(RegOperands):
-            self.dOperands[s.lower()] = idx
-            
-    def value(self, s):
-        if s[0] == "$":
-            return int(s[1:], base=16)
-        elif s[0:2] == "0x":
-            return int(s[2:], base=16)
-        elif s[0] == "0":
-            return int(s, base=8)
-        return int(s, base=10)       
+            self.dOperands[s] = idx
 
+    def error(self, err):
+        print("Error in file '%s', line %u:\n%s" % (self.fname, self.lineno, err))
+        sys.exit(-1)
+        
+    def value(self, s):
+        try:
+            if s[0] == "$":
+                return int(s[1:], base=16)
+            elif s[0:2] == "0x":
+                return int(s[2:], base=16)
+            elif s[0] == "0":
+                return int(s, base=8)
+            return int(s, base=10)
+        except:
+            self.error("Invalid operand '%s'" % s)
+            
     def string(self, s):
         lOut =[]
         s = s.replace("\\0", "\0")
@@ -84,6 +115,9 @@ class Assembler(object):
             self.is_text = True
             return True
         elif words[0] == ".org" and len(words) > 1:
+            if self.codes != []:
+                self.error("Keyword '.org' is on wrong position")
+                
             self.addr = self.value(words[1])
             self.start_addr = self.addr
             return True
@@ -97,46 +131,47 @@ class Assembler(object):
         return num
 
     def check_opcode(self, opcode):
-        if(opcode & 0x0210) == 0x0210:
-            print("Error in line %u: Invalid combination of operands" % (self.no + 1))
-            sys.exit(0)
+        #if(opcode & 0x0210) == 0x0210:
+        #    self.error("Invalid combination of operands")
+        pass
 
     def opcode(self, s):
         try:
             self.codes = [self.dOpcodes[s]]
             return self.num_operands(self.dOpcodes[s])
         except:
-            print("Error in line %u: Invalid instruction" % (self.no + 1))
-            sys.exit(0)
+            self.error("Invalid instruction")
     
     def operand(self, s):
         try:
             opd = self.dOperands[s]
             self.codes[0] = (self.codes[0] << 5) + opd
+            return opd
         except:
             m = reCONST.match(s)
             if m:
                 self.codes[0] = (self.codes[0] << 5) + Operands.index("IMM") 
                 self.codes.append(self.value(m.group(1)))
-                return
+                return Operands.index("IMM")
             m = reADDR.match(s)
             if m: 
                 self.codes[0] = (self.codes[0] << 5) + Operands.index("IND") 
                 self.codes.append(self.value(m.group(1)))
-                return
+                return Operands.index("IND")
             m = reREL.match(s)
             if m: 
                 self.codes[0] = (self.codes[0] << 5) + Operands.index("REL") 
-                if m.groups(1) == "-": 
-                    self.codes.append(-self.value(m.group(2)))
+                if m.group(1) == "-": 
+                    offset = (0x10000 - self.value(m.group(2))) & 0xFFFF
+                    self.codes.append(offset)
                 else:
                     self.codes.append(self.value(m.group(2)))
-                return
+                return Operands.index("REL")
             m = reSTACK.match(s)
             if m: 
-                self.codes[0] = (self.codes[0] << 5) + Operands.index("[sp+n]") 
+                self.codes[0] = (self.codes[0] << 5) + Operands.index("[SP+n]") 
                 self.codes.append(self.value(m.group(1)))
-                return
+                return Operands.index("[SP+n]")
             if s[0] == "#":
                 if self.dSymbols.has_key(s[1:]):
                     self.codes[0] = (self.codes[0] << 5) + Operands.index("IMM")
@@ -147,18 +182,17 @@ class Assembler(object):
                     self.codes[0] = (self.codes[0] << 5) + Operands.index("REL") 
                     offset = (0x10000 + self.dSymbols[s[1:]] - self.addr - 2) & 0xFFFF
                     self.codes.append(offset)
-                    return
+                    return Operands.index("REL")
             else:
                 if self.dSymbols.has_key(s):
                     self.codes[0] = (self.codes[0] << 5) + Operands.index("IND")  
                     self.codes.append(self.dSymbols[s])
-                    return
-            if not self.ispass2 and re.match(r"[#\+\-a-z0-9_]+", s):
+                    return Operands.index("IND")
+            if not self.ispass2 and re.match(r"[#\+\-A-Fa-z0-9_]+", s):
                 self.codes.append(0)
-                return
+                return Operands.index("IMM")
             if self.ispass2:    
-                print("Error in line %u" % (self.no + 1))
-                sys.exit(0)
+                self.error("Invalid/unknown operand '%s'" % s)
 
     def operand_correction(self, opc, opnd):
         # add the "immediate" sign to all jump instructions
@@ -167,13 +201,24 @@ class Assembler(object):
                 opnd = "#" + opnd
         return opnd
         
+    def check_operand_type(self, instr, opnd1, opnd2):
+        opcode = self.dOpcodes[instr]
+        words = Opcodes[opcode].split(":")
+        if words[1] != "-":
+            validOpnds = globals()[words[1]]
+            if opnd1 != None and Operands[opnd1] not in validOpnds:
+                self.error("Invalid operand1 type")
+        if words[2] != "-":
+            validOpnds = globals()[words[2]]
+            if opnd2 != None and Operands[opnd2] not in validOpnds:
+                self.error("Invalid operand2 type")
+        
     def check_num_operands(self, should, has):
         if should != has:
-            print("Error in line %u: Instruction should have %u operand(s), %u given." % (self.no + 1, should, has))
-            sys.exit(0)
+            self.error("Instruction should have %u operand(s), %u given" % (should, has))
         
     def decode(self, line):
-        line = line.rstrip().lower()
+        line = line.rstrip()
         line = line.split(";")[0]
         line = line.replace(",", " ")
         if line.strip() == "": return False
@@ -183,13 +228,20 @@ class Assembler(object):
         # new memory segment
         if self.segment(line):
             return False
+
+        # file re-synchronization
+        m = reFILEINFO.match(line)
+        if m:
+            self.fname = m.group(1)
+            self.lineno = int(m.group(2))
+            return False
         
         # address label
         if words[0][-1] == ":":
-            if not self.ispass2 and self.dSymbols.has_key(words[0][:-1]):
-                print("Error in line %u: Label '%s' used twice." % (self.no + 1, words[0][:-1]))
-                sys.exit(0)
-            self.dSymbols[words[0][:-1]] = self.addr
+            label = words[0][:-1]
+            if not label.islower() and not self.ispass2 and self.dSymbols.has_key(label):
+                self.error("Global label '%s' used twice" % label)
+            self.dSymbols[label] = self.addr
             words = words[1:]
             if len(words) == 0:
                 return False
@@ -212,18 +264,27 @@ class Assembler(object):
                 self.check_num_operands(num_opnds, 0)
                 self.codes[0] = self.codes[0] << 10
             elif len(words) == 2: # one operand
-                num_opnds = self.opcode(words[0])
-                self.check_num_operands(num_opnds, 1)
-                opnd = self.operand_correction(words[0], words[1])
-                self.operand(opnd)
-                self.codes[0] = self.codes[0] << 5
+                if self.dOpcodes[words[0]] < 4: # special opcode handling
+                    self.opcode(words[0])
+                    num_opnds = 1
+                    num = self.value(words[1]) % 1024
+                    self.codes[0] = (self.codes[0] << 10) | num
+                else:
+                    num_opnds = self.opcode(words[0])
+                    opnd = self.operand_correction(words[0], words[1])
+                    type1 = self.operand(opnd)
+                    self.check_operand_type(words[0], type1, None)
+                    self.codes[0] = self.codes[0] << 5
             elif len(words) == 3:
                 num_opnds = self.opcode(words[0])
                 self.check_num_operands(num_opnds, 2)
                 opnd1 = words[1]
                 opnd2 = self.operand_correction(words[0], words[2])
-                self.operand(opnd1)
-                self.operand(opnd2)
+                type1 = self.operand(opnd1)
+                type2 = self.operand(opnd2)
+                self.check_operand_type(words[0], type1, type2)
+            else:
+                self.error("Invalid syntax '%s'" % line.strip())
             if self.codes != []:
                 self.check_opcode(self.codes[0])
         curr_addr = self.addr
@@ -250,29 +311,33 @@ class Assembler(object):
         self.addr = 0
         self.start_addr = 0
         self.ispass2 = False
-        for self.no, line in enumerate(self.lines):
+        self.lineno = 1
+        for line in self.lines:
             self.decode(line)
+            self.lineno += 1
     
     def pass2(self):
         self.addr = 0
         self.ispass2 = True
+        self.lineno = 1
         lOut = []
         lOctals = []
-        for self.no, line in enumerate(self.lines):
+        for line in self.lines:
             addr = self.decode(line)
             if type(addr) is int:
                 s1 = self.fmt % addr
                 s2 = ", ".join([self.fmt % c for c in self.codes])
                 s3 = "%s: %-14s" % (s1, s2)
-                s4 = "%s" % self.lines[self.no].rstrip()
+                s4 = "%s" % line.rstrip()
                 lOctals.extend(self.codes)
             else:
-                s4 = "%s" % self.lines[self.no].rstrip()[1:]
+                s4 = "%s" % line.rstrip()[1:]
                 s3 = ""
             if s4 != "": 
-                lOut.append("%-32s ; %s" % (s3, s4))
+                lOut.append("%-32s %s" % (s3, s4))
             else:
                 lOut.append("")
+            self.lineno += 1
         hex1 = self.hexcodes(lOctals)
         hex2 = self.hexcodes2(lOctals)
         return "\n".join(lOut), hex1, hex2, len(lOctals)
@@ -298,9 +363,15 @@ def assembler(fname):
     file(dname, "wt").write(hex2)
 
     print("\nSymbol table:")
-    for key, line in a.dSymbols.items():
-        print(" - %s = %04X" % (key.upper(), line))
+    items = []
+    for key, addr in a.dSymbols.items():
+        if not key.islower():
+            items.append((key, addr))
+    items.sort(lambda x,y: cmp(x[1], y[1]))
+    for item in items:
+        print(" - %-16s = %04X" % (item[0], item[1]))
 
+    print("")
     print("Code start address: $%04X" % a.start_addr)
     print("Code size: $%04X/%u words\n" % (size, size))
 
