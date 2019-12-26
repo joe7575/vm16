@@ -13,7 +13,13 @@ uint16_t code[] = {
 0x2142, 0x2143, 0x1C00
 };
 
-int main() {
+void dump(vm16_t *C) {
+    printf("A:%04X B:%04X C:%04X D:%04X X:%04X Y:%04X PC:%04X SP:%04X\n", C->areg, C->breg, C->creg, C->dreg, C->xreg, C->yreg, C->pcnt, C->sptr);
+    printf("%04X %04X %04X %04X %04X %04X %04X %04X\n", C->memory[0], C->memory[1], C->memory[2], C->memory[3], C->memory[0xFFE], C->memory[0xFFF], C->memory[0x1000], C->memory[0x1001]);
+}
+
+// conformance test, check the result against
+void test1(void) {
     clock_t t;
     uint32_t ran;
     int64_t num_cycles;
@@ -21,12 +27,10 @@ int main() {
     uint32_t size = vm16_calc_size(1);
     vm16_t *C = (vm16_t *)malloc(size);
     vm16_init(C, size);
-    //vm16_mark_rom_bank(C, 1) ;
     vm16_write_mem(C, 0, sizeof(code) / 2, code);
     vm16_init_mem_banks(C);
     while(vm16_run(C, 1, &ran) != VM16_HALT) {
-        printf("A:%04X B:%04X C:%04X D:%04X X:%04X Y:%04X PC:%04X SP:%04X\n", C->areg, C->breg, C->creg, C->dreg, C->xreg, C->yreg, C->pcnt, C->sptr);
-        printf("%04X %04X %04X %04X %04X %04X %04X %04X\n", C->memory[0], C->memory[1], C->memory[2], C->memory[3], C->memory[0xFFE], C->memory[0xFFF], C->memory[0x1000], C->memory[0x1001]);
+        dump(C);
     }
 
     val = 0x0C00;
@@ -62,5 +66,28 @@ int main() {
     }
 
     free(C);
+}
+
+void test2(void) {
+    uint32_t ran;
+    uint32_t size = vm16_calc_size(3);
+    vm16_t *C = (vm16_t *)malloc(size);
+    vm16_init(C, size);
+    vm16_mark_rom_bank(C, 1) ;
+    vm16_init_mem_banks(C);
+
+    vm16_write_mem(C, 0x1000, sizeof(code) / 2, code);
+    vm16_loadaddr(C, 0x1000);
+    dump(C);
+    vm16_deposit(C, 0);
+    vm16_loadaddr(C, 0x1000);
+    dump(C);
+
+    free(C);
+}
+
+int main() {
+    test1();
+    //test2();
     return 0;
 }

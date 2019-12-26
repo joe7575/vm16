@@ -233,7 +233,7 @@ bool vm16_init(vm16_t *C, uint32_t vm_size) {
 bool vm16_mark_rom_bank(vm16_t *C, uint8_t bank) {
     uint8_t num_banks = C->mem_size / MEM_BANK_SIZE;
     if(bank < num_banks) {
-        C->p_dst[bank] = C->memory; // use first RAM bank instead
+        C->rom_bank[bank] = true;
         return true;
     }
     return false;
