@@ -14,16 +14,16 @@ START:  move    A, #$1111
         div     A,#3        ; 1111
 
         call    #subr1
-        res
+        dly
         push    #lbl1
         bnze    A,#subr2
-lbl1:   res
+lbl1:   nop
 
         push    #lbl2
         bpos    A,#subr3
 lbl2:   push    #lbl3
         bneg    A,#subr4
-lbl3:   res
+lbl3:   nop
         
         jump exit       
 

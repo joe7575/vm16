@@ -264,7 +264,7 @@ class Assembler(object):
                 self.check_num_operands(num_opnds, 0)
                 self.codes[0] = self.codes[0] << 10
             elif len(words) == 2: # one operand
-                if self.dOpcodes[words[0]] < 4: # special opcode handling
+                if self.dOpcodes.has_key(words[0]) and self.dOpcodes[words[0]] < 4: # special opcode handling
                     self.opcode(words[0])
                     num_opnds = 1
                     num = self.value(words[1]) % 1024

@@ -62,10 +62,10 @@ along with VM16.  If not, see <https://www.gnu.org/licenses/>.
 
 
 /* OP codes */
-#define  DLY    (0x00)
-#define  SYS    (0x01)
-#define  RST    (0x02)
-#define  RES    (0x03)
+#define  NOP    (0x00)
+#define  DLY    (0x01)
+#define  SYS    (0x02)
+#define  INT    (0x03)
 
 #define  JUMP   (0x04)
 #define  CALL   (0x05)
@@ -101,8 +101,17 @@ along with VM16.  If not, see <https://www.gnu.org/licenses/>.
 #define  SWAP   (0x1C)
 #define  DBNZ   (0x1D)
 #define  MOD    (0x1E)
+
 #define  SHL    (0x1F)
 #define  SHR    (0x20)
+#define  ADDC   (0x21)
+#define  MULC   (0x22)
+
+#define  SKNE   (0x23)
+#define  SKEQ   (0x24)
+#define  SKLT   (0x25)
+#define  SKGT   (0x26)
+
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
@@ -368,8 +377,10 @@ int vm16_run(vm16_t *C, uint32_t num_cycles, uint32_t *ran) {
         uint8_t addr_mode2 = (uint8_t)((code >>  0) & 0x001f);
 
         switch(opcode) {
+            case NOP: {
+                break;
+            }
            case DLY: {
-                C->l_addr = code & 0x03FF;
                 *ran = num_cycles - num;
                 return VM16_DELAY;
             }
@@ -379,14 +390,11 @@ int vm16_run(vm16_t *C, uint32_t num_cycles, uint32_t *ran) {
                 *ran = num_cycles - num;
                 return VM16_SYS;
             }
-            case RST: {
+            case INT: {
                 uint16_t addr = (code & 0x03FF) * 4;
                 C->sptr = C->sptr - 1;
                 *ADDR_DST(C, C->sptr) = C->pcnt;
                 C->pcnt = addr;
-                break;
-            }
-            case RES: {
                 break;
             }
             case JUMP: {
@@ -576,7 +584,55 @@ int vm16_run(vm16_t *C, uint32_t num_cycles, uint32_t *ran) {
                 *p_opd1 = *p_opd1 >> opd2;
                 break;
             }
-             default: {
+            case ADDC: {
+                uint16_t *p_opd1 = getaddr(C, addr_mode1);
+                uint16_t opd2 = getoprnd(C, addr_mode2);
+                uint32_t res = *p_opd1 + opd2;
+                 *p_opd1 = (uint16_t)res;
+                 C->breg = (uint16_t)(res >> 16);
+                break;
+            }
+            case MULC: {
+                uint16_t *p_opd1 = getaddr(C, addr_mode1);
+                uint16_t opd2 = getoprnd(C, addr_mode2);
+                uint32_t res = *p_opd1 * opd2;
+                 *p_opd1 = (uint16_t)res;
+                 C->breg = (uint16_t)(res >> 16);
+                break;
+            }
+            case SKNE: {
+                uint16_t opd1 = getoprnd(C, addr_mode1);
+                uint16_t opd2 = getoprnd(C, addr_mode2);
+                if(opd1 != opd2) {
+                    C->pcnt += 2;
+                }
+                break;
+            }
+            case SKEQ: {
+                uint16_t opd1 = getoprnd(C, addr_mode1);
+                uint16_t opd2 = getoprnd(C, addr_mode2);
+                if(opd1 == opd2) {
+                    C->pcnt += 2;
+                }
+                break;
+            }
+            case SKLT: {
+                uint16_t opd1 = getoprnd(C, addr_mode1);
+                uint16_t opd2 = getoprnd(C, addr_mode2);
+                if(opd1 < opd2) {
+                    C->pcnt += 2;
+                }
+                break;
+            }
+            case SKGT: {
+                uint16_t opd1 = getoprnd(C, addr_mode1);
+                uint16_t opd2 = getoprnd(C, addr_mode2);
+                if(opd1 > opd2) {
+                    C->pcnt += 2;
+                }
+                break;
+            }
+            default: {
                 break;
             }
         }
