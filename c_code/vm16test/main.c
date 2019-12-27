@@ -97,23 +97,17 @@ void test2(void) {
 
 void test3(void) {
     static uint16_t code[] = {
-        0x0000, 0x0000, 0x200D, 0x2030, 0x0002, 0x2050, 0x0002, 0x0400,
-        0x0C02, 0x9022, 0x1C00, 0x1C00, 0x8C22, 0x9422, 0x9822, 0x9820,
-        0x1C00, 0x1C00, 0x2010, 0xFFFF, 0x2050, 0x1111, 0x8402, 0x8802,
-        0x1C00
+        0x2090, 0x0080, 0x2224, 0x003F, 0x1C00
     };
     uint32_t ran;
-    uint32_t size = vm16_calc_size(1);
+    uint32_t size = vm16_calc_size(3);
     vm16_t *C = (vm16_t *)malloc(size);
     vm16_init(C, size);
-    vm16_write_mem(C, 0, sizeof(code) / 2, code);
+    vm16_mark_rom_bank(C, 2);
     vm16_init_mem_banks(C);
 
-    for(int i=0;i<10;i++) {
-        printf("%u\n", vm16_run(C, 1, &ran));
-        dump(C);
-    }
-    vm16_loadaddr(C, 0x009);
+    vm16_write_mem(C, 0x2000, sizeof(code) / 2, code);
+    vm16_loadaddr(C, 0x2000);
 
     while(vm16_run(C, 1, &ran) != VM16_HALT) {
         dump(C);
@@ -123,8 +117,8 @@ void test3(void) {
 }
 
 int main() {
-    test1();
+    //test1();
     //test2();
-    //test3();
+    test3();
     return 0;
 }

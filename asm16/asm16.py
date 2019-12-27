@@ -25,12 +25,14 @@ import os
 import pprint
 from instructions import *
 
+reLABEL = re.compile(r"^([A-Za-z_][A-Za-z_0-9]+):")
 reCONST = re.compile(r"#(\$?[0-9A-Fa-fx]+)$")
 reADDR = re.compile(r"(\$?[0-9A-Fa-fx]+)$")
 reREL  = re.compile(r"([\+\-])(\$?[0-9A-Fa-fx]+)$")
 reSTACK = re.compile(r"\[SP\+(\$?[0-9A-Fa-fx]+)\]$")
 reINCL =  re.compile(r'^\$include +"(.+?)"')
 reFILEINFO = re.compile(r'^#### include "(.+?)" ([0-9]+)')
+reEQUALS = re.compile(r"^([A-Za-z_][A-Za-z_0-9]+) *= *(\S+)")
 
 def import_file(fname):
     """
@@ -64,7 +66,9 @@ class Assembler(object):
         self.is_data = False
         self.is_text = False
         self.addr = 0
+        self.labelprefix = 0
         self.dSymbols = {}
+        self.dAliases = {}
         self.lines = import_file(fname)
         self.dOpcodes = {}
         for idx,s in enumerate(Opcodes):
@@ -99,7 +103,42 @@ class Assembler(object):
             for c in s[1:-1]:
                 lOut.append(ord(c))
         return lOut
-
+    
+    def add_label_prefix(self, label):
+        if label.islower(): # local label
+            return "%u_%s" % (self.labelprefix, label)
+        return label
+    
+    def rmv_label_prefix(self, label):
+        if label.islower(): # local label
+            return label.split("_", 1)[1]
+        return label
+    
+    def add_sym_addr(self, label, addr):
+        if not label.islower(): # global label
+            self.labelprefix += 1
+            if self.dSymbols.has_key(label) and not self.ispass2:
+                self.error("Label '%s' used twice" % label)
+            self.dSymbols[label] = addr
+        else:
+            label = self.add_label_prefix(label)
+            if self.dSymbols.has_key(label) and not self.ispass2:
+                self.error("Label '%s' used twice" % label)
+            self.dSymbols[label] = addr
+            
+    def get_sym_addr(self, label):
+        if not label.islower(): # global label
+            self.labelprefix += 1
+            if self.dSymbols.has_key(label):
+                return self.dSymbols[label]
+        else:
+            label2 = self.add_label_prefix(label)
+            if self.dSymbols.has_key(label2):
+                return self.dSymbols[label2]
+        if self.ispass2:
+            self.error("Invalid/unknown operand '%s'" % label)
+        return 0
+            
     def segment(self, s):
         words = s.split()
         if words[0] == ".data":
@@ -143,6 +182,12 @@ class Assembler(object):
             self.error("Invalid instruction")
     
     def operand(self, s):
+        if s[0] == "#":
+            if self.dAliases.has_key(s[1:]):
+                s = "#" + self.dAliases[s[1:]]
+        else:
+            if self.dAliases.has_key(s):
+                s = self.dAliases[s]
         try:
             opd = self.dOperands[s]
             self.codes[0] = (self.codes[0] << 5) + opd
@@ -173,21 +218,21 @@ class Assembler(object):
                 self.codes.append(self.value(m.group(1)))
                 return Operands.index("[SP+n]")
             if s[0] == "#":
-                if self.dSymbols.has_key(s[1:]):
-                    self.codes[0] = (self.codes[0] << 5) + Operands.index("IMM")
-                    self.codes.append(self.dSymbols[s[1:]])
-                    return
+                self.codes[0] = (self.codes[0] << 5) + Operands.index("IMM")
+                addr = self.get_sym_addr(s[1:])
+                self.codes.append(addr)
+                return
             elif s[0] in ["+", "-"]:
-                if self.dSymbols.has_key(s[1:]):
-                    self.codes[0] = (self.codes[0] << 5) + Operands.index("REL") 
-                    offset = (0x10000 + self.dSymbols[s[1:]] - self.addr - 2) & 0xFFFF
-                    self.codes.append(offset)
-                    return Operands.index("REL")
+                self.codes[0] = (self.codes[0] << 5) + Operands.index("REL")
+                addr = self.get_sym_addr(s[1:]) 
+                offset = (0x10000 + addr - self.addr - 2) & 0xFFFF
+                self.codes.append(offset)
+                return Operands.index("REL")
             else:
-                if self.dSymbols.has_key(s):
-                    self.codes[0] = (self.codes[0] << 5) + Operands.index("IND")  
-                    self.codes.append(self.dSymbols[s])
-                    return Operands.index("IND")
+                self.codes[0] = (self.codes[0] << 5) + Operands.index("IND")
+                addr = self.get_sym_addr(s)  
+                self.codes.append(addr)
+                return Operands.index("IND")
             if not self.ispass2 and re.match(r"[#\+\-A-Fa-z0-9_]+", s):
                 self.codes.append(0)
                 return Operands.index("IMM")
@@ -237,21 +282,20 @@ class Assembler(object):
             return False
         
         # address label
-        if words[0][-1] == ":":
-            label = words[0][:-1]
-            if not label.islower() and not self.ispass2 and self.dSymbols.has_key(label):
-                self.error("Global label '%s' used twice" % label)
-            self.dSymbols[label] = self.addr
-            words = words[1:]
-            if len(words) == 0:
+        m = reLABEL.match(line)
+        if m:
+            self.add_sym_addr(m.group(1), self.addr)
+            if len(words) == 1:
                 return False
-            try:
-                line = line.split(" ", 1)[1]
-            except:
-                pass
-
+            words = words[1:]
+            line = line.split(" ", 1)[1]
+            
+        # aliases
+        m = reEQUALS.match(line)
+        if m:
+            self.dAliases[m.group(1)] = m.group(2)
         # text segment
-        if self.is_text:
+        elif self.is_text:
             self.codes.extend(self.string(line.strip()))
         # data segment
         elif self.is_data:
@@ -312,6 +356,7 @@ class Assembler(object):
         self.start_addr = 0
         self.ispass2 = False
         self.lineno = 1
+        self.labelprefix = 0
         for line in self.lines:
             self.decode(line)
             self.lineno += 1
@@ -320,6 +365,7 @@ class Assembler(object):
         self.addr = 0
         self.ispass2 = True
         self.lineno = 1
+        self.labelprefix = 0
         lOut = []
         lOctals = []
         for line in self.lines:

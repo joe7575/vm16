@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1577442558 source:/home/joachim/minetest51/mods/vm16/c_code/vm16test/main.c
+1577489763 source:/home/joachim/minetest51/mods/vm16/c_code/vm16test/main.c
 	<stdio.h>
 	<stdlib.h>
 	<time.h>

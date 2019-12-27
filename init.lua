@@ -20,6 +20,7 @@ along with VM16.  If not, see <https://www.gnu.org/licenses/>.
 
 -- for lazy programmers
 local M = minetest.get_meta
+local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
 
 vm16 = vm16lib		-- rename the lib
 
@@ -62,6 +63,7 @@ function vm16.call(vm, pos, cycles, input, output, system)
 	local resp, ran
 	while credit > 0 and cycles > 0 do
 		resp, ran = vm16.run(vm, cycles)
+		print("call", resp, ran)
 		if resp == VM16_IN then
 			local evt = vm16.get_event(vm, resp)
 			local result, points = input(vm, pos, evt.addr)
@@ -89,6 +91,7 @@ end
 function vm16.vm_store(vm, pos)
 	local s = vm16.get_vm(vm)
 	M(pos):set_string("vm16", s)
+	print("vm16.vm_store #s pos", #s, P2S(pos))
 	M(pos):mark_as_private("vm16")
 end
 

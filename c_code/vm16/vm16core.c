@@ -153,13 +153,13 @@ static uint16_t *getaddr(vm16_t *C, uint8_t addr_mod) {
     }
     case CNST: return ADDR_DST(C, 0); // invalid
     case ABS: {
-        uint16_t addr = *ADDR_DST(C, C->pcnt);
+        uint16_t addr = *ADDR_SRC(C, C->pcnt);
         C->pcnt++;
         return ADDR_DST(C, addr);
     }
     case REL: return ADDR_DST(C, 0); // invalid
     case SREL: {
-        uint16_t offs = *ADDR_DST(C, C->pcnt);
+        uint16_t offs = *ADDR_SRC(C, C->pcnt);
         C->pcnt++;
         return ADDR_DST(C, C->sptr + offs);
     }
