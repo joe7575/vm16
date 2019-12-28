@@ -10,7 +10,7 @@ The VM16 virtual machine provides the following API functions.
 vm = vm16.create(pos, ram_size)
 ```
 
-Initially create the virtual machine VM13. `ram_size` is a value between 1 (for 4 KWords)  and 16 (for 65 KWords memory).
+Initially create the virtual machine VM13. `ram_size` is a value between 1 (for 4 KWords)  and 16 (for 64 KWords memory).
 
 The function returns the vm instance needed for all further API calls.
 
@@ -20,7 +20,7 @@ The function returns the vm instance needed for all further API calls.
 vm16.destroy(vm, pos)
 ```
 
-Delete the instance an the vm stored as node meta data.
+Delete the instance and the vm stored as node meta data.
 
 ## mark_rom_bank
 
@@ -28,13 +28,13 @@ Delete the instance an the vm stored as node meta data.
  res = vm16.mark_rom_bank(vm, block_num)
 ```
 
-Mark the given block (1..15) as ROM (read only) block
-Hint: The block has to be a valid ram area, initialized via `vm16.create()`.
-The function can be called several times, it returns true/false
+Mark the given bank (1..15) as ROM (read only) block
+Hint: The bank has to be a valid ram area, initialized via `vm16.create()`.
+The function can be called several times for different ROM banks, it returns true/false
 
 ## init_mem_banks
 
-To be called after `vm16.mark_rom_bank()` ti finaize the memory initialization.
+To be called after `vm16.mark_rom_bank()` to finalize the memory initialization.
 The function returns true/false.
 
 ## loadaddr
@@ -79,7 +79,7 @@ Function returns an table/array with the read values.
 num = vm16.write_mem(vm, addr, tbl)
 ```
 
-Write a memory block with values from `tbl`  starting at the given `addr`. 
+Write a memory block with values from `tbl` starting at the given `addr`. 
 Function returns the number of written values.
 
 ## get_cpu_reg
@@ -96,7 +96,7 @@ Return the complete register set as table with the keys `A`, `B`, `C`, `D`, `X`,
 res = vm16.testbit(value, bit)
 ```
 
-Test if the `bit` number (0..15) is set in value
+Test if the `bit` number (0..15) is set in `value`
 Function returns true/false
 
 ## call
@@ -113,13 +113,13 @@ The response value is one of:
 
 - `vm16.OK` - the VM terminated after the given number of cycles
 - `vm16.DELAY` - the VM terminated with a `dly` instruction
-- `vm16.IN`   - the VM terminated with a `in` instruction. 
+- `vm16.IN`   - the VM terminated with a `in` instruction 
 - `vm16.OUT` - the VM terminated with a `out` instruction
 - `vm16.SYS` - the VM terminated with a `sys` instruction
 - `vm16.HALT` - the VM terminated with a `halt` instruction
 - `vm16.ERROR` - the VM terminated because of an internal error
 
-In case of  IN, `OUT`, and `SYS` the provided callback function is called, before the function returns.
+In case of  `IN`, `OUT`, and `SYS` the provided callback function is called, before the function returns.
 
 The callback function are:
 

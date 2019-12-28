@@ -4,10 +4,10 @@
 
 | Instr. | Opnd 1 | Opnd 2 | Opcode                |
 |--------|--------|--------|-----------------------|
-| dly    | NUM    | --     | 0000 + number (10bit) |
-| sys    | NUM    | --     | 0400 + number (10bit) |
-| rst    | NUM    | --     | 0800 + number (10bit) |
-| res    | --     | --     | 0C00                  |
+| nop    | --     | --     | 0000                  |
+| dly    | --     | --     | 0400                  |
+| sys    | NUM    | --     | 0800 + number (10bit) |
+| int    | NUM    | --     | 0C00 + number (10bit) |
 | jump   | ADR    | --     | 1000 + Opnd1          |
 | call   | ADR    | --     | 1400 + Opnd1          |
 | ret    | --     | --     | 1800                  |
@@ -37,13 +37,19 @@
 | mod    | DST    | SRC    | 7800 + Opnd1 + Opnd2  |
 | shl    | DST    | SRC    | 7C00 + Opnd1 + Opnd2  |
 | shr    | DST    | SRC    | 8000 + Opnd1 + Opnd2  |
+| addc   | DST    | SRC    | 8400 + Opnd1 + Opnd2  |
+| mulc   | DST    | SRC    | 8800 + Opnd1 + Opnd2  |
+| skne   | SRC    | SRC    | 8C00 + Opnd1 + Opnd2  |
+| skeq   | SRC    | SRC    | 9000 + Opnd1 + Opnd2  |
+| sklt   | SRC    | SRC    | 9400 + Opnd1 + Opnd2  |
+| skgt   | SRC    | SRC    | 9800 + Opnd1 + Opnd2  |
 
 
 ### Addressing Modes
 
 - REG = A, B, C, D, X, Y, PC, SP
 - MEM = [X], [Y], [X]+, [Y]+, IND, [SP+n]
-- ADR = IMM, REL
+- ADR = IMM, REL, #0, #1
 - CNST = #0, #1, IMM
 - DST = A, B, C, D, X, Y, PC, SP, [X], [Y], [X]+, [Y]+, IND, [SP+n]
 - SRC = A, B, C, D, X, Y, PC, SP, [X], [Y], [X]+, [Y]+, IND, [SP+n], #0, #1, IMM
@@ -53,7 +59,7 @@
 
 #### Instructions
 
-| dly  | sys  | rst  | res  | jump | call | ret  | halt |
+| nop  | dly  | sys  | int  | jump | call | ret  | halt |
 |------|------|------|------|------|------|------|------|
 | 0000 | 0400 | 0800 | 0C00 | 1000 | 1400 | 1800 | 1C00 |
 

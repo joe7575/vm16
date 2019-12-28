@@ -5,11 +5,11 @@ The VM16 is a 16-bit virtual machine implemented in C. It enables simulation of 
 This document contains information on how to program the VM16 virtual machine in assembly language. 
 
 All VM16 registers are 16-bits wide. The VM16 supports only 16-bit memory addressing, the memory is also organized in 16-bit words.
-Valid memory configursation are 4, 8, 16, 32, and 64 KByte.
+Valid memory configuration are 4, 8, 12, up to 64 KByte.
 
 There are four data registers: A, B, C, D. These are intended to hold numbers that will have various mathematical and logical operations performed on them.
 
-There are two address registers: X and Y. These are typically used as pointers (indirect addressing.
+There are two address registers: X and Y. These are typically used as pointers (indirect addressing)
 
 The last two registers are the Stack Pointer (SP) and the Program Counter (PC). 
 
@@ -30,17 +30,17 @@ And there are also instruction without any operand, like `ret` (return from subr
 Almost all instructions support different types of addressing modes. Addressing modes are:
 
 - **REG** (register addressing) All registers can be used: A, B, C, D, X, Y, SP ,PC. Ex: `inc A`
-- **IMM** (immediate) In immediate addressing, the operand is located immediately after the opcode in the second word of the instruction. These are 2-word instructions, only one operand can be of type IMM. Ex: `move a, #100`
-- **DIR** (direct addressing) In direct addressing, the address of the operand is contained in the second word of the instruction. Direct addressing allows the user to directly address the memory. These are 2-word instructions.  Ex: `move 800, A`
+- **IMM** (immediate) In immediate addressing, the operand is located immediately after the opcode in the second word of the instruction. Both operands can be of type IMM (3-words instruction)
+- **DIR** (direct addressing) In direct addressing, the address of the operand is contained in the second word of the instruction. Direct addressing allows the user to directly address the memory.
 - **IND** (indirect addressing) In indirect addressing, an index register (X or Y) is used to address memory. EX: `dec [X]`
 - **PINC** (indirect addressing with post-increment) Same as indirect addressing, but the index register will be incremented after the instruction is executed. Ex: `move [X]+, [Y]+` used for memory copying routines.
-- **ABS** (absolute addressing). Used for all branch/jump instructions as absolute jump address. These are 2-word instructions. Ex: `jump 0`
+- **ABS** (absolute addressing). Used for all branch/jump instructions as absolute jump address. These are 2-word instructions. Ex: `jump $1000`
 - **REL** (relative addressing). Used for all branch/jump instructions to be able to jump relative to the current address (relocatable code). These are 2-word instructions. Ex: `jump -8`
 - **CNST** (constant addressing). VM16 has two pseudo register #0 and #1, which can be used as source operand. Ex: `move A, #0`
+- **NUM** (number). A 10 bit number as part of the 16-bit opcode. Can only be used in combination with `sys` and `int`
 
 
-
-The table below uses two groups of addressing modes:
+In addition to the Addressing Modes the table below uses the following two addressing groups:
 
 - **DST**  (destination address capable) includes the following addressing modes: REG + DIR + IND + PINC 
 - **SRC**  (source address/value capable) includes the following addressing modes: REG + DIR + IND + PINC  + IMM + CNST
@@ -50,44 +50,224 @@ The table below uses two groups of addressing modes:
 
 ## Instructions
 
+For a table with all instructions, the addrressing modes and opcodes, see "opcodes.md"
 
-Table of instructions with addressing modes:
+### nop
 
-| Instr. | Oprnd1 | Oprnd2  | Comment                                                      |
-| ------ | ------ | ------- | ------------------------------------------------------------ |
-| nop    | -      | -       | No operation, the CPU does nothing, only consuming time (one cycle) |
-| halt   | -      | -       | Halts/stops the program execution                            |
-| call   | -      | ABS,REL | Call a subroutine. The address for the next instruction is stored on the stack and the stack pointer is decremented |
-| ret    | -      | -       | Return from subroutine. The used address is taken from the stack, the stack pointer is incremented |
-| move   | DST    | SRC     | Move a value from memory or any register to memory or any register. `move A,B` means move the content from B to A |
-| jump   | -      | ABS,REL | Jump to the given address by setting the PC to the new value. The stack is untouched |
-| inc    | DST    | -       | Increment the content of a register or memory address (DST = DST + 1) |
-| dec    | DST    | -       | Decrement the content of a register or memory address (DST = DST - 1) |
-| add    | DST    | SRC     | Add contents/value of SRC to DST. The result is stored in DST |
-| sub    | DST    | SRC     | Subtract contents/value of SRC from DST. The result is stored in DST |
-| mul    | DST    | SRC     | Multiply contents/value of SRC with DST. The result is stored in DST |
-| div    | DST    | SRC     | Divide contents/value of DST by SRC (`DST = DST / SRC`). The result is stored in DST |
-| and    | DST    | SRC     | AND operation with SRC and DST. The result is stored in DST  |
-| or     | DST    | SRC     | OR operation with SRC and DST. The result is stored in DST   |
-| xor    | DST    | SRC     | XOR operation with SRC and DST. The result is stored in DST  |
-| not    | DST    | -       | NOT operation with DST. The result is stored in DST          |
-| bnze   | REG    | ABS,REL | Branch to the operand2 address  if REG is not zero.          |
-| bze    | REG    | ABS,REL | Branch to the operand2 address  if REG is zero.              |
-| bpos   | REG    | ABS,REL | Branch to the operand2 address  if REG is positive (bit 15 is 0). |
-| bneg   | REG    | ABS,REL | Branch to the operand2 address  if REG is negative (bit 15 is 1). |
-| in     | DST    | CNST    | (I/O) operation to read an input value from an external device |
-| out    | CNST   | SRC     | (I/O) operation to write an output value to an external device |
-| push   | SCR    | -       | Push a value onto the stack with a pre-decrement of the SP   |
-| pop    | DST    | -       | Pop a value from the stack with a post-increment of the SP   |
-| swap   | DST    | -       | Exchange high- and low-byte of DST                           |
-| xchg   | DST    | DST     | Exchange contents/values one DST with the other DST          |
-| dbnz   | REG    | ABS,REL | Decrement and branch to the operand2 address if REG has not become zero |
-| mod    | DST    | SRC     | Modulo operation of DST with SRC (`DST = DST mod SRC`). The result is stored in DST |
-| shl    | DST    | SRC     | Shift the bits of DST to the left, by the number of bits specified in SRC |
-| shr    | DST    | SRC     | Shift the bits of DST to the right, by the number of bits specified in SRC |
-| dly    | -      | -       | Perform a delay of one world cycle to slow down program execution |
-| sys    | -      | CNST    | system call with number specified in CNST                    |
+No operation, the CPU does nothing, only consuming time (one cycle) and jumping to the next instruction.
+
+### dly
+
+Perform a delay of one Minetest world cycle to be able to slow down the program execution.
+
+### sys
+
+System call into the Lua environment. It allows to use some higher level of functionality,
+implemented in Lua, without the need to write everything is assembler (cheating).
+System call parameters a passed with registers A and B. 
+The result is return in register A (B in addition if needed).
+Ex: `sys 0`
+
+### int
+
+Software interrupt. Jump to a interrupt routine by setting the PC to the value NUM*4. 
+The address for the next instruction is stored on the stack and the stack pointer is decremented.
+Valid numbers are 0 to 1023 (10 bit).
+Ex: `int 2`
+
+### jump
+
+Jump to the given address by setting the PC to the new value. The stack keeps untouched.
+The instruction supports absolute and relative addressing
+Ex: `jump $1234` or `jump +4`
+
+### call
+
+Call a subroutine. The address for the next instruction is stored on the stack 
+and the stack pointer is decremented.
+The instruction supports absolute and relative addressing
+Ex: `call $1234` or `call +4`
+
+### ret
+
+Return from subroutine. The used address is taken from the stack, the stack pointer is incremented.
+
+### halt
+
+Halts/stops the program execution. Used to terminate the program e.g. for debugging purposes.
+
+### move
+
+Move a constant or value from memory/register to memory/register. 
+The VM16 assembler follows the Intel syntax: The destination operand is preceded by the source operand.
+`move A, B` means move the content from B to A. The move instruction has a variable number of words, from
+`move A, [X]` (one word), to `move X,#$1234` (to words), and `move $1000, $2000` (3 words)
+
+### xchg
+
+Exchange the values between one memory location/register and another memory location/register.
+Ex: `xchg A, [X]`
+
+### inc
+
+Increment the content of a register or memory address (val = val + 1).
+Ex: `inc A`
+
+### dec
+
+Decrement the content of a register or memory address (val = val - 1).
+Ex: `dec $3F`
+
+### add
+
+Add a constant or value of one memory/register to another memory/register.
+Ex: `add A, B`  (the result is stored in A).
+
+### addc
+
+Add a constant or value of one memory/register to another memory/register with carry.
+The carry bit is stored in register B.
+Ex: `addc A, C`  (the result is stored in A, the carry in B).
+
+### sub
+
+Subtract a constant or value of one memory/register from another memory/register.
+Ex: `sub A, B`  (the result is stored in A).
+
+### mul
+
+Multiply contents/value of one memory/register with another memory/register
+Ex: `mul A, B`  (the result is stored in A).
+
+### mulc
+
+Multiply contents/value of one memory/register with another memory/register with carry.
+The carry value is stored in register B.
+Ex: `mulc A, #5`  (the result is stored in A, the carry in B).
+
+### mod
+
+Modulo operation with contents/value from one memory/register with another memory/register.
+Ex: `mul A, B`  (the result is stored in A).
+
+### and
+
+AND operation with contents/value from one memory/register with another memory/register.
+Ex: `and A, $78E`  (the result is stored in A).
+
+### or
+
+OR operation with contents/value from one memory/register with another memory/register.
+Ex: `or A, $00FF`  (the result is stored in A).
+
+### xor
+
+XOR operation with contents/value from one memory/register with another memory/register.
+Ex: `xor A, $00FF`  (the result is stored in A).
+
+### not
+
+NOT operation with contents/value from one memory/register.
+Ex: `not A`
+
+### bnze
+
+Branch to the operand2 address if operand1 is not zero.
+operand2 can be any memory location/register, operand2 an absolute and relative address.
+Ex: `bnze [X], +2` (`+2` means: skip the next 2 word instruction)
+
+The following examples are valid for all five branch instructions:
+
+```
+bnze	A, -4   ; jump to the prior address
+bnze	A, -2   ; jump to the same address (endless loop)
+bnze	A, +0   ; jump to the next address (nop)
+```
+
+### bze
+
+Branch to the operand2 address if operand1 is zero.
+operand2 can be any memory location/register, operand2 an absolute and relative address.
+Ex: `bze [X], -8` 
+
+### bpos
+
+Branch to the operand2 address if operand1 is positive (value < $8000).
+operand2 can be any memory location/register, operand2 an absolute and relative address.
+Ex: `bpos [X], -8` 
+
+### bneg
+
+Branch to the operand2 address if operand1 is negative (value >= $8000).
+operand2 can be any memory location/register, operand2 an absolute and relative address.
+Ex: `bneg [X], -8` 
+
+### dbnz
+
+Decrement operand1 and branch to the address operand2 when operand1 becomes zero.
+operand2 can be any memory location/register, operand2 an absolute and relative address.
+Ex: `dbnz C, -8` 
+
+### in
+
+(I/O) operation to read an input value from an external device.
+operand1 can be any memory location/register, operand2 is the port number (immediate).
+Valid numbers for operand2 are application dependent.
+Ex: `in A, #1` 
+
+### out
+
+(I/O) operation to rite an output value to an external device.
+operand1 is the port number (immediate), operand2 can be any memory location/register.
+Valid numbers for operand1 are application dependent.
+Ex: `out #2, A` 
+
+### push
+
+Push a value onto the stack with a pre-decrement of the SP.
+Ex: `push #123` 
+
+### pop
+
+op a value from the stack with a post-increment of the SP.
+Ex: `pop D`
+
+### swap
+
+Exchange high- and low-byte of the memory location/register.
+Ex: `swap A`
+
+### shl
+
+Shift the bits of operand1 to the left, by the number of bits specified in operand2.
+Ex: `shl A, #8` 
 
 
+### shr
 
+Shift the bits of operand1 to the right, by the number of bits specified in operand2.
+Ex: `shr [X], A` 
+
+### skne
+Compare operand1 with operand2. If not equal, skip the next 2-word instructions (PC + 2).
+Operand1 and operand2 can be any memory location/register or constant (immediate).
+Ex: `skne [X], A` 
+
+### skeq
+
+Compare operand1 with operand2. If equal, skip the next 2-word instructions (PC + 2).
+Operand1 and operand2 can be any memory location/register or constant (immediate).
+Ex: `skeq #10, A` 
+
+### sklt
+
+Compare operand1 with operand2. If operand1 is less than operand2, skip the next 2-word instructions (PC + 2).
+Operand1 and operand2 can be any memory location/register or constant (immediate).
+Ex: `sklt B, A` 
+
+### skgt
+
+Compare operand1 with operand2. If operand1 is greater than operand2, skip the next 2-word instructions (PC + 2).
+Operand1 and operand2 can be any memory location/register or constant (immediate).
+Ex: `skgt $800, A` 
 

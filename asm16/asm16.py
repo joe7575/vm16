@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
 # VM16 Assembler v1.0
@@ -54,7 +54,7 @@ def import_file(fname):
         print("Error: File '%s' does not exist" % fname)
         sys.exit(0)
     lines = []
-    for idx, line in enumerate(file(fname).readlines()):
+    for idx, line in enumerate(open(fname).readlines()):
         lines.extend(handle_includes(idx, fname, line))
     return lines
   
@@ -117,23 +117,23 @@ class Assembler(object):
     def add_sym_addr(self, label, addr):
         if not label.islower(): # global label
             self.labelprefix += 1
-            if self.dSymbols.has_key(label) and not self.ispass2:
+            if label in self.dSymbols and not self.ispass2:
                 self.error("Label '%s' used twice" % label)
             self.dSymbols[label] = addr
         else:
             label = self.add_label_prefix(label)
-            if self.dSymbols.has_key(label) and not self.ispass2:
+            if label in self.dSymbols and not self.ispass2:
                 self.error("Label '%s' used twice" % label)
             self.dSymbols[label] = addr
             
     def get_sym_addr(self, label):
         if not label.islower(): # global label
             self.labelprefix += 1
-            if self.dSymbols.has_key(label):
+            if label in self.dSymbols:
                 return self.dSymbols[label]
         else:
             label2 = self.add_label_prefix(label)
-            if self.dSymbols.has_key(label2):
+            if label2 in self.dSymbols:
                 return self.dSymbols[label2]
         if self.ispass2:
             self.error("Invalid/unknown operand '%s'" % label)
@@ -183,10 +183,10 @@ class Assembler(object):
     
     def operand(self, s):
         if s[0] == "#":
-            if self.dAliases.has_key(s[1:]):
+            if s[1:] in self.dAliases:
                 s = "#" + self.dAliases[s[1:]]
         else:
-            if self.dAliases.has_key(s):
+            if s in self.dAliases:
                 s = self.dAliases[s]
         try:
             opd = self.dOperands[s]
@@ -308,7 +308,7 @@ class Assembler(object):
                 self.check_num_operands(num_opnds, 0)
                 self.codes[0] = self.codes[0] << 10
             elif len(words) == 2: # one operand
-                if self.dOpcodes.has_key(words[0]) and self.dOpcodes[words[0]] < 4: # special opcode handling
+                if words[0] in self.dOpcodes and self.dOpcodes[words[0]] < 4: # special opcode handling
                     self.opcode(words[0])
                     num_opnds = 1
                     num = self.value(words[1]) % 1024
@@ -398,22 +398,22 @@ def assembler(fname):
 
     dname = os.path.splitext(fname)[0] + ".lst"
     print(" - write %s..." % dname)
-    file(dname, "wt").write(lst)
+    open(dname, "wt").write(lst)
 
     dname = os.path.splitext(fname)[0] + ".hex"
     print(" - write %s..." % dname)
-    file(dname, "wt").write(hex1)
+    open(dname, "wt").write(hex1)
 
     dname = os.path.splitext(fname)[0] + ".txt"
     print(" - write %s..." % dname)
-    file(dname, "wt").write(hex2)
+    open(dname, "wt").write(hex2)
 
     print("\nSymbol table:")
     items = []
     for key, addr in a.dSymbols.items():
         if not key.islower():
             items.append((key, addr))
-    items.sort(lambda x,y: cmp(x[1], y[1]))
+    items.sort(key=lambda item: item[1])
     for item in items:
         print(" - %-16s = %04X" % (item[0], item[1]))
 
