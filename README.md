@@ -1,6 +1,6 @@
 # VM16 [vm16]
 
-VM16 is a 16-bit virtual machine in order to be able to implement real working computers in Minetest.
+VM16 is a 16-bit virtual machine to implement real working computers in Minetest.
 It is not useful by itself, the mod pdp13 is an example how to use VM16.
 
 The virtual machine is implemented in C and has a Lua API. In order to use the functionality
