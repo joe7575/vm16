@@ -6,7 +6,7 @@ The VM16 virtual machine provides the following API functions.
 
 ## create
 
-```
+```LUA
 vm = vm16.create(pos, ram_size)
 ```
 
@@ -16,7 +16,7 @@ The function returns the vm instance needed for all further API calls.
 
 ## destroy
 
-```
+```LUA
 vm16.destroy(vm, pos)
 ```
 
@@ -24,7 +24,7 @@ Delete the instance and the vm stored as node meta data.
 
 ## mark_rom_bank
 
-```
+```LUA
  res = vm16.mark_rom_bank(vm, block_num)
 ```
 
@@ -39,7 +39,7 @@ The function returns true/false.
 
 ## loadaddr
 
-```
+```LUA
  res = vm16.loadaddr(vm, addr)
 ```
 
@@ -57,7 +57,7 @@ The function returns true/false.
 
 ## examine
 
-```
+```LUA
 res = vm16.examine(vm)
 ```
 
@@ -66,7 +66,7 @@ The function returns true/false.
 
 ## read_mem
 
-```
+```LUA
 tbl = vm16.read_mem(vm, addr, num)
 ```
 
@@ -75,7 +75,7 @@ Function returns an table/array with the read values.
 
 ## write_mem
 
-```
+```LUA
 num = vm16.write_mem(vm, addr, tbl)
 ```
 
@@ -92,7 +92,7 @@ Return the complete register set as table with the keys `A`, `B`, `C`, `D`, `X`,
 
 ## testbit
 
-```
+```LUA
 res = vm16.testbit(value, bit)
 ```
 
@@ -101,7 +101,7 @@ Function returns true/false
 
 ## call
 
-```
+```LUA
 resp, ran = vm16lib.call(vm, pos, cycles, input, output, system)
 ```
 
@@ -130,7 +130,7 @@ The callback function are:
 
 ## vm_store
 
-```
+```LUA
 vm16.vm_store(vm, pos)
 ```
 
@@ -138,7 +138,7 @@ Store the complete VM as node meta data, to be restored after e.g. a server rest
 
 ## vm_restore
 
-```
+```LUA
 vm = vm16.vm_restore(pos)
 ```
 
