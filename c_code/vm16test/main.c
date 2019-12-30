@@ -97,7 +97,7 @@ void test2(void) {
 
 void test3(void) {
     static uint16_t code[] = {
-        0x2090, 0x0080, 0x2224, 0x003F, 0x1C00
+        0x200C, 0x6600, 0x0008, 0x2800, 0x4010, 0x000F, 0x1240, 0xFFF9
     };
     uint32_t ran;
     uint32_t size = vm16_calc_size(3);
@@ -106,8 +106,8 @@ void test3(void) {
     vm16_mark_rom_bank(C, 2);
     vm16_init_mem_banks(C);
 
-    vm16_write_mem(C, 0x2000, sizeof(code) / 2, code);
-    vm16_loadaddr(C, 0x2000);
+    vm16_write_mem(C, 0x0000, sizeof(code) / 2, code);
+    vm16_loadaddr(C, 0x0000);
 
     while(vm16_run(C, 1, &ran) != VM16_HALT) {
         dump(C);

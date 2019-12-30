@@ -532,7 +532,6 @@ int vm16_run(vm16_t *C, uint32_t num_cycles, uint32_t *ran) {
                 return VM16_IN;
             }
             case OUT: {
-                C->p_in_dest = &C->areg;
                 C->l_addr = getoprnd(C, addr_mode1);
                 C->l_data = getoprnd(C, addr_mode2);
                 *ran = num_cycles - num;

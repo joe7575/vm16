@@ -303,7 +303,7 @@ static int event_response(lua_State *L) {
                 break;
 
             case VM16_OUT:
-                *C->p_in_dest = (uint16_t)data;
+                // no response;
                 break;
 
             case VM16_SYS:
