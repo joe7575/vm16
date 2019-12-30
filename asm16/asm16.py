@@ -459,17 +459,17 @@ def list_file(fname, lToken):
     print(" - write %s..." % dname)
     open(dname, "wt").write("\n".join(lOut))
     
-def txt_file(fname, mem, fillword=0):
+def bin_file(fname, mem, fillword=0):
     """
-    Generate a TXT file 
+    Generate a text file with hex values for import into Minetest 
     """
-    dname = os.path.splitext(fname)[0] + ".txt"
+    dname = os.path.splitext(fname)[0] + ".bin"
     print(" - write %s..." % dname)
     open(dname, "wt").write(" ".join(["%04X" % (v if v != -1 else 0) for v in mem]))
     
 def h16_file(fname, start_addr, mem):
     """
-    Generate a H16 file 
+    Generate a H16 file for import into Minetest 
     """
     def first_valid(arr, start):
         for idx, val in enumerate(arr[start:]):
@@ -516,7 +516,7 @@ def assembler(fname):
     lToken = a.run(lToken)
     list_file(fname, lToken)
     start_addr, mem = locater(lToken)
-    txt_file(fname, mem)
+    bin_file(fname, mem)
     h16_file(fname, start_addr, mem)
     
     print("\nSymbol table:")
@@ -532,16 +532,9 @@ def assembler(fname):
     size = len(mem)
     print("Code start address: $%04X" % start_addr)
     print("Code size: $%04X/%u words\n" % (size, size))
-    return lToken
 
 if len(sys.argv) != 2:
     print("Syntax: asm13.py <asm-file>")
     sys.exit(0)
         
-l = assembler(sys.argv[1])
-
-# mem = array('l', [-1,1,1,-1,-1,1,1,1])
-# h16_file("t1.asm", 0, mem)
-
-# mem = array('l', [1,1,-1,-1,1,1,-1,-1])
-# h16_file("t2.asm", 0, mem)
+assembler(sys.argv[1])

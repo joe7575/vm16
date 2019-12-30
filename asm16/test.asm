@@ -1,5 +1,4 @@
-$include "7s.asm"
-$include "boot.asm"
+$include "test2.asm"
 
 		.org $100
         .code
