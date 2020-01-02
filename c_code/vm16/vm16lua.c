@@ -149,7 +149,6 @@ static int read_mem(lua_State *L) {
     vm16_t *C = check_vm(L);
     lua_Integer addr = luaL_checkinteger(L, 2);
     lua_Integer num = luaL_checkinteger(L, 3);
-    num = MIN(num, 0x80);
     addr = MIN(addr, C->mem_size - num);
     uint16_t *p_data = (uint16_t*)malloc(num * 2);
     if((C != NULL) && (p_data != NULL) && (num > 0)) {
@@ -170,7 +169,6 @@ static int write_mem(lua_State *L) {
     uint16_t addr = (uint16_t)luaL_checkinteger(L, 2);
     if(lua_istable(L, 3)) {
         size_t num = lua_objlen(L, 3);
-        num = MIN(num, 0x80);
         addr = MIN(addr, C->mem_size - num);
         uint16_t *p_data = (uint16_t*)malloc(num * 2);
         if((C != NULL) && (p_data != NULL)) {

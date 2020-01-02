@@ -129,7 +129,7 @@ class AsmBase(object):
                 return int(s, base=8)
             return int(s, base=10)
         except:
-            self.error("Invalid operand '%s'" % s)
+            self.error("Invalid operand in '%s'" % self.line)
             
     def add_label_prefix(self, label):
         if label.islower(): # local label
@@ -163,9 +163,23 @@ class AsmBase(object):
             if label2 in self.dSymbols:
                 return self.dSymbols[label2]
         if self.ispass2:
-            self.error("Invalid/unknown operand '%s'" % label)
+            self.error("Invalid/unknown operand in '%s'" % self.line)
         return 0
             
+    def aliases(self, s):    
+        prefix = str(self.token[FILEREF])
+        if s[0] == "#":
+            if prefix+s[1:] in self.dAliases:
+                s = "#" + self.dAliases[prefix+s[1:]]
+            elif s[1:] in self.dAliases:
+                s = "#" + self.dAliases[s[1:]]
+        else:
+            if prefix+s in self.dAliases:
+                s = self.dAliases[prefix+s]
+            elif s in self.dAliases:
+                s = self.dAliases[s]
+        return s
+
 
 class AsmPass1(AsmBase):
     """
@@ -215,7 +229,8 @@ class AsmPass1(AsmBase):
 
     def operand_size(self, s):
         if not s: return 0
-        if s in self.dAliases: s = self.dAliases[s]
+        s = self.aliases(s)
+        
         if s in ["#0", "#1", "#$0", "#$1"]: return 0
         if s[0] in ["#", "+", "-"]: return 1
         if s in self.dOperands: return 0
@@ -237,6 +252,7 @@ class AsmPass1(AsmBase):
             
         line = self.token[LINESTR]
         line = line.split(";")[0].rstrip()
+        self.line = line.strip() # for error messages
         line = line.replace(",", " ")
         line = line.replace("\t", "    ")
         if line.strip() == "": 
@@ -244,18 +260,20 @@ class AsmPass1(AsmBase):
         words = line.split()
         # assembler directive
         if self.directive(line):
-            return False
+            return self.comment()
         # aliases
         m = reEQUALS.match(line)
         if m:
             self.dAliases[m.group(1)] = m.group(2)
-            return False
+            prefix = str(self.token[FILEREF])
+            self.dAliases[prefix + m.group(1)] = m.group(2)
+            return self.comment()
         # address label
         m = reLABEL.match(line)
         if m:
             self.add_sym_addr(m.group(1), self.addr)
             if len(words) == 1:
-                return False
+                return self.comment()
             words = words[1:]
             line = line.split(" ", 1)[1]
         # text segment
@@ -273,7 +291,7 @@ class AsmPass1(AsmBase):
             return self.tokenize(len(l), l)
         # code segment
         if words[0] not in self.dOpcodes:
-            self.error("Invalid syntax '%s'" % line.strip())
+            self.error("Invalid syntax '%s'" % self.line)
         opcode = self.dOpcodes[words[0]]
         if len(words) == 2 and opcode < 4: # special handling
             size = 1
@@ -312,21 +330,12 @@ class AsmPass2(AsmBase):
         if words[1] != "-":
             validOpnds = globals()[words[1]]
             if opnd1 != None and Operands[opnd1] not in validOpnds:
-                self.error("Invalid operand1 type")
+                self.error("Invalid operand1 type in '%s'" % self.line)
         if words[2] != "-":
             validOpnds = globals()[words[2]]
             if opnd2 != None and Operands[opnd2] not in validOpnds:
-                self.error("Invalid operand2 type")
+                self.error("Invalid operand2 type in '%s'" % self.line)
     
-    def aliases(self, s):    
-        if s[0] == "#":
-            if s[1:] in self.dAliases:
-                s = "#" + self.dAliases[s[1:]]
-        else:
-            if s in self.dAliases:
-                s = self.dAliases[s]
-        return s
-
     def operand(self, s):
         if not s: return 0, None
         s = self.aliases(s)
@@ -357,7 +366,7 @@ class AsmPass2(AsmBase):
         
     def get_opcode(self, instr):
         if instr not in self.dOpcodes:
-            self.error("Invalid instruction '%s'" % instr)
+            self.error("Invalid instruction in '%s'" % self.line)
         opc1 = self.dOpcodes[instr]
         num_opnds = 2 - Opcodes[opc1].count("-") 
         num_has = len(self.token[INSTRWORDS]) - 1
@@ -372,6 +381,8 @@ class AsmPass2(AsmBase):
         return token
 
     def decode(self):
+        line = self.token[LINESTR]
+        self.line = line.split(";")[0].strip() # for error messages
         list_get = lambda l, idx: l[idx] if len(l) > idx else None
         instr = list_get(self.token[INSTRWORDS], 0)
         oprnd1 = list_get(self.token[INSTRWORDS], 1)
@@ -379,7 +390,7 @@ class AsmPass2(AsmBase):
         self.labelprefix = self.token[LABELPREFIX]
 
         if instr not in self.dOpcodes:
-             self.error("Invalid instruction '%s'" % instr)
+             self.error("Invalid instruction in '%s'" % self.line)
         opc1 = self.get_opcode(instr)
         if oprnd1 and opc1 < 4:
             num = self.value(oprnd1) % 1024
@@ -465,7 +476,25 @@ def bin_file(fname, mem, fillword=0):
     """
     dname = os.path.splitext(fname)[0] + ".bin"
     print(" - write %s..." % dname)
-    open(dname, "wt").write(" ".join(["%04X" % (v if v != -1 else 0) for v in mem]))
+    lOut = []
+    for idx, v in enumerate(mem):
+        lOut.append("%04X" % (v if v != -1 else 0))
+        if idx > 0 and idx % 8 == 0:
+            lOut[-1] = "\n" + lOut[-1]
+    open(dname, "wt").write(" ".join(lOut))
+    
+def rom_file(fname, mem, fillword=0):
+    """
+    Generate a text block to be used as constant table for ROM chips 
+    """
+    dname = os.path.splitext(fname)[0] + ".rom"
+    print(" - write %s..." % dname)
+    lOut = []
+    for idx, v in enumerate(mem):
+        lOut.append("0x%04X" % (v if v != -1 else 0))
+        if idx > 0 and idx % 8 == 0:
+            lOut[-1] = "\n" + lOut[-1]
+    open(dname, "wt").write(", ".join(lOut))
     
 def h16_file(fname, start_addr, mem):
     """
@@ -512,12 +541,14 @@ def assembler(fname):
     print(" - read %s..." % fname)
     a = AsmPass1()
     lToken = a.run(fname)
+    #print("\n".join([str(item) for item in lToken]))
     a = AsmPass2(a.dSymbols, a.dAliases)
     lToken = a.run(lToken)
     list_file(fname, lToken)
     start_addr, mem = locater(lToken)
     bin_file(fname, mem)
-    h16_file(fname, start_addr, mem)
+    if "-h16" in sys.argv: h16_file(fname, start_addr, mem)
+    if "-rom" in sys.argv: rom_file(fname, mem)
     
     print("\nSymbol table:")
     items = []
@@ -533,8 +564,11 @@ def assembler(fname):
     print("Code start address: $%04X" % start_addr)
     print("Code size: $%04X/%u words\n" % (size, size))
 
-if len(sys.argv) != 2:
+if len(sys.argv) < 2:
     print("Syntax: asm13.py <asm-file>")
+    print("Options:")
+    print(" -h16     generate a H16 file in addition")
+    print(" -rom     generate a ROM file in addition")
     sys.exit(0)
         
 assembler(sys.argv[1])

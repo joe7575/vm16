@@ -102,7 +102,8 @@ bool vm16_init(vm16_t *C, uint32_t mem_size);
 bool vm16_mark_rom_bank(vm16_t *C, uint8_t bank);
 
 /*
-** Initialize the memory bank pointers.
+** Initialize the memory bank pointers to finalize the memory layout.
+** After that, ROM banks can no longer be written.
 */
 void vm16_init_mem_banks(vm16_t *C);
 

@@ -234,6 +234,10 @@ bool vm16_init(vm16_t *C, uint32_t vm_size) {
         C->ident = IDENT;
         C->version = VERSION;
         C->mem_size = MEM_SIZE(vm_size);
+        for(int i=0; i<16; i++) {
+            C->rom_bank[i] = false;
+        }
+        vm16_init_mem_banks(C);
         return true;
     }
     return false;
@@ -252,17 +256,12 @@ void vm16_init_mem_banks(vm16_t *C) {
     if(VM_VALID(C)) {
         uint8_t num_blocks = C->mem_size / MEM_BANK_SIZE;
         for(int i=0; i<16; i++) {
-            if(i < num_blocks) {
-                if(C->rom_bank[i]) {
-                    C->p_dst[i] = C->memory;
-                } else {
-                    C->p_dst[i] = &(C->memory)[i * MEM_BANK_SIZE];
-                }
-                C->p_src[i] = &(C->memory)[i * MEM_BANK_SIZE];
-            } else {
+            if(C->rom_bank[i % num_blocks]) {
                 C->p_dst[i] = C->memory;
-                C->p_src[i] = C->memory;
+            } else {
+                C->p_dst[i] = &(C->memory)[(i % num_blocks) * MEM_BANK_SIZE];
             }
+            C->p_src[i] = &(C->memory)[(i % num_blocks) * MEM_BANK_SIZE];
         }
     }
 }
@@ -321,8 +320,11 @@ uint32_t vm16_set_vm(vm16_t *C, uint32_t size_buffer, uint8_t *p_buffer) {
 uint32_t vm16_read_mem(vm16_t *C, uint16_t addr, uint16_t num, uint16_t *p_buffer) {
     if(VM_VALID(C)) {
         if((p_buffer != NULL) && (num > 0) && (C->mem_size >= (addr + num))) {
-            num = MIN(num, 0x80);
             num = MIN(num, C->mem_size - addr);
+            for(int i=0; i<num; i++) {
+                *p_buffer++ = *ADDR_SRC(C, addr);
+                addr++;
+            }
             memcpy(p_buffer, &(C->memory[addr]), num * 2);
             return num;
         }
@@ -333,9 +335,11 @@ uint32_t vm16_read_mem(vm16_t *C, uint16_t addr, uint16_t num, uint16_t *p_buffe
 uint32_t vm16_write_mem(vm16_t *C, uint16_t addr, uint16_t num, uint16_t *p_buffer) {
     if(VM_VALID(C)) {
         if((p_buffer != NULL) && (num > 0) && (C->mem_size >= (addr + num))) {
-            num = MIN(num, 0x80);
             num = MIN(num, C->mem_size - addr);
-            memcpy(&(C->memory[addr]), p_buffer, num * 2);
+            for(int i=0; i<num; i++) {
+                *ADDR_DST(C, addr) = *p_buffer++;
+                addr++;
+            }
             return num;
         }
     }
@@ -344,19 +348,15 @@ uint32_t vm16_write_mem(vm16_t *C, uint16_t addr, uint16_t num, uint16_t *p_buff
 
 uint16_t vm16_peek(vm16_t *C, uint16_t addr) {
     if(VM_VALID(C)) {
-        if(C->mem_size >= addr) {
-            return C->memory[addr];
-        }
+        return *ADDR_SRC(C, addr);
     }
     return 0xFFFF;
 }
 
 bool vm16_poke(vm16_t *C, uint16_t addr, uint16_t val) {
     if(VM_VALID(C)) {
-        if(C->mem_size >= addr) {
-            C->memory[addr] = val;
-            return true;
-        }
+        *ADDR_DST(C, addr) = val;
+        return true;
     }
     return false;
 }

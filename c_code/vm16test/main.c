@@ -97,17 +97,22 @@ void test2(void) {
 
 void test3(void) {
     static uint16_t code[] = {
-        0x200C, 0x6600, 0x0008, 0x2800, 0x4010, 0x000F, 0x1240, 0xFFF9
+        0x2030, 0x0043, 0x4030, 0x00BF
     };
     uint32_t ran;
     uint32_t size = vm16_calc_size(3);
     vm16_t *C = (vm16_t *)malloc(size);
     vm16_init(C, size);
-    vm16_mark_rom_bank(C, 2);
+    vm16_mark_rom_bank(C, 1);
     vm16_init_mem_banks(C);
 
-    vm16_write_mem(C, 0x0000, sizeof(code) / 2, code);
-    vm16_loadaddr(C, 0x0000);
+    vm16_poke(C, 0x3FFF, 1234);
+    vm16_poke(C, 0x2FFF, 5678);
+    vm16_poke(C, 0x1FFF, 9000);
+    printf("%u\n", vm16_peek(C, 0xFFFF));
+    printf("%u\n", vm16_peek(C, 0x2FFF));
+    printf("%u\n", vm16_peek(C, 0x1FFF));
+    printf("%u\n", vm16_peek(C, 0x0FFF));
 
     while(vm16_run(C, 1, &ran) != VM16_HALT) {
         dump(C);
@@ -117,8 +122,8 @@ void test3(void) {
 }
 
 int main() {
-    //test1();
+    test1();
     //test2();
-    test3();
+    //test3();
     return 0;
 }

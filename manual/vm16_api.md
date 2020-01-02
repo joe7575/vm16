@@ -35,6 +35,7 @@ The function can be called several times for different ROM banks, it returns tru
 ## init_mem_banks
 
 To be called after `vm16.mark_rom_bank()` to finalize the memory initialization.
+After that, ROM banks can no longer be written.
 The function returns true/false.
 
 ## loadaddr
