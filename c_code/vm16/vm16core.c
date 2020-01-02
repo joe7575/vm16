@@ -325,7 +325,6 @@ uint32_t vm16_read_mem(vm16_t *C, uint16_t addr, uint16_t num, uint16_t *p_buffe
                 *p_buffer++ = *ADDR_SRC(C, addr);
                 addr++;
             }
-            memcpy(p_buffer, &(C->memory[addr]), num * 2);
             return num;
         }
     }
