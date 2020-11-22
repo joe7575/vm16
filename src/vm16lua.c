@@ -58,29 +58,6 @@ static int init(lua_State *L) {
     return 0;
 }
 
-static int init_mem_banks(lua_State *L) {
-    vm16_t *C = check_vm(L);
-    if(C != NULL) {
-        vm16_init_mem_banks(C);
-        lua_pushboolean(L, 1);
-        return 1;
-    }
-    lua_pushboolean(L, 0);
-    return 1;
-}
-
-static int mark_rom_bank(lua_State *L) {
-    vm16_t *C = check_vm(L);
-    lua_Integer block = luaL_checkinteger(L, 2);
-    if(C != NULL) {
-        bool res = vm16_mark_rom_bank(C, (uint8_t) block);
-        lua_pushboolean(L, res);
-        return 1;
-    }
-    lua_pushboolean(L, 0);
-    return 1;
-}
-
 static int loadaddr(lua_State *L) {
     vm16_t *C = check_vm(L);
     lua_Integer addr = luaL_checkinteger(L, 2);
@@ -330,11 +307,9 @@ static int testbit(lua_State *L) {
     return 1;
 }
 
-static const luaL_Reg vm16lib[] = {
+static const luaL_Reg R[] = {
     {"init",            init},
     {"loadaddr",        loadaddr},
-    {"mark_rom_bank",   mark_rom_bank},
-    {"init_mem_banks",  init_mem_banks},
     {"deposit",         deposit},
     {"examine",         examine},
     {"get_vm",          get_vm},
@@ -355,8 +330,8 @@ static const luaL_Reg vm16lib[] = {
 
 
 
-LUALIB_API int luaopen_vm16(lua_State *L) {
+LUALIB_API int luaopen_vm16lib(lua_State *L) {
     luaL_newmetatable(L, "vm16.cpu_dump");
-    luaL_register(L, LUA_VM16LIBNAME, vm16lib);
+    luaL_register(L, NULL, R);
     return 1;
 }

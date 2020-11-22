@@ -1,10 +1,32 @@
-# VM16 Lua API
+# VM16 - 16-bit VM for Minetest mods
 
-The VM16 virtual machine provides the following API functions.
+The VM16 is a 16-bit virtual machine implemented in C. It enables simulation of vintage computers in the game Minetest and is capable of executing real binary code at a remarkable speed.
+
+Browse on: ![GitHub](https://github.com/joe7575/vm16)
+
+Download: ![GitHub](https://github.com/joe7575/vm16/archive/master.zip)
 
 
 
-## create
+## Installation
+
+```
+luarocks install vm16
+```
+
+To enable this `unsafe` package, add 'vm16' to the list of trusted mods in minetest.conf:
+
+```
+secure.trusted_mods = vm16
+```
+
+For the installation of 'luarocks' (if not already available), see [luarocks](https://luarocks.org/)
+
+
+
+## API Functions
+
+### create
 
 ```LUA
 vm = vm16.create(pos, ram_size)
@@ -14,7 +36,7 @@ Initially create the virtual machine VM13. `ram_size` is a value between 1 (for 
 
 The function returns the vm instance needed for all further API calls.
 
-## destroy
+### destroy
 
 ```LUA
 vm16.destroy(vm, pos)
@@ -22,23 +44,7 @@ vm16.destroy(vm, pos)
 
 Delete the instance and the vm stored as node meta data.
 
-## mark_rom_bank
-
-```LUA
- res = vm16.mark_rom_bank(vm, block_num)
-```
-
-Mark the given bank (1..15) as ROM (read only) block
-Hint: The bank has to be a valid ram area, initialized via `vm16.create()`.
-The function can be called several times for different ROM banks, it returns true/false
-
-## init_mem_banks
-
-To be called after `vm16.mark_rom_bank()` to finalize the memory initialization.
-After that, ROM banks can no longer be written.
-The function returns true/false.
-
-## loadaddr
+### loadaddr
 
 ```LUA
  res = vm16.loadaddr(vm, addr)
@@ -47,7 +53,7 @@ The function returns true/false.
 Load the PC (program counter) of the VM with the given 16-bit address
 The function returns true/false.
 
-## deposit
+### deposit
 
 ```
 res = vm16.deposit(vm, value)
@@ -56,7 +62,7 @@ res = vm16.deposit(vm, value)
 Store the given value in the memory cell where the PC points to and post-increment the PC.
 The function returns true/false.
 
-## examine
+### examine
 
 ```LUA
 res = vm16.examine(vm)
@@ -65,7 +71,7 @@ res = vm16.examine(vm)
 Read the memory cell where the PC points to and post-increment the PC.
 The function returns true/false.
 
-## read_mem
+### read_mem
 
 ```LUA
 tbl = vm16.read_mem(vm, addr, num)
@@ -74,7 +80,7 @@ tbl = vm16.read_mem(vm, addr, num)
 Read a memory block starting at the given `addr` with `num` number of words.
 Function returns an table/array with the read values.
 
-## write_mem
+### write_mem
 
 ```LUA
 num = vm16.write_mem(vm, addr, tbl)
@@ -83,7 +89,7 @@ num = vm16.write_mem(vm, addr, tbl)
 Write a memory block with values from `tbl` starting at the given `addr`. 
 Function returns the number of written values.
 
-## get_cpu_reg
+### get_cpu_reg
 
 ```
 tbl = vm16.get_cpu_reg(vm)
@@ -91,7 +97,7 @@ tbl = vm16.get_cpu_reg(vm)
 
 Return the complete register set as table with the keys `A`, `B`, `C`, `D`, `X`, `Y`, `PC`, `SP`, plus 4 memory cells `mem0` to `mem3` (the PC points to `mem0`)
 
-## testbit
+### testbit
 
 ```LUA
 res = vm16.testbit(value, bit)
@@ -100,10 +106,10 @@ res = vm16.testbit(value, bit)
 Test if the `bit` number (0..15) is set in `value`
 Function returns true/false
 
-## call
+### call
 
 ```LUA
-resp, ran = vm16lib.call(vm, pos, cycles, input, output, system)
+resp, ran = vm16.call(vm, pos, cycles, input, output, system)
 ```
 
 Call the VM to execute the given number of `cycles` (1..n).
@@ -129,7 +135,7 @@ The callback function are:
 - `system` is a callback of type: 
   `u16_regA, u16_regB, points = func(vm, pos, u16_addr, u16_regA, u16_regB)`
 
-## vm_store
+### vm_store
 
 ```LUA
 vm16.vm_store(vm, pos)
@@ -137,7 +143,7 @@ vm16.vm_store(vm, pos)
 
 Store the complete VM as node meta data, to be restored after e.g. a server restart.
 
-## vm_restore
+### vm_restore
 
 ```LUA
 vm = vm16.vm_restore(pos)
@@ -145,4 +151,25 @@ vm = vm16.vm_restore(pos)
 
 Restore the complete VM from the node meta data.
 The function returns the vm instance.
+
+
+
+## Dependencies
+
+none
+
+
+
+## License
+
+Copyright (C) 2019-2020 Joachim Stolberg  
+Licensed under the GNU GPLv3   (See LICENSE.txt)
+
+
+
+## History
+
+- 2020-11-21  v1.1  * First commit as LuaRocks project
+
+
 

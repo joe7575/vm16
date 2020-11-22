@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include "../vm16/vm16.h"
+#include "../src/vm16.h"
 
 
 void dump(vm16_t *C) {
     printf("A:%04X B:%04X C:%04X D:%04X X:%04X Y:%04X PC:%04X SP:%04X\n", C->areg, C->breg, C->creg, C->dreg, C->xreg, C->yreg, C->pcnt, C->sptr);
-    printf("%04X %04X %04X %04X %04X %04X %04X %04X\n", C->memory[0], C->memory[1], C->memory[2], C->memory[3], C->memory[0xFFE], C->memory[0xFFF], C->memory[0x1000], C->memory[0x1001]);
+    printf("%04X %04X %04X %04X %04X %04X\n", C->memory[0], C->memory[1], C->memory[2], C->memory[3], C->memory[0xFFE], C->memory[0xFFF]);
 }
 
 // conformance test, check the result against
@@ -28,7 +28,6 @@ void test1(void) {
     vm16_t *C = (vm16_t *)malloc(size);
     vm16_init(C, size);
     vm16_write_mem(C, 0, sizeof(code) / 2, code);
-    vm16_init_mem_banks(C);
     while(vm16_run(C, 1, &ran) != VM16_HALT) {
         dump(C);
     }
@@ -53,6 +52,7 @@ void test1(void) {
     t = clock() - t;
     printf("Performance = %li MIPS\n", ran / t);
 
+    // test some random code to try to break the VM
     for(int i=0; i<10000; i++) {
         for(int ii=0; ii<4096; ii++) {
             val = (uint16_t)random();
@@ -81,8 +81,6 @@ void test2(void) {
     uint32_t size = vm16_calc_size(3);
     vm16_t *C = (vm16_t *)malloc(size);
     vm16_init(C, size);
-    vm16_mark_rom_bank(C, 1);
-    vm16_init_mem_banks(C);
 
     vm16_write_mem(C, 0x1000, sizeof(code) / 2, code);
     vm16_loadaddr(C, 0x1000);
@@ -103,8 +101,6 @@ void test3(void) {
     uint32_t size = vm16_calc_size(3);
     vm16_t *C = (vm16_t *)malloc(size);
     vm16_init(C, size);
-    vm16_mark_rom_bank(C, 1);
-    vm16_init_mem_banks(C);
 
     vm16_poke(C, 0x3FFF, 1234);
     vm16_poke(C, 0x2FFF, 5678);

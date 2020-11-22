@@ -18,12 +18,7 @@ You should have received a copy of the GNU General Public License
 along with VM16.  If not, see <https://www.gnu.org/licenses/>.
 ]]--
 
--- for lazy programmers
-local M = minetest.get_meta
-local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
-
-vm16 = vm16lib		-- rename the lib
-
+vm16 = require "vm16lib"
 
 local VM16_OK     = 0  -- run to the end
 local VM16_DELAY  = 1  -- one cycle pause
@@ -45,7 +40,7 @@ local CREDIT = 100
 
 -- ram_size is from 1 (4K) to 16 (64KB)
 function vm16.create(pos, ram_size)
-	local meta = M(pos)
+	local meta = minetest.get_meta(pos)
 	meta:set_string("vm16", "")
 	meta:set_int("vm16size", ram_size)
 	meta:mark_as_private("vm16")
@@ -54,7 +49,7 @@ end
 
 function vm16.destroy(vm, pos)
 	vm = nil
-	M(pos):set_string("vm16", "")
+	minetest.get_meta(pos):set_string("vm16", "")
 end
 
 
@@ -88,12 +83,12 @@ end
 
 function vm16.vm_store(vm, pos)
 	local s = vm16.get_vm(vm)
-	M(pos):set_string("vm16", s)
-	M(pos):mark_as_private("vm16")
+	minetest.get_meta(pos):set_string("vm16", s)
+	minetest.get_meta(pos):mark_as_private("vm16")
 end
 
 function vm16.vm_restore(pos)
-	local meta = M(pos)
+	local meta = minetest.get_meta(pos)
 	local s = meta:get_string("vm16")
 	local size = meta:get_int("vm16size")
 	if s ~= "" and size > 0 then

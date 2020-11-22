@@ -117,8 +117,9 @@ along with VM16.  If not, see <https://www.gnu.org/licenses/>.
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
 
-#define ADDR_SRC(C, addr)       ((C)->p_src[(addr) >> 12] + ((addr) & 0x0fff))
-#define ADDR_DST(C, addr)       ((C)->p_dst[(addr) >> 12] + ((addr) & 0x0fff))
+#define VMA(C, addr)            (((uint16_t)(addr)) & (C)->mem_mask)  // valid memory address
+#define ADDR_SRC(C, addr)       (&(C)->memory[VMA(C, addr)])
+#define ADDR_DST(C, addr)       (&(C)->memory[VMA(C, addr)])
 
 
 #define VM_SIZE(size)           (sizeof(vm16_t) + (sizeof(uint16_t) * (size - 1)))
@@ -220,7 +221,7 @@ static uint16_t getoprnd(vm16_t *C, uint8_t addr_mod) {
 
 // size in number of 4K blocks
 uint32_t vm16_calc_size(uint8_t size) {
-    uint32_t mem_size = MIN(size, MAX_MEM_BANKS) * MEM_BANK_SIZE;
+    uint32_t mem_size = MIN(size, MAX_MEM_BLOCKS) * MEM_BLOCK_SIZE;
     return VM_SIZE(mem_size);
 }
 
@@ -234,36 +235,10 @@ bool vm16_init(vm16_t *C, uint32_t vm_size) {
         C->ident = IDENT;
         C->version = VERSION;
         C->mem_size = MEM_SIZE(vm_size);
-        for(int i=0; i<16; i++) {
-            C->rom_bank[i] = false;
-        }
-        vm16_init_mem_banks(C);
+        C->mem_mask = C->mem_size - 1;
         return true;
     }
     return false;
-}
-
-bool vm16_mark_rom_bank(vm16_t *C, uint8_t bank) {
-    uint8_t num_banks = C->mem_size / MEM_BANK_SIZE;
-    if(bank < num_banks) {
-        C->rom_bank[bank] = true;
-        return true;
-    }
-    return false;
-}
-
-void vm16_init_mem_banks(vm16_t *C) {
-    if(VM_VALID(C)) {
-        uint8_t num_blocks = C->mem_size / MEM_BANK_SIZE;
-        for(int i=0; i<16; i++) {
-            if(C->rom_bank[i % num_blocks]) {
-                C->p_dst[i] = C->memory;
-            } else {
-                C->p_dst[i] = &(C->memory)[(i % num_blocks) * MEM_BANK_SIZE];
-            }
-            C->p_src[i] = &(C->memory)[(i % num_blocks) * MEM_BANK_SIZE];
-        }
-    }
 }
 
 void vm16_loadaddr(vm16_t *C, uint16_t addr) {

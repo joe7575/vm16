@@ -31,17 +31,14 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
-		<Unit filename="../vm16/vm16.h" />
-		<Unit filename="../vm16/vm16core.c">
+		<Unit filename="../src/vm16.h" />
+		<Unit filename="../src/vm16core.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Extensions>
-			<code_completion />
-			<envvars />
-			<debugger />
 			<lib_finder disable_auto="1" />
 		</Extensions>
 	</Project>
