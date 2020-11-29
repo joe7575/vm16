@@ -63,9 +63,9 @@ along with VM16.  If not, see <https://www.gnu.org/licenses/>.
 
 /* OP codes */
 #define  NOP    (0x00)
-#define  DLY    (0x01)
+//#define  DLY    (0x01)
 #define  SYS    (0x02)
-#define  INT    (0x03)
+//#define  INT    (0x03)
 
 #define  JUMP   (0x04)
 #define  CALL   (0x05)
@@ -241,10 +241,17 @@ bool vm16_init(vm16_t *C, uint32_t vm_size) {
     return false;
 }
 
-void vm16_loadaddr(vm16_t *C, uint16_t addr) {
+void vm16_set_pc(vm16_t *C, uint16_t addr) {
     if(VM_VALID(C)) {
         C->pcnt = addr;
     }
+}
+
+uint16_t vm16_get_pc(vm16_t *C) {
+    if(VM_VALID(C)) {
+        return C->pcnt;
+    }
+    return 0;
 }
 
 void vm16_deposit(vm16_t *C, uint16_t value) {
@@ -252,14 +259,6 @@ void vm16_deposit(vm16_t *C, uint16_t value) {
         *ADDR_DST(C, C->pcnt) = value;
         C->l_addr = C->pcnt;
         C->l_data = value;
-        C->pcnt++;
-    }
-}
-
-void vm16_examine(vm16_t *C) {
-    if(VM_VALID(C)) {
-        C->l_addr = C->pcnt;
-        C->l_data = *ADDR_SRC(C, C->pcnt);
         C->pcnt++;
     }
 }
@@ -294,8 +293,7 @@ uint32_t vm16_set_vm(vm16_t *C, uint32_t size_buffer, uint8_t *p_buffer) {
 
 uint32_t vm16_read_mem(vm16_t *C, uint16_t addr, uint16_t num, uint16_t *p_buffer) {
     if(VM_VALID(C)) {
-        if((p_buffer != NULL) && (num > 0) && (C->mem_size >= (addr + num))) {
-            num = MIN(num, C->mem_size - addr);
+        if((p_buffer != NULL) && (num > 0) && (num <= C->mem_size)) {
             for(int i=0; i<num; i++) {
                 *p_buffer++ = *ADDR_SRC(C, addr);
                 addr++;
@@ -308,8 +306,7 @@ uint32_t vm16_read_mem(vm16_t *C, uint16_t addr, uint16_t num, uint16_t *p_buffe
 
 uint32_t vm16_write_mem(vm16_t *C, uint16_t addr, uint16_t num, uint16_t *p_buffer) {
     if(VM_VALID(C)) {
-        if((p_buffer != NULL) && (num > 0) && (C->mem_size >= (addr + num))) {
-            num = MIN(num, C->mem_size - addr);
+        if((p_buffer != NULL) && (num > 0) && (num <= C->mem_size)) {
             for(int i=0; i<num; i++) {
                 *ADDR_DST(C, addr) = *p_buffer++;
                 addr++;
@@ -354,22 +351,11 @@ int vm16_run(vm16_t *C, uint32_t num_cycles, uint32_t *ran) {
             case NOP: {
                 break;
             }
-           case DLY: {
-                *ran = num_cycles - num;
-                return VM16_DELAY;
-            }
             case SYS: {
                 C->p_in_dest = &C->areg;
                 C->l_addr = code & 0x03FF;
                 *ran = num_cycles - num;
                 return VM16_SYS;
-            }
-            case INT: {
-                uint16_t addr = (code & 0x03FF) * 4;
-                C->sptr = C->sptr - 1;
-                *ADDR_DST(C, C->sptr) = C->pcnt;
-                C->pcnt = addr;
-                break;
             }
             case JUMP: {
                 C->pcnt = getoprnd(C, addr_mode1);

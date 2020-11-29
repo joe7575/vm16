@@ -46,12 +46,11 @@ LUALIB_API int luaopen_vm16(lua_State *L);
 */
 
 #define VM16_OK        (0)  // run to the end
-#define VM16_DELAY     (1)  // one cycle pause
-#define VM16_IN        (2)  // input command
-#define VM16_OUT       (3)  // output command
-#define VM16_SYS       (4)  // system call
-#define VM16_HALT      (5)  // CPU halt
-#define VM16_ERROR     (6)  // invalid call
+#define VM16_IN        (1)  // input command
+#define VM16_OUT       (2)  // output command
+#define VM16_SYS       (3)  // system call
+#define VM16_HALT      (4)  // CPU halt
+#define VM16_ERROR     (5)  // invalid call
 
 typedef struct {
     uint32_t ident;     // VM identifier
@@ -96,19 +95,18 @@ bool vm16_init(vm16_t *C, uint32_t mem_size);
 /*
 ** Set PC to given memory address
 */
-void vm16_loadaddr(vm16_t *C, uint16_t addr);
+void vm16_set_pc(vm16_t *C, uint16_t addr);
+
+/*
+** Return PC value
+*/
+uint16_t vm16_get_pc(vm16_t *C);
 
 /*
 ** Deposit 'value' to PC address and post-increment PC
 ** addr/data is available via C->io_addr/C->out_data
 */
 void vm16_deposit(vm16_t *C, uint16_t value);
-
-/*
-** Read 'value' from PC address and post-increment PC
-** addr/data is available via C->io_addr/C->out_data
-*/
-void vm16_examine(vm16_t *C);
 
 /*
 ** Read complete VM inclusive RAM for storage purposes.

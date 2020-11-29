@@ -1,5 +1,5 @@
 package = "vm16"
-version = "1.1-1"
+version = "1.2.0"
 source = {
     url = "git+https://github.com/joe7575/vm16.git"
 }
@@ -21,7 +21,6 @@ dependencies = {
 build = {
     type = "builtin",
     modules = {
-        vm16 = "src/api.lua",  
         vm16lib = {"src/vm16core.c", "src/vm16lua.c"},
     }
 }

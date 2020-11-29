@@ -58,15 +58,28 @@ static int init(lua_State *L) {
     return 0;
 }
 
-static int loadaddr(lua_State *L) {
+static int mem_size(lua_State *L) {
+    vm16_t *C = check_vm(L);
+    lua_pushinteger(L, C->mem_size);
+    return 1;
+}
+
+static int set_pc(lua_State *L) {
     vm16_t *C = check_vm(L);
     lua_Integer addr = luaL_checkinteger(L, 2);
     if(C != NULL) {
-        vm16_loadaddr(C, (uint16_t)addr);
+        vm16_set_pc(C, (uint16_t)addr);
         lua_pushboolean(L, 1);
         return 1;
     }
     lua_pushboolean(L, 0);
+    return 1;
+}
+
+static int get_pc(lua_State *L) {
+    vm16_t *C = check_vm(L);
+    uint16_t addr = vm16_get_pc(C);
+    lua_pushinteger(L, addr);
     return 1;
 }
 
@@ -75,17 +88,6 @@ static int deposit(lua_State *L) {
     lua_Integer value = luaL_checkinteger(L, 2);
     if(C != NULL) {
         vm16_deposit(C, (uint16_t)value);
-        lua_pushboolean(L, 1);
-        return 1;
-    }
-    lua_pushboolean(L, 0);
-    return 1;
-}
-
-static int examine(lua_State *L) {
-    vm16_t *C = check_vm(L);
-    if(C != NULL) {
-        vm16_examine(C);
         lua_pushboolean(L, 1);
         return 1;
     }
@@ -126,7 +128,6 @@ static int read_mem(lua_State *L) {
     vm16_t *C = check_vm(L);
     lua_Integer addr = luaL_checkinteger(L, 2);
     lua_Integer num = luaL_checkinteger(L, 3);
-    addr = MIN(addr, C->mem_size - num);
     uint16_t *p_data = (uint16_t*)malloc(num * 2);
     if((C != NULL) && (p_data != NULL) && (num > 0)) {
         uint16_t words = vm16_read_mem(C, addr, num, p_data);
@@ -146,7 +147,6 @@ static int write_mem(lua_State *L) {
     uint16_t addr = (uint16_t)luaL_checkinteger(L, 2);
     if(lua_istable(L, 3)) {
         size_t num = lua_objlen(L, 3);
-        addr = MIN(addr, C->mem_size - num);
         uint16_t *p_data = (uint16_t*)malloc(num * 2);
         if((C != NULL) && (p_data != NULL)) {
             for(size_t i = 0; i < num; i++) {
@@ -198,9 +198,9 @@ static int run(lua_State *L) {
 static int get_cpu_reg(lua_State *L) {
     vm16_t *C = check_vm(L);
     if(C != NULL) {
-        uint16_t mem[4];
-        uint16_t words = vm16_read_mem(C, C->pcnt, 4, mem);
-        if(words == 4) {
+        uint16_t mem[2];
+        uint16_t words = vm16_read_mem(C, C->pcnt, 2, mem);
+        if(words == 2) {
             lua_newtable(L);               /* creates a table */
             setfield(L, "A", C->areg);
             setfield(L, "B", C->breg);
@@ -210,90 +210,44 @@ static int get_cpu_reg(lua_State *L) {
             setfield(L, "Y", C->yreg);
             setfield(L, "PC", C->pcnt);
             setfield(L, "SP", C->sptr);
-            setfield(L, "l_addr", C->l_addr);
-            setfield(L, "l_data", C->l_data);
             setfield(L, "mem0", mem[0]);
             setfield(L, "mem1", mem[1]);
-            setfield(L, "mem2", mem[2]);
-            setfield(L, "mem3", mem[3]);
             return 1;
         }
     }
     return 0;
 }
 
-static int get_event(lua_State *L) {
+static int get_io_reg(lua_State *L) {
     vm16_t *C = check_vm(L);
-    lua_Integer type = luaL_checkinteger(L, 2);
     if(C != NULL) {
-        lua_newtable(L); /* creates a table */
-        switch(type) {
-            case VM16_DELAY:
-                setstrfield(L, "type", "delay");
-                break;
-
-            case VM16_IN:
-                setstrfield(L, "type", "input");
-                setfield(L, "addr", C->l_addr);
-                break;
-
-            case VM16_OUT:
-                setstrfield(L, "type", "output");
-                setfield(L, "addr", C->l_addr);
-                setfield(L, "data", C->l_data);
-                break;
-
-            case VM16_SYS:
-                setstrfield(L, "type", "system");
-                setfield(L, "addr", C->l_addr);
-                setfield(L, "A", C->areg);
-                setfield(L, "B", C->breg);
-                break;
-
-            case VM16_HALT:
-                setstrfield(L, "type", "halt");
-                break;
-
-            case VM16_ERROR:
-                setstrfield(L, "type", "VM invalid");
-                break;
-
-            default:
-                setstrfield(L, "type", "unknown");
-                break;
-        }
+        lua_newtable(L);               /* creates a table */
+        setfield(L, "A", C->areg);
+        setfield(L, "B", C->breg);
+        setfield(L, "addr", C->l_addr);
+        setfield(L, "data", C->l_data);
         return 1;
     }
     return 0;
 }
 
-static int event_response(lua_State *L) {
+static int set_io_reg(lua_State *L) {
     vm16_t *C = check_vm(L);
-    lua_Integer type = luaL_checkinteger(L, 2);
-    lua_Integer data = luaL_checkinteger(L, 3);
     if(C != NULL) {
-        switch(type) {
-            case VM16_IN:
-                *C->p_in_dest = (uint16_t)data;
-                break;
-
-            case VM16_OUT:
-                // no response;
-                break;
-
-            case VM16_SYS:
-                C->areg = (uint16_t)data;
-                if(lua_isnumber(L, 4)) {
-                    data = lua_tointeger(L, 4);
-                    C->breg = (uint16_t)data;
-                }
-                break;
-        }
-        lua_pushboolean(L, 1);
-        return 1;
+        lua_getfield(L, 2, "A");
+        lua_getfield(L, 2, "B");
+        lua_getfield(L, 2, "data");
+        // stack now has following:
+        //  2 = table
+        // -3 = A
+        // -2 = B
+        // -1 = data
+        C->areg = luaL_checkint(L, -3);
+        C->breg = luaL_checkint(L, -2);
+        *C->p_in_dest = luaL_checkint(L, -1);
+        lua_settop(L, 0);
     }
-    lua_pushboolean(L, 0);
-    return 1;
+    return 0;
 }
 
 /*
@@ -309,9 +263,10 @@ static int testbit(lua_State *L) {
 
 static const luaL_Reg R[] = {
     {"init",            init},
-    {"loadaddr",        loadaddr},
+    {"mem_size",        mem_size},
+    {"set_pc",          set_pc},
+    {"get_pc",          get_pc},
     {"deposit",         deposit},
-    {"examine",         examine},
     {"get_vm",          get_vm},
     {"set_vm",          set_vm},
     {"read_mem",        read_mem},
@@ -320,8 +275,8 @@ static const luaL_Reg R[] = {
     {"poke",            poke},
     {"get_cpu_reg",     get_cpu_reg},
     {"run",             run},
-    {"get_event",       get_event},
-    {"event_response",  event_response},
+    {"get_io_reg",      get_io_reg},
+    {"set_io_reg",      set_io_reg},
     {"testbit",         testbit},
     {NULL, NULL}
 };
