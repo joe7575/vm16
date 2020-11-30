@@ -349,7 +349,7 @@ int vm16_run(vm16_t *C, uint32_t num_cycles, uint32_t *ran) {
 
         switch(opcode) {
             case NOP: {
-                break;
+                return VM16_NOP;
             }
             case SYS: {
                 C->p_in_dest = &C->areg;

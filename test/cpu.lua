@@ -139,58 +139,82 @@ local function help()
 end
 	
 local function on_receive_fields(pos, formname, fields, player)
+	local meta = minetest.get_meta(pos)
+	local lines = {"Error"}
+	
 	if fields.tab == "2" then
-		M(pos):set_string("formspec", formspec_help())
+		meta:set_string("storeformspec", meta:get_string("formspec"))
+		meta:set_string("formspec", formspec_help())
+		return
 	elseif fields.tab == "1" then
-		local meta = minetest.get_meta(pos)
-		local state = meta:get_int("vm16state")
-		meta:set_string("formspec", formspec({vm16.States[state] or "Error"}))
+		meta:set_string("formspec", meta:get_string("storeformspec"))
+		return
 	elseif (fields.key_enter_field or fields.enter) and fields.command ~= "" then
 		local cmd = string.sub(fields.command, 1, 1)
 		local data = string.sub(fields.command, 3)
-		local lines = {"Error"}
-		
-		if cmd == "d" then
-			lines = mem_dump(pos, data)
-		elseif cmd == "a" then
-			local addr = hex2number(data)
-			vm16.set_pc(pos, addr)
-			lines = {string.format("%04X:", addr)}
-		elseif cmd == "s" then
-			local resp = vm16.run(pos, 1)
-			lines = reg_dump(pos, resp)
-		elseif cmd == "e" then
-			lines = enter_data(pos, data)
-		elseif cmd == "r" then
-			minetest.get_node_timer(pos):start(0.2)
-			lines = {"started"}
-		elseif cmd == "t" then
-			minetest.get_node_timer(pos):stop()
-			lines = {"stopped"}
-		elseif cmd == "n" then
-			if vm16.on_power_on(pos, 1) then
-				lines = {"power on"}
-				vm16.write_h16(pos, PROG)
-			end
-		elseif cmd == "f" then
-			print(vm16.read_h16(pos))
-			if vm16.on_power_off(pos) then
-				lines = {"power off"}
-			end
-		elseif cmd == "u" then
-			if vm16.vm_store(pos) then
-				lines = {"unloaded"}
+			
+		if meta:get_int("vm16state") == vm16.POWERED then
+			if minetest.get_node_timer(pos):is_started() then
+				if cmd == "t" then
+					minetest.get_node_timer(pos):stop()
+					lines = {"stopped"}
+				elseif cmd == "f" then
+					minetest.get_node_timer(pos):stop()
+					print(vm16.read_h16(pos))
+					if vm16.on_power_off(pos) then
+						lines = {"power off"}
+					end
+				else
+					lines = help()
+				end
+			else -- stopped
+				if cmd == "d" then
+					lines = mem_dump(pos, data)
+				elseif cmd == "a" then
+					local addr = hex2number(data)
+					vm16.set_pc(pos, addr)
+					lines = {string.format("%04X:", addr)}
+				elseif cmd == "s" then
+					local resp = vm16.run(pos, 1)
+					lines = reg_dump(pos, resp)
+				elseif cmd == "e" then
+					lines = enter_data(pos, data)
+				elseif cmd == "r" then
+					minetest.get_node_timer(pos):start(0.1)
+					lines = {"started"}
+				elseif cmd == "f" then
+					print(vm16.read_h16(pos))
+					if vm16.on_power_off(pos) then
+						lines = {"power off"}
+					end
+				elseif cmd == "u" then
+					minetest.get_node_timer(pos):stop()
+					if vm16.vm_store(pos) then
+						lines = {"unloaded"}
+					end
+				else
+					lines = help()
+				end
 			end
 		else
-			lines = help()
+			if cmd == "n" then
+				if vm16.on_power_on(pos, 1) then
+					lines = {"power on"}
+					vm16.write_h16(pos, PROG)
+				end
+			else
+				lines = help()
+			end
 		end
-		M(pos):set_string("formspec", formspec(lines))
+	else
+		lines = help()
 	end
+	meta:set_string("formspec", formspec(lines))
 end
 
 local function on_timer(pos, elapsed)
 	print("timer")
-	return vm16.run(pos, 1000) ~= vm16.HALT
+	return vm16.run(pos, 10000) ~= vm16.HALT
 end
 
 minetest.register_node("vm16:cpu", {

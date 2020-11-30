@@ -46,11 +46,12 @@ LUALIB_API int luaopen_vm16(lua_State *L);
 */
 
 #define VM16_OK        (0)  // run to the end
-#define VM16_IN        (1)  // input command
-#define VM16_OUT       (2)  // output command
-#define VM16_SYS       (3)  // system call
-#define VM16_HALT      (4)  // CPU halt
-#define VM16_ERROR     (5)  // invalid call
+#define VM16_NOP       (1)  // nop command
+#define VM16_IN        (2)  // input command
+#define VM16_OUT       (3)  // output command
+#define VM16_SYS       (4)  // system call
+#define VM16_HALT      (5)  // CPU halt
+#define VM16_ERROR     (6)  // invalid call
 
 typedef struct {
     uint32_t ident;     // VM identifier

@@ -14,11 +14,12 @@ local vm16lib = ...
 local VMList = {}
 
 local VM16_OK     = 0  -- run to the end
-local VM16_IN     = 1  -- input command
-local VM16_OUT    = 2  -- output command
-local VM16_SYS    = 3  -- system call
-local VM16_HALT   = 4  -- CPU halt
-local VM16_ERROR  = 5  -- invalid call
+local VM16_NOP    = 1  -- nop command
+local VM16_IN     = 2  -- input command
+local VM16_OUT    = 3  -- output command
+local VM16_SYS    = 4  -- system call
+local VM16_HALT   = 5  -- CPU halt
+local VM16_ERROR  = 6  -- invalid call
 
 local VM16_NO_POWER  = 0  -- see events.lua!
 local VM16_POWERED   = 1  -- see events.lua!
@@ -26,13 +27,14 @@ local VM16_UNLOADED  = 2  -- see events.lua!
 
 
 vm16.OK     = VM16_OK
+vm16.NOP    = VM16_NOP
 vm16.IN     = VM16_IN
 vm16.OUT    = VM16_OUT
 vm16.SYS    = VM16_SYS
 vm16.HALT   = VM16_HALT
 vm16.ERROR  = VM16_ERROR
 
-vm16.CallResults = {[0]="OK", "IN", "OUT", "SYS", "HALT", "ERROR"}
+vm16.CallResults = {[0]="OK", "NOP", "IN", "OUT", "SYS", "HALT", "ERROR"}
 
 local CYCLES = 10000  -- max CPU cycles / 100 ms 
 
@@ -211,7 +213,6 @@ function vm16.run(pos, cycles)
 	
 	if vm then
 		resp = vm16lib.run(vm, math.min(cycles, CYCLES))
-		print("resp", resp)
 
 		if resp == VM16_IN then
 			local io = vm16lib.get_io_reg(vm)

@@ -14,6 +14,10 @@ local VM16_NO_POWER  = 0  -- default state
 local VM16_POWERED   = 1  -- VM instance available
 local VM16_UNLOADED  = 2  -- area unloaded, VM stored as meta
 
+vm16.NO_POWER = VM16_NO_POWER
+vm16.POWERED = VM16_POWERED
+vm16.UNLOADED = VM16_UNLOADED
+
 vm16.States = {[0]="no power", "powered", "unloaded"}
 
 function vm16.on_power_on(pos, ram_size)
