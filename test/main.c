@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <assert.h>
 #include "../src/vm16.h"
 
 
@@ -36,7 +37,7 @@ void test1(void) {
     for(int i=0; i<4096; i++) {
         vm16_poke(C, i, val);
     }
-    vm16_loadaddr(C, 0);
+    vm16_set_pc(C, 0);
     t = clock();
     vm16_run(C, 50000000, &ran);
     t = clock() - t;
@@ -46,7 +47,7 @@ void test1(void) {
     for(int i=0; i<4096; i++) {
         vm16_poke(C, i, val);
     }
-    vm16_loadaddr(C, 0);
+    vm16_set_pc(C, 0);
     t = clock();
     vm16_run(C, 50000000, &ran);
     t = clock() - t;
@@ -83,10 +84,10 @@ void test2(void) {
     vm16_init(C, size);
 
     vm16_write_mem(C, 0x1000, sizeof(code) / 2, code);
-    vm16_loadaddr(C, 0x1000);
+    vm16_set_pc(C, 0x1000);
     dump(C);
     vm16_deposit(C, 0);
-    vm16_loadaddr(C, 0x1000);
+    vm16_set_pc(C, 0x1000);
     dump(C);
 
     free(C);
@@ -117,9 +118,54 @@ void test3(void) {
     free(C);
 }
 
+#define BUFF_SIZE  94
+
+void test4(void) {
+    char s[] = ":40100001111222233334444\n:601200055556666777788889999AAAA\n:00000FF";
+    char buffer[BUFF_SIZE];
+
+    uint32_t ran;
+    uint32_t size = vm16_calc_size(3);
+    vm16_t *C = (vm16_t *)malloc(size);
+    vm16_init(C, size);
+
+    printf("Test vm16_write_h16...");
+    vm16_write_h16(C, s);
+
+    assert(vm16_peek(C, 0x0100) == 0x1111);
+    assert(vm16_peek(C, 0x0101) == 0x2222);
+    assert(vm16_peek(C, 0x0102) == 0x3333);
+    assert(vm16_peek(C, 0x0103) == 0x4444);
+    assert(vm16_peek(C, 0x0104) == 0x0000);
+    assert(vm16_peek(C, 0x0120) == 0x5555);
+    assert(vm16_peek(C, 0x0125) == 0xAAAA);
+
+    // some negative tests which should not change the memory content
+    vm16_write_h16(C, ":4010000111122");  // wrong length
+    vm16_write_h16(C, "4010000111122");  // wrong format
+    vm16_write_h16(C, ":A010000111122");  // wrong num
+    vm16_write_h16(C, ":101000011vvv"); // wrong chars
+    vm16_write_h16(C, ":10100011112222");  // wrong type
+
+    assert(vm16_peek(C, 0x0100) == 0x1111);
+    assert(vm16_peek(C, 0x0101) == 0x2222);
+    assert(vm16_peek(C, 0x0102) == 0x3333);
+    assert(vm16_peek(C, 0x0103) == 0x4444);
+    assert(vm16_peek(C, 0x0104) == 0x0000);
+    assert(vm16_peek(C, 0x0120) == 0x5555);
+    assert(vm16_peek(C, 0x0125) == 0xAAAA);
+
+    printf("ok\n");
+
+    printf("%s", vm16_read_h16(C, buffer, BUFF_SIZE));
+
+    free(C);
+}
+
 int main() {
-    test1();
+    //test1();
     //test2();
     //test3();
+    test4();
     return 0;
 }

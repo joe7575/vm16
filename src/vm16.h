@@ -148,4 +148,19 @@ bool vm16_poke(vm16_t *C, uint16_t addr, uint16_t val);
 */
 int vm16_run(vm16_t *C, uint32_t num_cycles, uint32_t *run);
 
+/*
+** Write H16 string to the VM memory.
+*/
+bool vm16_write_h16(vm16_t *C, char *s);
+
+/*
+** Return H16 string from VM memory data
+*/
+uint32_t vm16_read_h16(vm16_t *C, char *dest_buff, int buff_size);
+
+/*
+** Return needed buffer size for the H16 string.
+*/
+uint32_t vm16_get_h16_buffer_size(vm16_t *C);
+
 #endif

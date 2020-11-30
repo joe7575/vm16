@@ -16,6 +16,11 @@ local M = minetest.get_meta
 local CpuInputs = {}   -- [addr] = value
 local CpuOutputs = {}  -- [addr] = dest_pos
 
+
+local PROG = ([[:8 0000 00 2010 0000 3010 0001 6010 0002 6600 0001
+:2 0008 00 1200 0002
+:00000FF]]):gsub(" ", "")
+
 -- Returns the number of operands (0,1) based on the given opcode
 local function num_operands(opcode)
 	if opcode then 
@@ -165,8 +170,10 @@ local function on_receive_fields(pos, formname, fields, player)
 		elseif cmd == "n" then
 			if vm16.on_power_on(pos, 1) then
 				lines = {"power on"}
+				vm16.write_h16(pos, PROG)
 			end
 		elseif cmd == "f" then
+			print(vm16.read_h16(pos))
 			if vm16.on_power_off(pos) then
 				lines = {"power off"}
 			end

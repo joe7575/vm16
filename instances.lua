@@ -190,6 +190,20 @@ function vm16.set_io_reg(pos, addr)
 	return vm and vm16lib.set_io_reg(vm, addr)
 end
 
+-- Write H16 string to VM memory
+function vm16.write_h16(pos, s)
+	local hash = minetest.hash_node_position(pos)
+	local vm = VMList[hash]
+	return vm and vm16lib.write_h16(vm, s)
+end
+
+-- Generate H16 string from VM memory
+function vm16.read_h16(pos)
+	local hash = minetest.hash_node_position(pos)
+	local vm = VMList[hash]
+	return vm and vm16lib.read_h16(vm)
+end
+
 function vm16.run(pos, cycles)
 	local hash = minetest.hash_node_position(pos)
 	local vm = VMList[hash]

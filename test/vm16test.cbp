@@ -35,6 +35,9 @@
 		<Unit filename="../src/vm16core.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="../src/vm16h16.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>

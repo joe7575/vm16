@@ -9,7 +9,7 @@
 ]]--
 
 vm16 = {}
-vm16.version = 1.2   -- see history in readme.md
+vm16.version = 1.3   -- see history in readme.md
 
 local IE = minetest.request_insecure_environment()
 

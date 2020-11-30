@@ -1,6 +1,6 @@
 /*
 VM16
-Copyright (C) 2019 Joe <iauit@gmx.de>
+Copyright (C) 2019-2020 Joe <iauit@gmx.de>
 
 This file is part of VM16.
 
@@ -131,92 +131,92 @@ along with VM16.  If not, see <https://www.gnu.org/licenses/>.
 ** Determine the operand destination address (register/memory)
 */
 static uint16_t *getaddr(vm16_t *C, uint8_t addr_mod) {
-  switch(addr_mod) {
-    case AREG: return &C->areg;
-    case BREG: return &C->breg;
-    case CREG: return &C->creg;
-    case DREG: return &C->dreg;
-    case XREG: return &C->xreg;
-    case YREG: return &C->yreg;
-    case PCNT: return &C->pcnt;
-    case SPTR: return &C->sptr;
-    case XIND: return ADDR_DST(C, C->xreg);
-    case YIND: return ADDR_DST(C, C->yreg);
-    case XINC: {
-        uint16_t *p_res = ADDR_DST(C, C->xreg);
-        C->xreg++;
-        return p_res;
+    switch(addr_mod) {
+        case AREG: return &C->areg;
+        case BREG: return &C->breg;
+        case CREG: return &C->creg;
+        case DREG: return &C->dreg;
+        case XREG: return &C->xreg;
+        case YREG: return &C->yreg;
+        case PCNT: return &C->pcnt;
+        case SPTR: return &C->sptr;
+        case XIND: return ADDR_DST(C, C->xreg);
+        case YIND: return ADDR_DST(C, C->yreg);
+        case XINC: {
+            uint16_t *p_res = ADDR_DST(C, C->xreg);
+            C->xreg++;
+            return p_res;
+        }
+        case YINC: {
+            uint16_t *p_res = ADDR_DST(C, C->yreg);
+            C->yreg++;
+            return p_res;
+        }
+        case CNST: return ADDR_DST(C, 0); // invalid
+        case ABS: {
+            uint16_t addr = *ADDR_SRC(C, C->pcnt);
+            C->pcnt++;
+            return ADDR_DST(C, addr);
+        }
+        case REL: return ADDR_DST(C, 0); // invalid
+        case SREL: {
+            uint16_t offs = *ADDR_SRC(C, C->pcnt);
+            C->pcnt++;
+            return ADDR_DST(C, C->sptr + offs);
+        }
+        default: return ADDR_DST(C, 0);
     }
-    case YINC: {
-        uint16_t *p_res = ADDR_DST(C, C->yreg);
-        C->yreg++;
-        return p_res;
-    }
-    case CNST: return ADDR_DST(C, 0); // invalid
-    case ABS: {
-        uint16_t addr = *ADDR_SRC(C, C->pcnt);
-        C->pcnt++;
-        return ADDR_DST(C, addr);
-    }
-    case REL: return ADDR_DST(C, 0); // invalid
-    case SREL: {
-        uint16_t offs = *ADDR_SRC(C, C->pcnt);
-        C->pcnt++;
-        return ADDR_DST(C, C->sptr + offs);
-    }
-    default: return ADDR_DST(C, 0);
-  }
 }
 
 /*
 * Determine the operand source value (register/memory)
 */
 static uint16_t getoprnd(vm16_t *C, uint8_t addr_mod) {
-  switch(addr_mod) {
-    case AREG: return C->areg;
-    case BREG: return C->breg;
-    case CREG: return C->creg;
-    case DREG: return C->dreg;
-    case XREG: return C->xreg;
-    case YREG: return C->yreg;
-    case PCNT: return C->pcnt;
-    case SPTR: return C->sptr;
-    case XIND: return *ADDR_SRC(C, C->xreg);
-    case YIND: return *ADDR_SRC(C, C->yreg);
-    case XINC: {
-        uint16_t val = *ADDR_SRC(C, C->xreg);
-        C->xreg++;
-        return val;
+    switch(addr_mod) {
+        case AREG: return C->areg;
+        case BREG: return C->breg;
+        case CREG: return C->creg;
+        case DREG: return C->dreg;
+        case XREG: return C->xreg;
+        case YREG: return C->yreg;
+        case PCNT: return C->pcnt;
+        case SPTR: return C->sptr;
+        case XIND: return *ADDR_SRC(C, C->xreg);
+        case YIND: return *ADDR_SRC(C, C->yreg);
+        case XINC: {
+            uint16_t val = *ADDR_SRC(C, C->xreg);
+            C->xreg++;
+            return val;
+        }
+        case YINC: {
+            uint16_t val = *ADDR_SRC(C, C->yreg);
+            C->yreg++;
+            return val;
+        }
+        case REG0: return 0;
+        case REG1: return 1;
+        case CNST: {
+            uint16_t val = *ADDR_SRC(C, C->pcnt);
+            C->pcnt++;
+            return val;
+        }
+        case ABS: {
+            uint16_t addr = *ADDR_SRC(C, C->pcnt);
+            C->pcnt++;
+            return *ADDR_SRC(C, addr);
+        }
+        case REL: {
+            uint16_t offs = *ADDR_SRC(C, C->pcnt);
+            C->pcnt++;
+            return C->pcnt + offs;
+        }
+        case SREL: {
+            uint16_t offs = *ADDR_SRC(C, C->pcnt);
+            C->pcnt++;
+            return C->sptr + offs;
+        }
+        default: return 0;
     }
-    case YINC: {
-        uint16_t val = *ADDR_SRC(C, C->yreg);
-        C->yreg++;
-        return val;
-    }
-    case REG0: return 0;
-    case REG1: return 1;
-    case CNST: {
-        uint16_t val = *ADDR_SRC(C, C->pcnt);
-        C->pcnt++;
-        return val;
-    }
-    case ABS: {
-        uint16_t addr = *ADDR_SRC(C, C->pcnt);
-        C->pcnt++;
-        return *ADDR_SRC(C, addr);
-    }
-    case REL: {
-        uint16_t offs = *ADDR_SRC(C, C->pcnt);
-        C->pcnt++;
-        return C->pcnt + offs;
-    }
-    case SREL: {
-        uint16_t offs = *ADDR_SRC(C, C->pcnt);
-        C->pcnt++;
-        return C->sptr + offs;
-    }
-    default: return 0;
-  }
 }
 
 // size in number of 4K blocks

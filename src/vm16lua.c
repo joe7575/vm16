@@ -1,6 +1,6 @@
 /*
 VM16
-Copyright (C) 2019 Joe <iauit@gmx.de>
+Copyright (C) 2019-2020 Joe <iauit@gmx.de>
 
 This file is part of VM16.
 
@@ -250,6 +250,36 @@ static int set_io_reg(lua_State *L) {
     return 0;
 }
 
+static int read_h16(lua_State *L) {
+    vm16_t *C = check_vm(L);
+    uint32_t size = vm16_get_h16_buffer_size(C);
+    if(size > 0) {
+        char *p_data = (char*)malloc(size);
+        if(p_data != NULL) {
+            uint32_t bytes = vm16_read_h16(C, p_data, size);
+            lua_pushlstring(L, (const char *)p_data, bytes);
+            free(p_data);
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static int write_h16(lua_State *L) {
+    vm16_t *C = check_vm(L);
+    if(lua_isstring(L, 2)) {
+        size_t size;
+        char *p_data = (char*)lua_tolstring(L, 2, &size);
+        p_data[size] = '\0';
+        uint32_t res = vm16_write_h16(C, p_data);
+        lua_pop(L, 2);
+        lua_pushboolean(L, size == res);
+        return 1;
+    }
+    lua_pushboolean(L, 0);
+    return 1;
+}
+
 /*
 ** Bit 0..15
 */
@@ -277,6 +307,8 @@ static const luaL_Reg R[] = {
     {"run",             run},
     {"get_io_reg",      get_io_reg},
     {"set_io_reg",      set_io_reg},
+    {"read_h16",        read_h16},
+    {"write_h16",       write_h16},
     {"testbit",         testbit},
     {NULL, NULL}
 };
