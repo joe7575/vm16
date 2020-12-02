@@ -227,18 +227,18 @@ function vm16.run(pos, cycles)
 
 		if resp == VM16_IN then
 			local io = vm16lib.get_io_reg(vm)
-			io.data = vm16.func_input(pos, io.addr) or 0xFFFF
+			io.data = vm16.on_input(pos, io.addr) or 0xFFFF
 			vm16lib.set_io_reg(vm, io)
 		elseif resp == VM16_OUT then
 			local io = vm16lib.get_io_reg(vm)
-			vm16.func_output(pos, io.addr, io.data)
+			vm16.on_output(pos, io.addr, io.data)
 		elseif resp == VM16_SYS then
 			local io = vm16lib.get_io_reg(vm)
-			io.A = vm16.func_system(pos, io.addr, io.A, io.B) or 0xFFFF
+			io.A = vm16.on_system(pos, io.addr, io.A, io.B) or 0xFFFF
 			vm16lib.set_io_reg(vm, io)
 		elseif resp == VM16_HALT then
 			local cpu = vm16lib.get_cpu_reg(vm) 
-			vm16.func_update(pos, resp, cpu)
+			vm16.on_update(pos, resp, cpu)
 		end
 	end
 	return resp
@@ -265,6 +265,7 @@ local function remove_unloaded_vm()
 			cnt = cnt + 1
 		else
 			vm_store(pos, vm)
+			vm16.on_unload(pos)
 		end
 	end
 	print(cnt.." CPUs active")

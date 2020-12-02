@@ -39,28 +39,33 @@ end
 -- func_output(pos, address, value) 
 -- result = func_system(pos, address, val1, val2) 
 -- func_update(pos, resp, cpu)
-function vm16.register_callbacks(func_input, func_output, func_system, func_update)
-	vm16.func_input  = func_input or vm16.func_input
-	vm16.func_output = func_output or vm16.func_output
-	vm16.func_system = func_system or vm16.func_system
-	vm16.func_update = func_update or vm16.func_update
+function vm16.register_callbacks(on_input, on_output, on_system, on_update, on_unload)
+	vm16.on_input  = on_input or vm16.on_input
+	vm16.on_output = on_output or vm16.on_output
+	vm16.on_system = on_system or vm16.on_system
+	vm16.on_update = on_update or vm16.on_update
+	vm16.on_unload = on_unload or vm16.on_unload
 end
 
 -- default callback handlers
-vm16.func_input = function(pos, address)
-	print("input", address)
+vm16.on_input = function(pos, address)
+	print("on_input", address)
 	return address
 end
 
-vm16.func_output = function(pos, address, value)
-	print("output", address, value)
+vm16.on_output = function(pos, address, value)
+	print("on_output", address, value)
 end
 
-vm16.func_system = function(pos, address, val1, val2) 
-	print("system", address, val1, val2)
+vm16.on_system = function(pos, address, val1, val2) 
+	print("on_system", address, val1, val2)
 	return 1
 end
 
-vm16.func_update = function(pos, resp, cpu)
-	print("update", vm16.CallResults[resp])
+vm16.on_update = function(pos, resp, cpu)
+	print("on_update", vm16.CallResults[resp])
+end
+
+vm16.on_unload = function(pos)
+	print("on_unload")
 end

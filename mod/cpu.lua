@@ -287,4 +287,4 @@ local function on_update(pos, resp, cpu)
 	M(pos):set_string("formspec", formspec(lines))
 end
 
-vm16.register_callbacks(on_input, on_output, nil, on_update)
+vm16.register_callbacks(on_input, on_output, nil, on_update, nil)
