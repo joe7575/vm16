@@ -12,6 +12,7 @@
 
 local vm16lib = ...
 local VMList = {}
+local storage = minetest.get_mod_storage()
 
 local VM16_OK     = 0  -- run to the end
 local VM16_NOP    = 1  -- nop command
@@ -20,11 +21,6 @@ local VM16_OUT    = 3  -- output command
 local VM16_SYS    = 4  -- system call
 local VM16_HALT   = 5  -- CPU halt
 local VM16_ERROR  = 6  -- invalid call
-
-local VM16_NO_POWER  = 0  -- see events.lua!
-local VM16_POWERED   = 1  -- see events.lua!
-local VM16_UNLOADED  = 2  -- see events.lua!
-
 
 vm16.OK     = VM16_OK
 vm16.NOP    = VM16_NOP
@@ -111,17 +107,32 @@ function vm16.destroy(pos)
 	VMList[hash] = nil
 end
 
--- move VM from meta string to active 
+function vm16.is_loaded(pos)
+	local hash = minetest.hash_node_position(pos)
+	return VMList[hash] ~= nil
+end
+
+-- move VM from storage string to active 
 function vm16.vm_restore(pos)
 	print("vm_restore")
 	local meta = minetest.get_meta(pos)
-	local s = meta:get_string("vm16")
-	local size = meta:get_int("vm16size")
-	if s ~= "" and size > 0 then
-		local hash = minetest.hash_node_position(pos)
-		VMList[hash] = vm16lib.init(size)
-		vm16lib.set_vm(VMList[hash], s)
+	local hash = minetest.hash_node_position(pos)
+	if not VMList[hash] then
+		local s = storage:get_string(hash)
+		local size = meta:get_int("vm16size")
+		if s ~= "" and size > 0 then
+			VMList[hash] = vm16lib.init(size)
+			vm16lib.set_vm(VMList[hash], s)
+		end
 	end
+end
+
+-- move VM from active to storage string
+local function vm_store(pos, vm)
+	print("vm_store")
+	local hash = minetest.hash_node_position(pos)
+	local s = vm16lib.get_vm(vm)
+	storage:set_string(hash, s)
 end
 
 -- returns size in words
@@ -233,37 +244,17 @@ function vm16.run(pos, cycles)
 	return resp
 end
 
--- move VM from active to meta string
-local function vm_store(pos, vm)
-	local meta = minetest.get_meta(pos)
-	local state = meta:get_int("vm16state")
-	print("vm_store", state)
-	if state == VM16_POWERED then
-		local s = vm16lib.get_vm(vm)
-		minetest.get_meta(pos):set_string("vm16", s)
-		minetest.get_meta(pos):mark_as_private("vm16")
-		meta:set_int("vm16state", VM16_UNLOADED)
-		print("vm_store", meta:get_int("vm16state"))
-		return true
-	end
-end
-
-function vm16.vm_store(pos)
-	local hash = minetest.hash_node_position(pos)
-	local vm = VMList[hash]
-	return vm and vm_store(pos, vm)
-end
-
 minetest.register_on_shutdown(function()
-	print("register_on_shutdown")
+	print("register_on_shutdown2")
 	for hash, vm in pairs(VMList) do
 		local pos = minetest.get_position_from_hash(hash)
 		vm_store(pos, vm)
 	end
+	print("done")
 end)
 
 local function remove_unloaded_vm()
-	print("remove_unloaded_vm")
+	print("remove_unloaded_vms")
 	local tbl = table.copy(VMList)
 	local cnt = 0
 	VMList = {}
@@ -284,11 +275,9 @@ minetest.after(60, remove_unloaded_vm)
 
 
 local function debugging()
-	for hash, vm in pairs(VMList) do
+	for hash, _ in pairs(VMList) do
 		local pos = minetest.get_position_from_hash(hash)
-		local meta = minetest.get_meta(pos)
-		local state = meta:get_int("vm16state")
-		print("CPU at "..minetest.pos_to_string(pos)..":  "..vm16.States[state])
+		print("CPU active at "..minetest.pos_to_string(pos))
 	end
 	minetest.after(10, debugging)
 end	

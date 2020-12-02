@@ -9,7 +9,6 @@
 ]]--
 
 vm16 = {}
-vm16.version = 1.3   -- see history in readme.md
 
 local IE = minetest.request_insecure_environment()
 
@@ -32,7 +31,7 @@ IE = nil
 vm16lib = nil
 
 -- for testing purposes
-dofile(MP.."/test/cpu.lua")
-dofile(MP.."/test/input.lua")
-dofile(MP.."/test/output.lua")
+dofile(MP.."/mod/cpu.lua")
+dofile(MP.."/mod/input.lua")
+dofile(MP.."/mod/output.lua")
 

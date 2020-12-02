@@ -10,49 +10,27 @@
 	User event functions
 ]]--
 
-local VM16_NO_POWER  = 0  -- default state
-local VM16_POWERED   = 1  -- VM instance available
-local VM16_UNLOADED  = 2  -- area unloaded, VM stored as meta
-
-vm16.NO_POWER = VM16_NO_POWER
-vm16.POWERED = VM16_POWERED
-vm16.UNLOADED = VM16_UNLOADED
-
-vm16.States = {[0]="no power", "powered", "unloaded"}
-
 function vm16.on_power_on(pos, ram_size)
-	local meta = minetest.get_meta(pos)
-	local state = meta:get_int("vm16state")
-	print("on_power_on", state)
-	if state == VM16_NO_POWER then
+	print("on_power_on")
+	if not vm16.is_loaded(pos) then
 		if vm16.create(pos, ram_size) then
-			meta:set_int("vm16state", VM16_POWERED)
-			print("on_power_on2",  meta:get_int("vm16state"))
 			return true
 		end
 	end
 end
 
 function vm16.on_power_off(pos)
-	local meta = minetest.get_meta(pos)
-	local state = meta:get_int("vm16state")
-	print("on_power_off", state)
-	if state ~= VM16_NO_POWER then
+	print("on_power_off")
+	if vm16.is_loaded(pos) then
 		vm16.destroy(pos)
-		meta:set_int("vm16state", VM16_NO_POWER)
-		print("on_power_off2",  meta:get_int("vm16state"))
 		return true
 	end
 end
 
 function vm16.on_load(pos)
-	local meta = minetest.get_meta(pos)
-	local state = meta:get_int("vm16state")
-	print("on_load", state)
-	if state == VM16_UNLOADED then
+	print("on_load")
+	if not vm16.is_loaded(pos) then
 		vm16.vm_restore(pos)
-		meta:set_int("vm16state", VM16_POWERED)
-		print("on_load2",  meta:get_int("vm16state"))
 		return true
 	end
 end

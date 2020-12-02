@@ -70,6 +70,7 @@ Licensed under the GNU GPLv3   (See LICENSE.txt)
 - 2020-11-21  v1.1  * First commit as LuaRocks project
 - 2020-11-29  v1.2  * Complete rework, Add test nodes
 - 2020-11-30  v1.3  * Add functions read_h16/write_h16
+- 2020-12-02  v2.0  * Switch to mod storage for VMs
 
 
 

@@ -134,7 +134,6 @@ local function help()
 		"t               - terminate CPU",
 		"n               - turn power on",
 		"f               - turn power off",
-		"u               - 'unload' CPU",
 	}
 end
 	
@@ -153,7 +152,7 @@ local function on_receive_fields(pos, formname, fields, player)
 		local cmd = string.sub(fields.command, 1, 1)
 		local data = string.sub(fields.command, 3)
 			
-		if meta:get_int("vm16state") == vm16.POWERED then
+		if vm16.is_loaded(pos) then
 			if minetest.get_node_timer(pos):is_started() then
 				if cmd == "t" then
 					minetest.get_node_timer(pos):stop()
@@ -251,13 +250,9 @@ minetest.register_lbm({
     run_at_every_load = true,
     action = function(pos, node)
 		if vm16.on_load(pos) then
-			local meta = minetest.get_meta(pos)
-			local state = meta:get_int("vm16state")
-			meta:set_string("formspec", formspec({vm16.States[state] or "Error"}))
+			M(pos):set_string("formspec", formspec({"powered"}))
 		else
-			local meta = minetest.get_meta(pos)
-			local state = meta:get_int("vm16state")
-			meta:set_string("formspec", formspec({"Error"}))
+			M(pos):set_string("formspec", formspec({"unpowered"}))
 		end
 	end
 })

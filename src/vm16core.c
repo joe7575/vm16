@@ -126,6 +126,9 @@ along with VM16.  If not, see <https://www.gnu.org/licenses/>.
 #define MEM_SIZE(vm_size)       ((vm_size - sizeof(vm16_t) + sizeof(uint16_t)) / sizeof(uint16_t))
 #define VM_VALID(C)             ((C != 0) && (C->ident == IDENT) && (C->version == VERSION))
 
+// byte nibble vs ASCII char
+#define NTOA(n)                 ((n) > 9   ? (n) + 55 : (n) + 48)
+#define ATON(a)                 ((a) > '9' ? (a) - 55 : (a) - 48)
 
 /*
 ** Determine the operand destination address (register/memory)
@@ -225,8 +228,8 @@ uint32_t vm16_calc_size(uint8_t size) {
     return VM_SIZE(mem_size);
 }
 
-uint32_t vm16_real_size(vm16_t *C) {
-    return VM_SIZE(C->mem_size);
+uint32_t vm16_get_string_size(vm16_t *C) {
+    return VM_SIZE(C->mem_size) * 2;
 }
 
 bool vm16_init(vm16_t *C, uint32_t vm_size) {
@@ -236,6 +239,7 @@ bool vm16_init(vm16_t *C, uint32_t vm_size) {
         C->version = VERSION;
         C->mem_size = MEM_SIZE(vm_size);
         C->mem_mask = C->mem_size - 1;
+        C->p_in_dest = &C->areg;
         return true;
     }
     return false;
@@ -263,29 +267,38 @@ void vm16_deposit(vm16_t *C, uint16_t value) {
     }
 }
 
-uint32_t vm16_get_vm(vm16_t *C, uint32_t size_buffer, uint8_t *p_buffer) {
+char *vm16_get_vm_as_str(vm16_t *C, uint32_t size_buffer, char *p_buffer) {
     if(VM_VALID(C)) {
-        uint32_t size = MIN(VM_SIZE(C->mem_size), size_buffer);
-        if((p_buffer != NULL) && (size_buffer >= size)) {
-            memcpy(p_buffer, C, size);
-            return size;
+        if((p_buffer != NULL) && ((VM_SIZE(C->mem_size) * 2) == size_buffer)) {
+            char *p_src = (char*)C;
+            char *p_dst = p_buffer;
+             for(int i = 0; i < size_buffer/2; i++) {
+                *p_dst++ = NTOA(*p_src >> 4);
+                *p_dst++ = NTOA(*p_src & 0x0f);
+                p_src++;
+            }
+            return p_buffer;
         }
     }
-    return 0;
+    return NULL;
 }
 
-uint32_t vm16_set_vm(vm16_t *C, uint32_t size_buffer, uint8_t *p_buffer) {
+uint32_t vm16_set_vm_as_str(vm16_t *C, uint32_t size_buffer, char *p_buffer) {
     if(VM_VALID(C)) {
-        uint32_t size = MIN(VM_SIZE(C->mem_size), size_buffer);
-        if(p_buffer != NULL) {
-            uint32_t mem_size = C->mem_size;
-            memcpy(C, p_buffer, size);
+        if((p_buffer != NULL) && ((VM_SIZE(C->mem_size) * 2) == size_buffer)) {
+            uint16_t mem_size = C->mem_size;
+            char *p_src = p_buffer;
+            char *p_dst = (char*)C;
+            for(int i = 0; i < size_buffer/2; i++) {
+                *p_dst++ = (ATON(p_src[0]) << 4) + ATON(p_src[1]);
+                p_src += 2;
+            }
             // restore the header again
             C->ident = IDENT;
             C->version = VERSION;
             C->mem_size = mem_size;
-
-            return size;
+            C->p_in_dest = &C->areg;
+            return size_buffer;
         }
     }
     return 0;

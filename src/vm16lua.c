@@ -45,6 +45,12 @@ static vm16_t *check_vm(lua_State *L) {
     luaL_argcheck(L, ud != NULL, 1, "'vm16 object' expected");
     return (vm16_t*)ud;
 }
+
+static int version(lua_State *L) {
+    lua_pushstring(L, SVERSION);
+    return 1;
+}
+
 static int init(lua_State *L) {
     lua_Integer size = luaL_checkinteger(L, 1);
     uint32_t nbytes = vm16_calc_size(size);
@@ -97,14 +103,15 @@ static int deposit(lua_State *L) {
 
 static int get_vm(lua_State *L) {
     vm16_t *C = check_vm(L);
-    uint32_t size = vm16_real_size(C);
+    uint32_t size = vm16_get_string_size(C);
     if(size > 0) {
-        void *p_data = malloc(size);
+        uint8_t *p_data = (uint8_t*)malloc(size);
         if(p_data != NULL) {
-            uint32_t bytes = vm16_get_vm(C, size, (uint8_t*)p_data);
-            lua_pushlstring(L, (const char *)p_data, bytes);
-            free(p_data);
-            return 1;
+            if(vm16_get_vm_as_str(C, size, p_data) != NULL) {
+                lua_pushlstring(L, (const char *)p_data, size);
+                free(p_data);
+                return 1;
+            }
         }
     }
     return 0;
@@ -114,8 +121,8 @@ static int set_vm(lua_State *L) {
     vm16_t *C = check_vm(L);
     if(lua_isstring(L, 2)) {
         size_t size;
-        const void *p_data = lua_tolstring(L, 2, &size);
-        uint32_t res = vm16_set_vm(C, size, (uint8_t*)p_data);
+        char *p_data = (char*)lua_tolstring(L, 2, &size);
+        uint32_t res = vm16_set_vm_as_str(C, size, p_data);
         lua_pop(L, 2);
         lua_pushboolean(L, size == res);
         return 1;
@@ -292,6 +299,7 @@ static int testbit(lua_State *L) {
 }
 
 static const luaL_Reg R[] = {
+    {"version",         version},
     {"init",            init},
     {"mem_size",        mem_size},
     {"set_pc",          set_pc},

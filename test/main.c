@@ -25,6 +25,8 @@ void test1(void) {
     uint32_t ran;
     int64_t num_cycles;
     uint16_t val;
+    char *p_data;
+    uint32_t bytes;
     uint32_t size = vm16_calc_size(1);
     vm16_t *C = (vm16_t *)malloc(size);
     vm16_init(C, size);
@@ -32,6 +34,9 @@ void test1(void) {
     while(vm16_run(C, 1, &ran) != VM16_HALT) {
         dump(C);
     }
+    size = vm16_get_string_size(C);
+    p_data = (char*)malloc(size);
+    vm16_get_vm_as_str(C, size, p_data);
 
     val = 0x0C00;
     for(int i=0; i<4096; i++) {
@@ -163,7 +168,7 @@ void test4(void) {
 }
 
 int main() {
-    //test1();
+    test1();
     //test2();
     //test3();
     test4();

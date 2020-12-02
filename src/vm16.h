@@ -36,7 +36,8 @@ LUALIB_API int luaopen_vm16(lua_State *L);
 #endif
 
 #define IDENT           (0x36314D56)
-#define VERSION         (2)
+#define VERSION         (2)    // VM compatibility
+#define SVERSION        "2.0"  // see history in readme.md
 #define VM16_WORD_SIZE  (16)
 #define MEM_BLOCK_SIZE  (4096)
 #define MAX_MEM_BLOCKS  (16)     // = 64 KW
@@ -84,9 +85,9 @@ void vm16_disassemble(vm16_t *C, uint8_t opcode, uint8_t addr_mode1, uint8_t add
 uint32_t vm16_calc_size(uint8_t size);
 
 /*
-** Return the size store in the VM
+** Return the size to store the VM as ASCII string
 */
-uint32_t vm16_real_size(vm16_t *C);
+uint32_t vm16_get_string_size(vm16_t *C);
 
 /*
 ** Initialize the allocation VM memory.
@@ -110,16 +111,15 @@ uint16_t vm16_get_pc(vm16_t *C);
 void vm16_deposit(vm16_t *C, uint16_t value);
 
 /*
-** Read complete VM inclusive RAM for storage purposes.
-** Number of read bytes is returned.
+** Return complete VM inclusive RAM as ASCII string for storage purposes.
 */
-uint32_t vm16_get_vm(vm16_t *C, uint32_t size_buffer, uint8_t *p_buffer);
+char *vm16_get_vm_as_str(vm16_t *C, uint32_t size_buffer, char *p_buffer);
 
 /*
-** Write (restore) the VM with then given binary string.
+** Write (restore) the VM with then given ASCII string.
 ** Number of written bytes is returned.
 */
-uint32_t vm16_set_vm(vm16_t *C, uint32_t size_buffer, uint8_t *p_buffer);
+uint32_t vm16_set_vm_as_str(vm16_t *C, uint32_t size_buffer, char *p_buffer);
 
 /*
 ** Read memory block for debugging purposes / external drives
