@@ -102,7 +102,12 @@ for i = 1,10000 do
 	assert(vm16lib.peek(vm, 0x2347) == 0xFFFF)
 	assert(vm16lib.peek(vm, 0x2348) == 0xAFFE)
 
+	assert(vm16lib.poke(vm, 100, 0x40) == true)
+	assert(vm16lib.poke(vm, 101, 0x41) == true)
+	assert(vm16lib.poke(vm, 102, 0x42) == true)
+	assert(vm16lib.poke(vm, 103, 0x43) == true)
 	
+	print(vm16lib.read_ascii(vm, 100, 4))
 	local s2 = vm16lib.read_h16(vm)
 	vm16lib.write_h16(vm, s2)
 	s2 = vm16lib.read_h16(vm)

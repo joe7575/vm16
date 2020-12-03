@@ -171,6 +171,20 @@ static int write_mem(lua_State *L) {
     return 0;
 }
 
+static int read_ascii(lua_State *L) {
+    vm16_t *C = check_vm(L);
+    lua_Integer addr = luaL_checkinteger(L, 2);
+    lua_Integer num = luaL_checkinteger(L, 3);
+    char *p_data = (char*)malloc(num);
+    if((C != NULL) && (p_data != NULL) && (num > 0)) {
+        uint16_t chars = vm16_get_ascii(C, addr, num, p_data);
+        lua_pushlstring(L, (const char *)p_data, chars);
+        free(p_data);
+        return 1;
+    }
+    return 0;
+}
+
 static int peek(lua_State *L) {
     vm16_t *C = check_vm(L);
     uint16_t addr = (uint16_t)luaL_checkinteger(L, 2);
@@ -309,6 +323,7 @@ static const luaL_Reg R[] = {
     {"set_vm",          set_vm},
     {"read_mem",        read_mem},
     {"write_mem",       write_mem},
+    {"read_ascii",      read_ascii},
     {"peek",            peek},
     {"poke",            poke},
     {"get_cpu_reg",     get_cpu_reg},
