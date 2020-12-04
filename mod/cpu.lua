@@ -21,24 +21,6 @@ local PROG = ([[:8 0000 00 2010 0000 3010 0001 6010 0002 6600 0001
 :2 0008 00 1200 0002
 :00000FF]]):gsub(" ", "")
 
--- Returns the number of operands (0,1) based on the given opcode
-local function num_operands(opcode)
-	if opcode then 
-		local idx1 = math.floor(opcode / 1024)
-		local rest = opcode - (idx1 * 1024)
-		local idx2 = math.floor(rest / 32)
-		local idx3 = rest % 32
-		return math.min((idx2 >= 16 and 1 or 0) + (idx3 >= 16 and 1 or 0), 1)
-	end
-	return 0
-end
-
-local function hex2number(s)
-	local addr = string.match (s or "0", "^([0-9a-fA-F]+)$")
-	if not addr or addr == "" then addr = "0" end
-	return tonumber(addr, 16) % 0x10000
-end
-
 local function formspec(lines)
 	return "size[10,7]"..
 		"tabheader[0,0;tab;CPU,help;1;;true]"..
@@ -69,7 +51,7 @@ local function formspec_help()
 end
 
 local function mem_dump(pos, s)
-	local addr = hex2number(s) or 0
+	local addr = vm16.hex2number(s) or 0
 	local mem = vm16.read_mem(pos, addr, 8*4)
 	local lines = {}
 	
@@ -93,7 +75,7 @@ local function reg_dump(pos, resp)
 		lines[1] = vm16.CallResults[resp]
 		lines[2] = string.format("A:%04X B:%04X X:%04X Y:%04X", cpu.A, cpu.B, cpu.X, cpu.Y)
 		local operand = ""
-		if num_operands(cpu.mem0) == 1 then
+		if vm16.num_operands(cpu.mem0) == 1 then
 			operand = string.format("%04X", cpu.mem1)
 		end
 		lines[3] = string.format(">%04X: %04X %s", cpu.PC, cpu.mem0, operand)
@@ -108,14 +90,14 @@ local function enter_data(pos, s)
 	local lines
 	
 	if s2 then
-		local val1 = hex2number(s1)
-		local val2 = hex2number(s2)
+		local val1 = vm16.hex2number(s1)
+		local val2 = vm16.hex2number(s2)
 		local addr = vm16.get_pc(pos) or 0
 		lines = {string.format("%04X: %04X %04X", addr, val1, val2)}
 		vm16.deposit(pos, val1)
 		vm16.deposit(pos, val2)
 	else
-		local val = hex2number(s1)
+		local val = vm16.hex2number(s1)
 		local addr = vm16.get_pc(pos) or 0
 		lines = {string.format("%04X: %04X", addr, val)}
 		vm16.deposit(pos, val)
@@ -170,7 +152,7 @@ local function on_receive_fields(pos, formname, fields, player)
 				if cmd == "d" then
 					lines = mem_dump(pos, data)
 				elseif cmd == "a" then
-					local addr = hex2number(data)
+					local addr = vm16.hex2number(data)
 					vm16.set_pc(pos, addr)
 					lines = {string.format("%04X:", addr)}
 				elseif cmd == "s" then

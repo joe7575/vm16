@@ -113,6 +113,11 @@ for i = 1,10000 do
 	s2 = vm16lib.read_h16(vm)
 	
 	vm = nil
+	
+	assert(vm16lib.testbit(0x1000, 0) == false)
+	assert(vm16lib.testbit(0x1000, 11) == false)
+	assert(vm16lib.testbit(0x1000, 12) == true)
+	assert(vm16lib.testbit(0x1000, 13) == false)
 
 end
 

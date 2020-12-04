@@ -35,49 +35,49 @@ vm16.CallResults = {[0]="OK", "NOP", "IN", "OUT", "SYS", "HALT", "ERROR"}
 local CYCLES = 10000  -- max CPU cycles / 100 ms 
 
 vm16.AsmHelp = [[## VM16 Instruction Set ##
-0000            nop
-1C00            halt
-0800            sys  0
-2010, 0123      move A, #$123
-2030, 0123      move B, #$123
-2090, 0123      move X, #$123
-20B0, 0123      move Y, #$123
-2011, 0123      move A, $123
-2031, 0123      move B, $123
-2091, 0123      move X, $123
-20B1, 0123      move Y, $123
-2001            move A, B
-2001            move A, B
-2008            move A, [X]
-2009            move A, [Y]
-2028            move B, [X]
-2029            move B, [Y]
-2401            xchg A, B
-2880            inc  X
-28A0            inc  Y
-3001            add  A, B
-3010, 0002      add  A, #2
-3401            sub  A, B
-3410, 0003      sub  A, #3
-3801            mul  A, B
-3810, 0004      mul  A, #4
-3C01            div  A, B
-3C10, 0005      div  A, #5
-4001            and  A, B
-4010, 0006      and  A, #6
-4401            or   A, B
-4410, 0007      or   A, #7
-4801            xor  A, B
-4810, 0008      xor  A, #8
-1200, 0100      jump $100
-1600, 0100      call $100
-1800            ret
-5010, 0100      bnze A, $100
-5410, 0100      bze  A, $100
-5810, 0100      bpos A, $100
-5C10, 0100      bneg A, $100
-6010, 0002      in   A, #2
-6600, 0003      out  #3, A
+nop                0000
+halt               1C00
+sys  0             0800
+move A, #$123      2010, 0123
+move B, #$123      2030, 0123
+move X, #$123      2090, 0123
+move Y, #$123      20B0, 0123
+move A, $123       2011, 0123
+move B, $123       2031, 0123
+move X, $123       2091, 0123
+move Y, $123       20B1, 0123
+move A, B          2001
+move A, B          2001
+move A, [X]        2008
+move A, [Y]        2009
+move B, [X]        2028
+move B, [Y]        2029
+xchg A, B          2401
+inc  X             2880
+inc  Y             28A0
+add  A, B          3001
+add  A, #2         3010, 0002
+sub  A, B          3401
+sub  A, #3         3410, 0003
+mul  A, B          3801
+mul  A, #4         3810, 0004
+div  A, B          3C01
+div  A, #5         3C10, 0005
+and  A, B          4001
+and  A, #6         4010, 0006
+or   A, B          4401
+or   A, #7         4410, 0007
+xor  A, B          4801
+xor  A, #8         4810, 0008
+jump $100          1200, 0100
+call $100          1600, 0100
+ret                1800
+bnze A, $100       5010, 0100
+bze  A, $100       5410, 0100
+bpos A, $100       5810, 0100
+bneg A, $100       5C10, 0100
+in   A, #2         6010, 0002
+out  #3, A         6600, 0003
 ]]
 
 vm16.AsmHelp = vm16.AsmHelp:gsub(",", "\\,")
@@ -85,6 +85,9 @@ vm16.AsmHelp = vm16.AsmHelp:gsub("\n", ",")
 vm16.AsmHelp = vm16.AsmHelp:gsub("%[", "\\%[")
 vm16.AsmHelp = vm16.AsmHelp:gsub("%]", "\\%]")
 
+
+vm16.version = vm16lib.version()
+vm16.testbit = vm16lib.testbit
 
 -- ram_size is from 1 (4K) to 16 (64KB)
 function vm16.create(pos, ram_size)

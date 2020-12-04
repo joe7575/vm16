@@ -35,10 +35,11 @@ function vm16.on_load(pos)
 	end
 end
 
--- result = func_input(pos, address) 
--- func_output(pos, address, value) 
--- result = func_system(pos, address, val1, val2) 
--- func_update(pos, resp, cpu)
+-- result = on_input(pos, address) 
+--          on_output(pos, address, value) 
+-- result = on_system(pos, address, val1, val2) 
+--          on_update(pos, resp, cpu)
+--          on_unload(pos)
 function vm16.register_callbacks(on_input, on_output, on_system, on_update, on_unload)
 	vm16.on_input  = on_input or vm16.on_input
 	vm16.on_output = on_output or vm16.on_output

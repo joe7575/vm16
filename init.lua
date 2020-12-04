@@ -26,6 +26,7 @@ local MP = minetest.get_modpath("vm16")
 
 assert(loadfile(MP.."/instances.lua"))(vm16lib)
 dofile(MP.."/events.lua")
+dofile(MP.."/lib.lua")
 
 IE = nil
 vm16lib = nil
