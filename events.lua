@@ -36,7 +36,7 @@ function vm16.on_load(pos)
 end
 
 -- result = on_input(pos, address) 
---          on_output(pos, address, value) 
+--          on_output(pos, address, val1, val2) 
 -- result = on_system(pos, address, val1, val2) 
 --          on_update(pos, resp, cpu)
 --          on_unload(pos)
@@ -54,8 +54,8 @@ vm16.on_input = function(pos, address)
 	return address
 end
 
-vm16.on_output = function(pos, address, value)
-	print("on_output", address, value)
+vm16.on_output = function(pos, address, val1, val2)
+	print("on_output", address, val1, val2)
 end
 
 vm16.on_system = function(pos, address, val1, val2) 

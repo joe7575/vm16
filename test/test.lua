@@ -1,60 +1,32 @@
+local MP = '/home/joachim/Projekte/lua/minetest_unittest/lib'
+
+core = {}
+
+dofile(MP.."/chatcommands.lua")
+dofile(MP.."/serialize.lua")
+dofile(MP.."/misc_helpers.lua")
+dofile(MP.."/misc.lua")
+dofile(MP.."/vector.lua")
+dofile(MP.."/meta.lua")
+
+minetest = core
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+
+local MP = "/home/joachim/minetest5/mods/vm16"
+vm16 = {}
 local vm16lib = require("vm16lib")
 print(vm16lib.version())
-
-local function hex(word) return string.format("%04X", word) end
-
-local function dump(o)
-   if type(o) == 'table' then
-      local s = '{ '
-      for k,v in pairs(o) do
-         if type(k) ~= 'number' then k = '"'..k..'"' end
-         s = s .. '['..k..']=' .. dump(v) .. ', '
-      end
-      return s .. '} '
-   else
-      return tostring(o)
-   end
-end
-
-local function equals(o1, o2, ignore_mt)
-    if o1 == o2 then return true end
-    local o1Type = type(o1)
-    local o2Type = type(o2)
-    if o1Type ~= o2Type then return false end
-    if o1Type ~= 'table' then return false end
-
-    if not ignore_mt then
-        local mt1 = getmetatable(o1)
-        if mt1 and mt1.__eq then
-            --compare using built in method
-            return o1 == o2
-        end
-    end
-
-    local keySet = {}
-
-    for key1, value1 in pairs(o1) do
-        local value2 = o2[key1]
-        if value2 == nil or equals(value1, value2, ignore_mt) == false then
-            return false
-        end
-        keySet[key1] = true
-    end
-
-    for key2, _ in pairs(o2) do
-        if not keySet[key2] then return false end
-    end
-    return true
-end
+assert(loadfile(MP.."/instances.lua"))(vm16lib)
+dofile(MP.."/events.lua")
+dofile(MP.."/lib.lua")
 
 print("Do some tests...")
 
-for i = 1,10000 do
+for i = 1,10 do
 
 	local vm = vm16lib.init(1)
-	print("vm = "..dump(vm))
-	
-	assert("mem_size", vm16lib.mem_size(vm) == 4096)
+	assert(vm16lib.mem_size(vm) == 4096)
 
 	assert(vm16lib.set_pc(vm, 0x1234) == true)
 	assert(vm16lib.get_pc(vm) == 0x1234)
@@ -71,7 +43,7 @@ for i = 1,10000 do
 	assert(vm16lib.set_vm(vm, s) == true)
 
 	local tbl = vm16lib.read_mem(vm, 0 ,4)
-	assert(equals(tbl, {1,2,3,4}) == true)
+	assert(table.equals(tbl, {1,2,3,4}) == true)
 	assert(#vm16lib.read_mem(vm, 0 ,0x2345) == 0)
 	assert(#vm16lib.read_mem(vm, 0x2345 ,10) == 10)
 
@@ -106,8 +78,9 @@ for i = 1,10000 do
 	assert(vm16lib.poke(vm, 101, 0x41) == true)
 	assert(vm16lib.poke(vm, 102, 0x42) == true)
 	assert(vm16lib.poke(vm, 103, 0x43) == true)
+	assert(vm16lib.poke(vm, 104, 0) == true)
 	
-	print(vm16lib.read_ascii(vm, 100, 4))
+	print(vm16lib.read_ascii(vm, 100, 16))
 	local s2 = vm16lib.read_h16(vm)
 	vm16lib.write_h16(vm, s2)
 	s2 = vm16lib.read_h16(vm)
@@ -118,7 +91,46 @@ for i = 1,10000 do
 	assert(vm16lib.testbit(0x1000, 11) == false)
 	assert(vm16lib.testbit(0x1000, 12) == true)
 	assert(vm16lib.testbit(0x1000, 13) == false)
-
+	
 end
 
+-------------------------------------------------------------------------------
+-- real VM test
+-------------------------------------------------------------------------------
+
+local Code = {
+	0x0000, 0x0000,  -- nop / nop
+	0x6010, 0x0001,  -- in A, #1
+	0x6600, 0x0002,  -- out #2, A
+	0x6010, 0x0003,  -- in A, #3
+	0x6600, 0x0004,  -- out #4, A
+	0x1200, 0x0002,  -- jump, #2
+}
+
+local pos = {x=0, y=0, z=0}
+local cnt = 0
+
+local function on_input(pos, address)
+	cnt = cnt + 1
+	print("input", cnt)
+	return address
+end	
+
+local function on_output(pos, address, value)
+	cnt = cnt + 1
+	print("output", cnt)
+	return true
+	--return false
+end	
+
+local function on_system(pos, address, val1, val2)
+	return val1
+end	
+
+vm16.create(pos, 1)
+vm16.register_callbacks(on_input, on_output, on_system)
+vm16.write_mem(pos, 0, Code)
+print(vm16.CallResults[vm16.run(pos)])  -- 1. nop
+print(vm16.CallResults[vm16.run(pos)])  -- 2. no0p
+print(vm16.CallResults[vm16.run(pos)])  -- in/out loop
 print("finished.")

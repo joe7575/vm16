@@ -162,7 +162,8 @@ void test4(void) {
 
     printf("ok\n");
 
-    printf("%s", vm16_read_h16(C, buffer, BUFF_SIZE));
+    vm16_read_h16(C, buffer, BUFF_SIZE);
+    printf("%s", buffer);
 
     free(C);
 }

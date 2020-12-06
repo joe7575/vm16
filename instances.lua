@@ -182,10 +182,10 @@ function vm16.peek(pos, addr)
 	return vm and vm16lib.peek(vm, addr)
 end
 
-function vm16.poke(pos, addr)
+function vm16.poke(pos, addr, val)
 	local hash = minetest.hash_node_position(pos)
 	local vm = VMList[hash]
-	return vm and vm16lib.poke(vm, addr)
+	return vm and vm16lib.poke(vm, addr, val)
 end
 
 function vm16.get_cpu_reg(pos, addr)
@@ -224,17 +224,23 @@ function vm16.run(pos, cycles)
 	local hash = minetest.hash_node_position(pos)
 	local vm = VMList[hash]
 	local resp = VM16_ERROR
+	local ran
 	
-	if vm then
-		resp = vm16lib.run(vm, math.min(cycles, CYCLES))
-
-		if resp == VM16_IN then
+	cycles = math.min(cycles or CYCLES, CYCLES)
+	
+	while vm and cycles > 0 do
+		resp, ran = vm16lib.run(vm, cycles)
+		cycles = cycles - ran
+		
+		if resp == VM16_NOP then
+			return VM16_NOP
+		elseif resp == VM16_IN then
 			local io = vm16lib.get_io_reg(vm)
 			io.data = vm16.on_input(pos, io.addr) or 0xFFFF
 			vm16lib.set_io_reg(vm, io)
 		elseif resp == VM16_OUT then
 			local io = vm16lib.get_io_reg(vm)
-			vm16.on_output(pos, io.addr, io.data)
+			if vm16.on_output(pos, io.addr, io.data, io.B) then return VM16_OK end
 		elseif resp == VM16_SYS then
 			local io = vm16lib.get_io_reg(vm)
 			io.A = vm16.on_system(pos, io.addr, io.A, io.B) or 0xFFFF
@@ -242,9 +248,11 @@ function vm16.run(pos, cycles)
 		elseif resp == VM16_HALT then
 			local cpu = vm16lib.get_cpu_reg(vm) 
 			vm16.on_update(pos, resp, cpu)
+			return VM16_HALT
 		end
+		cycles = cycles - CYCLES/10
 	end
-	return resp
+	return VM16_OK
 end
 
 minetest.register_on_shutdown(function()

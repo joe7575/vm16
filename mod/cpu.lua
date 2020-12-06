@@ -195,7 +195,7 @@ end
 
 local function on_timer(pos, elapsed)
 	print("timer")
-	return vm16.run(pos, 10000) ~= vm16.HALT
+	return vm16.run(pos) < vm16.HALT
 end
 
 minetest.register_node("vm16:cpu", {
@@ -247,7 +247,7 @@ local function on_input(pos, address)
 	return value
 end
 	
-local function on_output(pos, address, value)	
+local function on_output(pos, address, val1, val2)	
 	local hash = minetest.hash_node_position(pos)
 	CpuOutputs[hash] = CpuOutputs[hash] or {}
 	local dest_pos = CpuOutputs[hash][address]
@@ -255,7 +255,7 @@ local function on_output(pos, address, value)
 		local node = minetest.get_node(dest_pos)
 		if node.name == "vm16:output" then
 			local ndef = minetest.registered_nodes[node.name]
-			ndef.hand_over(dest_pos, address, value)
+			ndef.hand_over(dest_pos, address, val1)
 		else
 			print("[VM16] No output position")
 		end

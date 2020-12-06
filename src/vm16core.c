@@ -319,11 +319,15 @@ uint32_t vm16_read_mem(vm16_t *C, uint16_t addr, uint16_t num, uint16_t *p_buffe
     return 0;
 }
 
-uint32_t vm16_get_ascii(vm16_t *C, uint16_t addr, uint16_t num, char *p_buffer) {
+uint16_t vm16_get_ascii(vm16_t *C, uint16_t addr, uint16_t num, char *p_buffer) {
     if(VM_VALID(C)) {
         if((p_buffer != NULL) && (num > 0) && (num <= C->mem_size)) {
-            for(int i=0; i<num; i++) {
-                *p_buffer++ = ASCII(*ADDR_SRC(C, addr));
+            for(uint16_t i=0; i<num; i++) {
+                uint16_t val = *ADDR_SRC(C, addr);
+                if(val == 0) {
+                    return i;
+                }
+                *p_buffer++ = ASCII(val);
                 addr++;
             }
             return num;
@@ -377,6 +381,8 @@ int vm16_run(vm16_t *C, uint32_t num_cycles, uint32_t *ran) {
 
         switch(opcode) {
             case NOP: {
+                C->p_in_dest = &C->areg;
+                *ran = num_cycles - num;
                 return VM16_NOP;
             }
             case SYS: {
