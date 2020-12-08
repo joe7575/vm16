@@ -36,8 +36,11 @@ local CYCLES = 10000  -- max CPU cycles / 100 ms
 
 vm16.AsmHelp = [[## VM16 Instruction Set ##
 nop                0000
+sys  #0            0800
+jump $100          1200, 0100
+call $100          1600, 0100
+ret                1800
 halt               1C00
-sys  0             0800
 move A, #$123      2010, 0123
 move B, #$123      2030, 0123
 move X, #$123      2090, 0123
@@ -69,9 +72,6 @@ or   A, B          4401
 or   A, #7         4410, 0007
 xor  A, B          4801
 xor  A, #8         4810, 0008
-jump $100          1200, 0100
-call $100          1600, 0100
-ret                1800
 bnze A, $100       5010, 0100
 bze  A, $100       5410, 0100
 bpos A, $100       5810, 0100
@@ -174,6 +174,12 @@ function vm16.write_mem(pos, addr, tbl)
 	local hash = minetest.hash_node_position(pos)
 	local vm = VMList[hash]
 	return vm and vm16lib.write_mem(vm, addr, tbl)
+end
+
+function vm16.read_ascii(pos, addr, num)
+	local hash = minetest.hash_node_position(pos)
+	local vm = VMList[hash]
+	return vm and vm16lib.read_ascii(vm, addr, num)
 end
 
 function vm16.peek(pos, addr)

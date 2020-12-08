@@ -95,6 +95,15 @@ num = vm16.write_mem(pos, addr, tbl)
 Write a memory block with values from `tbl` starting at the given `addr`. 
 Function returns the number of written values.
 
+## read_ascii
+
+```LUA
+s = vm16.read_ascii(pos, addr, num)
+```
+
+Read a memory block starting at the given `addr` and return the
+data as ASCII string with up to `num` characters.
+
 ## peek
 
 ```LUA

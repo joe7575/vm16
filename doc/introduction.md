@@ -30,14 +30,13 @@ And there are also instruction without any operand, like `ret` (return from subr
 Almost all instructions support different types of addressing modes. Addressing modes are:
 
 - **REG** (register addressing) All registers can be used: A, B, C, D, X, Y, SP ,PC. Ex: `inc A`
-- **IMM** (immediate) In immediate addressing, the operand is located immediately after the opcode in the second word of the instruction. But not both operands can be of type IMM (no 3-words instructions)
-- **DIR** (direct addressing) In direct addressing, the address of the operand is contained in the second word of the instruction. Direct addressing allows the user to directly address the memory.
+- **IMM** (immediate) In immediate addressing, the operand is located immediately after the opcode in the second word of the instruction. But not both operands can be of type IMM (no 3-words instructions). Ex: `sys #100`
+- **DIR** (direct addressing) In direct addressing, the address of the operand is contained in the second word of the instruction. Direct addressing allows the user to directly address the memory. Ex: `inc 100`
 - **IND** (indirect addressing) In indirect addressing, an index register (X or Y) is used to address memory. Ex: `dec [X]`
 - **PINC** (indirect addressing with post-increment) Same as indirect addressing, but the index register will be incremented after the instruction is executed. Ex: `move [X]+, [Y]+` used for memory copying routines.
 - **ABS** (absolute addressing). Used for all branch/jump instructions as absolute jump address. These are 2-word instructions. Ex: `jump 1000`
 - **REL** (relative addressing). Used for all branch/jump instructions to be able to jump relative to the current address (relocatable code). These are 2-word instructions. Ex: `jump -8` or  `jump +4`
 - **CNST** (constant addressing). VM16 has two pseudo register #0 and #1, which can be used as source operand. Ex: `move A, #0`
-- **NUM** (number). A 10 bit number as part of the 16-bit  `sys` opcode.
 
 
 In addition to the Addressing Modes the table below uses the following two addressing groups:
@@ -70,9 +69,9 @@ No operation, the CPU does nothing, only consuming time (one VM16 time slot, typ
 
 System call into the Lua environment. It allows to use some higher level of functionality,
 implemented in Lua, without the need to write everything is assembler (cheating).
-System call parameters a passed with registers A and B. 
+Valid numbers are 0 - 1023. Additional system call parameters a passed with registers A and B. 
 The result is return in register A.
-Ex: `sys 0`
+Ex: `sys #0`
 
 ### jump
 
