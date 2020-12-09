@@ -150,7 +150,6 @@ uint32_t vm16_read_h16(vm16_t *C, char *dest_buff, int buff_size) {
                 p = p + num;
             }
             *p++ = '\n';
-            *p++ = '\r';
             buff_size = buff_size - LINELENGTH1;
         }
     }

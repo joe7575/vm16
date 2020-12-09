@@ -294,7 +294,7 @@ static int write_h16(lua_State *L) {
         p_data[size] = '\0';
         uint32_t res = vm16_write_h16(C, p_data);
         lua_pop(L, 2);
-        lua_pushboolean(L, size == res);
+        lua_pushboolean(L, res);
         return 1;
     }
     lua_pushboolean(L, 0);

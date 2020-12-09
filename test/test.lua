@@ -133,4 +133,8 @@ vm16.write_mem(pos, 0, Code)
 print(vm16.CallResults[vm16.run(pos)])  -- 1. nop
 print(vm16.CallResults[vm16.run(pos)])  -- 2. no0p
 print(vm16.CallResults[vm16.run(pos)])  -- in/out loop
+
+local s2 = vm16.read_h16(pos)
+print(s2, vm16.write_h16(pos, s2))
+
 print("finished.")

@@ -300,4 +300,4 @@ local function debugging()
 	minetest.after(10, debugging)
 end	
 
-minetest.after(10, debugging)
+--minetest.after(10, debugging)
