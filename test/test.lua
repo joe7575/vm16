@@ -81,6 +81,8 @@ for i = 1,10 do
 	assert(vm16lib.poke(vm, 104, 0) == true)
 	
 	print(vm16lib.read_ascii(vm, 100, 16))
+	s = vm16lib.read_ascii(vm, 100, 16)
+	assert(vm16lib.write_ascii(vm, 100, s) == true)
 	local s2 = vm16lib.read_h16(vm)
 	vm16lib.write_h16(vm, s2)
 	s2 = vm16lib.read_h16(vm)
@@ -104,6 +106,7 @@ local Code = {
 	0x6600, 0x0002,  -- out #2, A
 	0x6010, 0x0003,  -- in A, #3
 	0x6600, 0x0004,  -- out #4, A
+	0x0800, 0x0802,  -- sys #0 / sys #2 (A=3)
 	0x1200, 0x0002,  -- jump, #2
 }
 
@@ -124,15 +127,18 @@ local function on_output(pos, address, value)
 end	
 
 local function on_system(pos, address, val1, val2)
-	return val1
+	print("on_system", address, val1, val2)
+	return 0x55
 end	
 
 vm16.create(pos, 1)
 vm16.register_callbacks(on_input, on_output, on_system)
 vm16.write_mem(pos, 0, Code)
 print(vm16.CallResults[vm16.run(pos)])  -- 1. nop
-print(vm16.CallResults[vm16.run(pos)])  -- 2. no0p
+print(vm16.CallResults[vm16.run(pos)])  -- 2. nop
 print(vm16.CallResults[vm16.run(pos)])  -- in/out loop
+print(vm16.CallResults[vm16.run(pos)])  -- in/out loop
+print(vm16.CallResults[vm16.run(pos)])  -- sys loop
 
 local s2 = vm16.read_h16(pos)
 print(s2, vm16.write_h16(pos, s2))

@@ -319,7 +319,7 @@ uint32_t vm16_read_mem(vm16_t *C, uint16_t addr, uint16_t num, uint16_t *p_buffe
     return 0;
 }
 
-uint16_t vm16_get_ascii(vm16_t *C, uint16_t addr, uint16_t num, char *p_buffer) {
+uint16_t vm16_read_ascii(vm16_t *C, uint16_t addr, uint16_t num, char *p_buffer) {
     if(VM_VALID(C)) {
         if((p_buffer != NULL) && (num > 0) && (num <= C->mem_size)) {
             for(uint16_t i=0; i<num; i++) {
@@ -328,6 +328,19 @@ uint16_t vm16_get_ascii(vm16_t *C, uint16_t addr, uint16_t num, char *p_buffer) 
                     return i;
                 }
                 *p_buffer++ = ASCII(val);
+                addr++;
+            }
+            return num;
+        }
+    }
+    return 0;
+}
+
+uint32_t vm16_write_ascii(vm16_t *C, uint16_t addr, uint16_t num, char *p_buffer) {
+    if(VM_VALID(C)) {
+        if((p_buffer != NULL) && (num > 0) && (num <= C->mem_size)) {
+            for(int i=0; i<num; i++) {
+                *ADDR_DST(C, addr) = *p_buffer++;
                 addr++;
             }
             return num;

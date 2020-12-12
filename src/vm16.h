@@ -134,7 +134,12 @@ uint32_t vm16_write_mem(vm16_t *C, uint16_t addr, uint16_t num, uint16_t *p_buff
 /*
 ** Read memory block and convert the data to ASCII characters (screen memory)
 */
-uint16_t vm16_get_ascii(vm16_t *C, uint16_t addr, uint16_t num, char *p_buffer);
+uint16_t vm16_read_ascii(vm16_t *C, uint16_t addr, uint16_t num, char *p_buffer);
+
+/*
+** Write ASCII string to VM memory (with char to word conversion)
+*/
+uint32_t vm16_write_ascii(vm16_t *C, uint16_t addr, uint16_t num, char *p_buffer);
 
 /*
 ** Read value from VM memory

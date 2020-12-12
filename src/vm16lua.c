@@ -177,10 +177,25 @@ static int read_ascii(lua_State *L) {
     lua_Integer num = luaL_checkinteger(L, 3);
     char *p_data = (char*)malloc(num);
     if((C != NULL) && (p_data != NULL) && (num > 0)) {
-        uint16_t chars = vm16_get_ascii(C, addr, num, p_data);
+        uint16_t chars = vm16_read_ascii(C, addr, num, p_data);
         lua_pushlstring(L, (const char *)p_data, chars);
         free(p_data);
         return 1;
+    }
+    return 0;
+}
+
+static int write_ascii(lua_State *L) {
+    vm16_t *C = check_vm(L);
+    lua_Integer addr = luaL_checkinteger(L, 2);
+    if(lua_isstring(L, 3)) {
+        size_t size;
+        char *p_data = (char*)lua_tolstring(L, 3, &size);
+        if((C != NULL) && (p_data != NULL) && (size > 0)) {
+            uint16_t chars = vm16_write_ascii(C, addr, size, p_data);
+            lua_pushboolean(L, chars == size);
+            return 1;
+        }
     }
     return 0;
 }
@@ -324,6 +339,7 @@ static const luaL_Reg R[] = {
     {"read_mem",        read_mem},
     {"write_mem",       write_mem},
     {"read_ascii",      read_ascii},
+    {"write_ascii",     write_ascii},
     {"peek",            peek},
     {"poke",            poke},
     {"get_cpu_reg",     get_cpu_reg},

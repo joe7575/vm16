@@ -182,6 +182,12 @@ function vm16.read_ascii(pos, addr, num)
 	return vm and vm16lib.read_ascii(vm, addr, num)
 end
 
+function vm16.write_ascii(pos, addr, s)
+	local hash = minetest.hash_node_position(pos)
+	local vm = VMList[hash]
+	return vm and vm16lib.write_ascii(vm, addr, s)
+end
+
 function vm16.peek(pos, addr)
 	local hash = minetest.hash_node_position(pos)
 	local vm = VMList[hash]
@@ -249,7 +255,7 @@ function vm16.run(pos, cycles)
 			if vm16.on_output(pos, io.addr, io.data, io.B) then return VM16_OK end
 		elseif resp == VM16_SYS then
 			local io = vm16lib.get_io_reg(vm)
-			io.A = vm16.on_system(pos, io.addr, io.A, io.B) or 0xFFFF
+			io.data = vm16.on_system(pos, io.addr, io.A, io.B) or 0xFFFF
 			vm16lib.set_io_reg(vm, io)
 		elseif resp == VM16_HALT then
 			local cpu = vm16lib.get_cpu_reg(vm) 
