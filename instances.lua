@@ -252,7 +252,7 @@ function vm16.run(pos, cycles)
 			vm16lib.set_io_reg(vm, io)
 		elseif resp == VM16_OUT then
 			local io = vm16lib.get_io_reg(vm)
-			if vm16.on_output(pos, io.addr, io.data, io.B) then return VM16_OK end
+			if vm16.on_output(pos, io.addr, io.data, io.B) then return resp end
 		elseif resp == VM16_SYS then
 			local io = vm16lib.get_io_reg(vm)
 			io.data = vm16.on_system(pos, io.addr, io.A, io.B) or 0xFFFF
@@ -260,11 +260,11 @@ function vm16.run(pos, cycles)
 		elseif resp == VM16_HALT then
 			local cpu = vm16lib.get_cpu_reg(vm) 
 			vm16.on_update(pos, resp, cpu)
-			return VM16_HALT
+			return resp
 		end
 		cycles = cycles - CYCLES/10
 	end
-	return VM16_OK
+	return resp
 end
 
 minetest.register_on_shutdown(function()
