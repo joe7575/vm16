@@ -12,7 +12,7 @@ This mod has two parts:
 
 - C files to be compiled and installed as LuaRocks package
 - Lua files to be used as Minetest mod
-- 
+
 
 ## Installation
 
