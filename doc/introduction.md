@@ -143,10 +143,15 @@ Multiply contents/value of one memory/register with another memory/register with
 The carry value is stored in register B.
 Ex: `mulc A, #5`  (the result is stored in A, the carry in B).
 
+### div
+
+Divide contents/value of one memory/register by another memory/register
+Ex: `div A, B`  (the result is stored in A).
+
 ### mod
 
 Modulo operation with contents/value from one memory/register with another memory/register.
-Ex: `mul A, B`  (the result is stored in A).
+Ex: `mod A, B`  (the result is stored in A).
 
 ### and
 
