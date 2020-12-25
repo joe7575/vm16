@@ -128,6 +128,14 @@ tbl = vm16.get_cpu_reg(pos)
 
 Return the complete register set as table with the keys `A`, `B`, `C`, `D`, `X`, `Y`, `PC`, `SP`, plus 2 memory cells `mem0` and `mem1` (the PC points to `mem0`)
 
+## set_cpu_reg
+
+```
+tbl = vm16.set_cpu_reg(pos, regs)
+```
+
+Set the complete register set via the given table with the keys `A`, `B`, `C`, `D`, `X`, `Y`, `PC`, `SP`.
+
 ## get_io_reg
 
 ```

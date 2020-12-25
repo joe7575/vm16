@@ -11,6 +11,8 @@
 ]]--
 
 local vm16lib = ...
+assert(vm16lib.version() == "2.1")
+
 local VMList = {}
 local storage = minetest.get_mod_storage()
 
@@ -31,6 +33,8 @@ vm16.HALT   = VM16_HALT
 vm16.ERROR  = VM16_ERROR
 
 vm16.CallResults = {[0]="OK", "NOP", "IN", "OUT", "SYS", "HALT", "ERROR"}
+
+local SpecialCycles = {} -- for sys calls with reduced/increased cycles
 
 local CYCLES = 10000  -- max CPU cycles / 100 ms 
 
@@ -148,22 +152,28 @@ function vm16.poke(pos, addr, val)
 	return vm and vm16lib.poke(vm, addr, val)
 end
 
-function vm16.get_cpu_reg(pos, addr)
+function vm16.get_cpu_reg(pos)
 	local hash = minetest.hash_node_position(pos)
 	local vm = VMList[hash]
-	return vm and vm16lib.get_cpu_reg(vm, addr)
+	return vm and vm16lib.get_cpu_reg(vm)
 end
 
-function vm16.get_io_reg(pos, addr)
+function vm16.set_cpu_reg(pos, regs)
 	local hash = minetest.hash_node_position(pos)
 	local vm = VMList[hash]
-	return vm and vm16lib.get_io_reg(vm, addr)
+	return vm and vm16lib.set_cpu_reg(vm, regs)
 end
 
-function vm16.set_io_reg(pos, addr)
+function vm16.get_io_reg(pos)
 	local hash = minetest.hash_node_position(pos)
 	local vm = VMList[hash]
-	return vm and vm16lib.set_io_reg(vm, addr)
+	return vm and vm16lib.get_io_reg(vm)
+end
+
+function vm16.set_io_reg(pos, io)
+	local hash = minetest.hash_node_position(pos)
+	local vm = VMList[hash]
+	return vm and vm16lib.set_io_reg(vm, io)
 end
 
 -- Write H16 string to VM memory
@@ -198,21 +208,27 @@ function vm16.run(pos, cycles)
 			local io = vm16lib.get_io_reg(vm)
 			io.data = vm16.on_input(pos, io.addr) or 0xFFFF
 			vm16lib.set_io_reg(vm, io)
+			cycles = cycles - CYCLES/10
 		elseif resp == VM16_OUT then
 			local io = vm16lib.get_io_reg(vm)
 			if vm16.on_output(pos, io.addr, io.data, io.B) then return resp end
+			cycles = cycles - CYCLES/20
 		elseif resp == VM16_SYS then
 			local io = vm16lib.get_io_reg(vm)
 			io.data = vm16.on_system(pos, io.addr, io.A, io.B) or 0xFFFF
 			vm16lib.set_io_reg(vm, io)
+			cycles = cycles - (SpecialCycles[io.addr] or CYCLES/10)
 		elseif resp == VM16_HALT then
 			local cpu = vm16lib.get_cpu_reg(vm) 
 			vm16.on_update(pos, resp, cpu)
 			return resp
 		end
-		cycles = cycles - CYCLES/10
 	end
 	return resp
+end
+
+function vm16.register_sys_cycles(address, cycles)
+	SpecialCycles[address] = cycles
 end
 
 minetest.register_on_shutdown(function()

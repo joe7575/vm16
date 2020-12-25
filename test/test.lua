@@ -87,6 +87,26 @@ for i = 1,10 do
 	vm16lib.write_h16(vm, s2)
 	s2 = vm16lib.read_h16(vm)
 	
+	local cpu = vm16lib.get_cpu_reg(vm)
+	cpu.A = 0x1111
+	cpu.B = 0x2222
+	cpu.C = 0x3333
+	cpu.D = 0x4444
+	cpu.X = 0x5555
+	cpu.Y = 0x6666
+	cpu.PC = 0x7777
+	cpu.SP = 0x8888
+	vm16lib.set_cpu_reg(vm, cpu)
+	cpu = vm16lib.get_cpu_reg(vm)
+	assert(cpu.A == 0x1111)
+	assert(cpu.B == 0x2222)
+	assert(cpu.C == 0x3333)
+	assert(cpu.D == 0x4444)
+	assert(cpu.X == 0x5555)
+	assert(cpu.Y == 0x6666)
+	assert(cpu.PC == 0x7777)
+	assert(cpu.SP == 0x8888)
+	
 	vm = nil
 	
 	assert(vm16lib.testbit(0x1000, 0) == false)

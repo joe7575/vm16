@@ -254,6 +254,41 @@ static int get_cpu_reg(lua_State *L) {
     return 0;
 }
 
+static int set_cpu_reg(lua_State *L) {
+    vm16_t *C = check_vm(L);
+    if(C != NULL) {
+        lua_getfield(L, 2, "A");
+        lua_getfield(L, 2, "B");
+        lua_getfield(L, 2, "C");
+        lua_getfield(L, 2, "D");
+        lua_getfield(L, 2, "X");
+        lua_getfield(L, 2, "Y");
+        lua_getfield(L, 2, "PC");
+        lua_getfield(L, 2, "SP");
+        // stack now has following:
+        //  2 = table
+        // -8 = A
+        // -7 = B
+        // -6 = C
+        // -5 = D
+        // -4 = X
+        // -3 = Y
+        // -2 = PC
+        // -1 = SP
+        C->areg = luaL_checkint(L, -8);
+        C->breg = luaL_checkint(L, -7);
+        C->creg = luaL_checkint(L, -6);
+        C->dreg = luaL_checkint(L, -5);
+        C->xreg = luaL_checkint(L, -4);
+        C->yreg = luaL_checkint(L, -3);
+        C->pcnt = luaL_checkint(L, -2);
+        C->sptr = luaL_checkint(L, -1);
+        C->p_in_dest = &C->areg;
+        lua_settop(L, 0);
+    }
+    return 0;
+}
+
 static int get_io_reg(lua_State *L) {
     vm16_t *C = check_vm(L);
     if(C != NULL) {
@@ -343,6 +378,7 @@ static const luaL_Reg R[] = {
     {"peek",            peek},
     {"poke",            poke},
     {"get_cpu_reg",     get_cpu_reg},
+    {"set_cpu_reg",     set_cpu_reg},
     {"run",             run},
     {"get_io_reg",      get_io_reg},
     {"set_io_reg",      set_io_reg},
