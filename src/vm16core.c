@@ -130,7 +130,9 @@ along with VM16.  If not, see <https://www.gnu.org/licenses/>.
 #define NTOA(n)                 ((n) > 9   ? (n) + 55 : (n) + 48)
 #define ATON(a)                 ((a) > '9' ? (a) - 55 : (a) - 48)
 
-#define ASCII(w)                (((w) > 126 || (w) < 32) ? '.' : (char)(w))
+static inline char ascii(uint16_t val) {
+    return ((val > 126 || val < 32) ? '.' : (char)val);
+}
 
 /*
 ** Determine the operand destination address (register/memory)
@@ -322,12 +324,23 @@ uint32_t vm16_read_mem(vm16_t *C, uint16_t addr, uint16_t num, uint16_t *p_buffe
 uint16_t vm16_read_ascii(vm16_t *C, uint16_t addr, uint16_t num, char *p_buffer) {
     if(VM_VALID(C)) {
         if((p_buffer != NULL) && (num > 0) && (num <= C->mem_size)) {
-            for(uint16_t i=0; i<num; i++) {
+            uint16_t i = 0;
+            while(i < num) {
                 uint16_t val = *ADDR_SRC(C, addr);
                 if(val == 0) {
                     return i;
                 }
-                *p_buffer++ = ASCII(val);
+                if(val >= 256) {
+                    *p_buffer++ = ascii(val >> 8);
+                    i++;
+                    if(i < num) {
+                        *p_buffer++ = ascii(val & 0xFF);
+                        i++;
+                    }
+                } else {
+                    *p_buffer++ = ascii(val);
+                    i++;
+                }
                 addr++;
             }
             return num;

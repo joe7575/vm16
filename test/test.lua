@@ -107,6 +107,18 @@ for i = 1,10 do
 	assert(cpu.PC == 0x7777)
 	assert(cpu.SP == 0x8888)
 	
+-------------------------------------------------------------------------------
+-- test word chars
+-------------------------------------------------------------------------------
+
+	vm16lib.poke(vm, 0x0100, 0x4861) -- 'Ha'
+	vm16lib.poke(vm, 0x0101, 0x6C6C) -- 'll'
+	vm16lib.poke(vm, 0x0102, 0x006F) -- 'o'
+	vm16lib.poke(vm, 0x0103, 0x0000) -- '\0'
+	print(vm16lib.read_ascii(vm, 0x0100, 6))
+	print(vm16lib.read_ascii(vm, 0x0100, 5))
+	print(vm16lib.read_ascii(vm, 0x0100, 4))
+
 	vm = nil
 	
 	assert(vm16lib.testbit(0x1000, 0) == false)
