@@ -112,6 +112,9 @@ static int parse_h16_line(vm16_t *C, char *s) {
         else if((type == 0xff) && (num == 0) && (addr == 0)) {
             return 0; // eof
         }
+        else if((type != 0x00) && (type != 0xff)) {
+            return 1; // unknown info, don't care
+        }
     }
     return -1; // error
 }
