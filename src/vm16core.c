@@ -63,7 +63,7 @@ along with VM16.  If not, see <https://www.gnu.org/licenses/>.
 
 /* OP codes */
 #define  NOP    (0x00)
-//#define  DLY    (0x01)
+#define  BRK    (0x01)
 #define  SYS    (0x02)
 //#define  INT    (0x03)
 
@@ -411,6 +411,12 @@ int vm16_run(vm16_t *C, uint32_t num_cycles, uint32_t *ran) {
                 *ran = num_cycles - num;
                 return VM16_NOP;
             }
+            case BRK: {
+                C->p_in_dest = &C->areg;
+                C->l_addr = code & 0x03FF;
+                *ran = num_cycles - num;
+                return VM16_BREAK;
+            }
             case SYS: {
                 C->p_in_dest = &C->areg;
                 C->l_addr = code & 0x03FF;
@@ -652,7 +658,7 @@ int vm16_run(vm16_t *C, uint32_t num_cycles, uint32_t *ran) {
                 break;
             }
             default: {
-                break;
+                return VM16_ERROR;
             }
         }
     }

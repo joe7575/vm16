@@ -37,7 +37,7 @@ LUALIB_API int luaopen_vm16(lua_State *L);
 
 #define IDENT           (0x36314D56)
 #define VERSION         (2)    // VM compatibility
-#define SVERSION        "2.1"  // see history in readme.md
+#define SVERSION        "2.2"  // see history in readme.md
 #define VM16_WORD_SIZE  (16)
 #define MEM_BLOCK_SIZE  (4096)
 #define MAX_MEM_BLOCKS  (16)     // = 64 KW
@@ -52,7 +52,8 @@ LUALIB_API int luaopen_vm16(lua_State *L);
 #define VM16_OUT       (3)  // output command
 #define VM16_SYS       (4)  // system call
 #define VM16_HALT      (5)  // CPU halt
-#define VM16_ERROR     (6)  // invalid call
+#define VM16_BREAK     (6)  // breakpoint reached
+#define VM16_ERROR     (7)  // invalid opcode
 
 typedef struct {
     uint32_t ident;     // VM identifier

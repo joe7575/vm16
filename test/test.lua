@@ -175,4 +175,44 @@ print(vm16.CallResults[vm16.run(pos)])  -- sys loop
 local s2 = vm16.read_h16(pos)
 print(s2, vm16.write_h16(pos, s2))
 
+-------------------------------------------------------------------------------
+-- Breakpoint test
+-------------------------------------------------------------------------------
+
+Code = {
+	0x1200, 0x0002,  -- jump, #2
+	0x1200, 0x0004,  -- jump, #4
+	0x1200, 0x0006,  -- jump, #6
+	0x1200, 0x0000,  -- jump, #0
+}
+
+local function hexdump(tbl)
+	local t = {}
+	for i,val in ipairs(tbl) do
+		t[i] = string.format("%04X", val)
+	end
+	print(table.concat(t, " "))
+end
+		
+vm16.write_mem(pos, 0, Code)
+local s = vm16.read_mem_bin(pos, 0, 8)
+assert(#s == 16)
+vm16.write_mem_bin(pos, 0, s)
+
+assert(vm16.run(pos, 100) == vm16.OK)
+hexdump(vm16.read_mem(pos, 0, 8))
+
+local opc = vm16.set_breakpoint(pos, 4, 1)
+assert(vm16.run(pos, 8) == vm16.BREAK)
+assert(vm16.get_pc(pos) == 5)
+vm16.breakpoint_step(pos, 4, opc)
+assert(vm16.get_pc(pos) == 6)
+hexdump(vm16.read_mem(pos, 0, 8))
+
+vm16.reset_breakpoint(pos, 4, opc)
+hexdump(vm16.read_mem(pos, 0, 8))
+assert(vm16.run(pos, 100) == vm16.OK)
+
+
+
 print("finished.")

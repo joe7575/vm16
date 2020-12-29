@@ -72,6 +72,7 @@ Licensed under the GNU GPLv3   (See LICENSE.txt)
 - 2020-11-30  v1.3  * Add functions read_h16/write_h16
 - 2020-12-02  v2.0  * Switch to mod storage for VMs
 - 2020-12-25  v2.1  * Add function 'set_cpu_reg'
+- 2020-12-29  v2.2  * Add breakpoints and read/write_bin functions
 
 
 

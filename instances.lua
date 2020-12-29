@@ -11,7 +11,7 @@
 ]]--
 
 local vm16lib = ...
-assert(vm16lib.version() == "2.1")
+assert(vm16lib.version() == "2.2")
 
 local VMList = {}
 local storage = minetest.get_mod_storage()
@@ -22,7 +22,8 @@ local VM16_IN     = 2  -- input command
 local VM16_OUT    = 3  -- output command
 local VM16_SYS    = 4  -- system call
 local VM16_HALT   = 5  -- CPU halt
-local VM16_ERROR  = 6  -- invalid call
+local VM16_BREAK  = 6  -- breakpoint
+local VM16_ERROR  = 7  -- invalid call
 
 vm16.OK     = VM16_OK
 vm16.NOP    = VM16_NOP
@@ -30,9 +31,10 @@ vm16.IN     = VM16_IN
 vm16.OUT    = VM16_OUT
 vm16.SYS    = VM16_SYS
 vm16.HALT   = VM16_HALT
+vm16.BREAK  = VM16_BREAK
 vm16.ERROR  = VM16_ERROR
 
-vm16.CallResults = {[0]="OK", "NOP", "IN", "OUT", "SYS", "HALT", "ERROR"}
+vm16.CallResults = {[0]="OK", "NOP", "IN", "OUT", "SYS", "HALT", "BREAK", "ERROR"}
 
 local SpecialCycles = {} -- for sys calls with reduced/increased cycles
 
@@ -128,6 +130,18 @@ function vm16.write_mem(pos, addr, tbl)
 	return vm and vm16lib.write_mem(vm, addr, tbl)
 end
 
+function vm16.read_mem_bin(pos, addr, num)
+	local hash = minetest.hash_node_position(pos)
+	local vm = VMList[hash]
+	return vm and vm16lib.read_mem_bin(vm, addr, num)
+end
+
+function vm16.write_mem_bin(pos, addr, s)
+	local hash = minetest.hash_node_position(pos)
+	local vm = VMList[hash]
+	return vm and vm16lib.write_mem_bin(vm, addr, s)
+end
+
 function vm16.read_ascii(pos, addr, num)
 	local hash = minetest.hash_node_position(pos)
 	local vm = VMList[hash]
@@ -204,6 +218,8 @@ function vm16.run(pos, cycles)
 		
 		if resp == VM16_NOP then
 			return VM16_NOP
+		elseif resp == VM16_BREAK then
+			return VM16_BREAK
 		elseif resp == VM16_IN then
 			local io = vm16lib.get_io_reg(vm)
 			io.data = vm16.on_input(pos, io.addr) or 0xFFFF

@@ -5,7 +5,7 @@
 | Instr. | Opnd 1 | Opnd 2 | Opcode                |
 | ------ | ------ | ------ | --------------------- |
 | nop    | --     | --     | 0000                  |
-| --     | --     | --     | --                    |
+| brk    | CNST   | --     | 0400 + number (10bit) |
 | sys    | CNST   | --     | 0800 + number (10bit) |
 | --     | --     | --     | --                    |
 | jump   | ADR    | --     | 1000 + Opnd1          |

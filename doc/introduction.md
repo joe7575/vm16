@@ -65,6 +65,10 @@ For a table with all instructions, the addrressing modes and opcodes, see "opcod
 
 No operation, the CPU does nothing, only consuming time (one VM16 time slot, typically 100 ms) and than jumping to the next instruction. One or several `nop` operations can therefore be used as delay.
 
+### brk
+
+Breaks/stops the program execution. Used to terminate the program for debugging purposes.
+
 ### sys
 
 System call into the Lua environment. It allows to use some higher level of functionality,
@@ -92,7 +96,7 @@ Return from subroutine. The used address is taken from the stack, the stack poin
 
 ### halt
 
-Halts/stops the program execution. Used to terminate the program e.g. for debugging purposes.
+Halts/stops the program execution to terminate the program.
 
 ### move
 
