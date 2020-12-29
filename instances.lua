@@ -219,6 +219,8 @@ function vm16.run(pos, cycles)
 		if resp == VM16_NOP then
 			return VM16_NOP
 		elseif resp == VM16_BREAK then
+			local cpu = vm16lib.get_cpu_reg(vm) 
+			vm16.on_update(pos, resp, cpu)
 			return VM16_BREAK
 		elseif resp == VM16_IN then
 			local io = vm16lib.get_io_reg(vm)
@@ -237,7 +239,11 @@ function vm16.run(pos, cycles)
 		elseif resp == VM16_HALT then
 			local cpu = vm16lib.get_cpu_reg(vm) 
 			vm16.on_update(pos, resp, cpu)
-			return resp
+			return VM16_HALT
+		elseif resp == VM16_ERROR then
+			local cpu = vm16lib.get_cpu_reg(vm) 
+			vm16.on_update(pos, resp, cpu)
+			return VM16_ERROR
 		end
 	end
 	return resp
