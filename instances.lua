@@ -48,8 +48,6 @@ function vm16.create(pos, ram_size)
 	print("vm_create")
 	local hash = minetest.hash_node_position(pos)
 	VMList[hash] = vm16lib.init(ram_size)
-	print(VMList[hash])
-	
 	local meta = minetest.get_meta(pos)
 	meta:set_string("vm16", "")
 	meta:set_int("vm16size", ram_size)
@@ -263,7 +261,6 @@ minetest.register_on_shutdown(function()
 end)
 
 local function remove_unloaded_vm()
-	print("remove_unloaded_vms")
 	local tbl = table.copy(VMList)
 	local cnt = 0
 	VMList = {}
@@ -277,7 +274,6 @@ local function remove_unloaded_vm()
 			vm16.on_unload(pos)
 		end
 	end
-	print(cnt.." CPUs active")
 	minetest.after(60, remove_unloaded_vm)
 end	
 
