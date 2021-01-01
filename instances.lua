@@ -11,7 +11,7 @@
 ]]--
 
 local vm16lib = ...
-assert(vm16lib.version() == "2.2")
+assert(vm16lib.version() == "2.3")
 
 local VMList = {}
 local storage = minetest.get_mod_storage()
@@ -42,6 +42,7 @@ local CYCLES = 10000  -- max CPU cycles / 100 ms
 
 vm16.version = vm16lib.version()
 vm16.testbit = vm16lib.testbit
+vm16.is_ascii = vm16lib.is_ascii
 
 -- ram_size is from 1 (4K) to 16 (64KB)
 function vm16.create(pos, ram_size)
@@ -196,10 +197,12 @@ function vm16.write_h16(pos, s)
 end
 
 -- Generate H16 string from VM memory
-function vm16.read_h16(pos)
+function vm16.read_h16(pos, start_addr, size)
 	local hash = minetest.hash_node_position(pos)
 	local vm = VMList[hash]
-	return vm and vm16lib.read_h16(vm)
+	start_addr = start_addr or 0
+	size = size or vm16lib.mem_size(vm)
+	return vm and vm16lib.read_h16(vm, start_addr, size)
 end
 
 function vm16.run(pos, cycles)

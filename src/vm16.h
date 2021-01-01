@@ -37,7 +37,7 @@ LUALIB_API int luaopen_vm16(lua_State *L);
 
 #define IDENT           (0x36314D56)
 #define VERSION         (2)    // VM compatibility
-#define SVERSION        "2.2"  // see history in readme.md
+#define SVERSION        "2.3"  // see history in readme.md
 #define VM16_WORD_SIZE  (16)
 #define MEM_BLOCK_SIZE  (4096)
 #define MAX_MEM_BLOCKS  (16)     // = 64 KW
@@ -167,8 +167,9 @@ bool vm16_write_h16(vm16_t *C, char *s);
 
 /*
 ** Return H16 string from VM memory data
+** start_addr and size must be a multiple of 8!
 */
-uint32_t vm16_read_h16(vm16_t *C, char *dest_buff, int buff_size);
+uint32_t vm16_read_h16(vm16_t *C, char *dest_buff, uint16_t start_addr, uint32_t size);
 
 /*
 ** Return needed buffer size for the H16 string.

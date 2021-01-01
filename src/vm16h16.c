@@ -133,19 +133,29 @@ bool vm16_write_h16(vm16_t *C, char *s) {
   return resp == 0;
 }
 
-uint32_t vm16_read_h16(vm16_t *C, char *dest_buff, int buff_size) {
+uint32_t vm16_read_h16(vm16_t *C, char *dest_buff, uint16_t start_addr, uint32_t size) {
     bool is_zero;
     char *p = dest_buff;
     int num;
+    uint32_t end_addr;
 
-    for(uint16_t addr = 0; addr < C->mem_size; addr = addr + 8) {
+    // allign numbers
+    start_addr = (start_addr / 8) * 8;
+    size = (size / 8) * 8;
+    end_addr = start_addr + size;
+
+    if(end_addr < start_addr) {
+        return 0;
+    }
+
+    for(uint16_t addr = start_addr; addr < end_addr; addr = addr + 8) {
         is_zero = true;
         for(uint16_t offs = 0; offs < 8; offs++) {
             if(C->memory[addr + offs] != 0) {
                 is_zero = false;
             }
         }
-        if(!is_zero && (buff_size > (LINELENGTH1 + LINELENGTH2))) {
+        if(!is_zero && (size > (LINELENGTH1 + LINELENGTH2))) {
             num = sprintf(p, ":8%04X00", addr);
             p = p + num;
             for(uint16_t offs = 0; offs < 8; offs++) {
@@ -153,7 +163,7 @@ uint32_t vm16_read_h16(vm16_t *C, char *dest_buff, int buff_size) {
                 p = p + num;
             }
             *p++ = '\n';
-            buff_size = buff_size - LINELENGTH1;
+            size = size - LINELENGTH1;
         }
     }
     strcpy(p, ENDOFFILE);

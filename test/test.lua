@@ -83,9 +83,9 @@ for i = 1,10 do
 	print(vm16lib.read_ascii(vm, 100, 16))
 	s = vm16lib.read_ascii(vm, 100, 16)
 	assert(vm16lib.write_ascii(vm, 100, s) == true)
-	local s2 = vm16lib.read_h16(vm)
+	local s2 = vm16lib.read_h16(vm, 0, vm16lib.mem_size(vm))
 	vm16lib.write_h16(vm, s2)
-	s2 = vm16lib.read_h16(vm)
+	s2 = vm16lib.read_h16(vm, 0, vm16lib.mem_size(vm))
 	
 	local cpu = vm16lib.get_cpu_reg(vm)
 	cpu.A = 0x1111
@@ -125,6 +125,10 @@ for i = 1,10 do
 	assert(vm16lib.testbit(0x1000, 11) == false)
 	assert(vm16lib.testbit(0x1000, 12) == true)
 	assert(vm16lib.testbit(0x1000, 13) == false)
+	
+	assert(vm16lib.is_ascii("Hallo joe") == true);
+	assert(vm16lib.is_ascii("\0Hallo joe") == false);
+	assert(vm16lib.is_ascii({}) == false);
 	
 end
 
@@ -175,6 +179,11 @@ print(vm16.CallResults[vm16.run(pos)])  -- sys loop
 local s2 = vm16.read_h16(pos)
 print(s2, vm16.write_h16(pos, s2))
 
+-- illegal opcode
+vm16.write_mem(pos, 0, {0xff00, 0xff00, 0xff00, 0xff00})
+assert(vm16.set_pc(pos, 0) == true)
+assert(vm16.run(pos) == vm16.ERROR)
+
 -------------------------------------------------------------------------------
 -- Breakpoint test
 -------------------------------------------------------------------------------
@@ -199,6 +208,7 @@ local s = vm16.read_mem_bin(pos, 0, 8)
 assert(#s == 16)
 vm16.write_mem_bin(pos, 0, s)
 
+assert(vm16.set_pc(pos, 0) == true)
 assert(vm16.run(pos, 100) == vm16.OK)
 hexdump(vm16.read_mem(pos, 0, 8))
 

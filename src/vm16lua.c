@@ -352,11 +352,13 @@ static int set_io_reg(lua_State *L) {
 
 static int read_h16(lua_State *L) {
     vm16_t *C = check_vm(L);
-    uint32_t size = vm16_get_h16_buffer_size(C);
-    if(size > 0) {
-        char *p_data = (char*)malloc(size);
+    uint32_t buff_size = vm16_get_h16_buffer_size(C);
+    if(buff_size > 0) {
+        char *p_data = (char*)malloc(buff_size);
         if(p_data != NULL) {
-            uint32_t bytes = vm16_read_h16(C, p_data, size);
+            uint16_t start_addr = (uint16_t)luaL_checkinteger(L, 2);
+            uint32_t size = (uint32_t)luaL_checkinteger(L, 3);
+            uint32_t bytes = vm16_read_h16(C, p_data, start_addr, size);
             lua_pushlstring(L, (const char *)p_data, bytes);
             free(p_data);
             return 1;
@@ -379,6 +381,26 @@ static int write_h16(lua_State *L) {
     lua_pushboolean(L, 0);
     return 1;
 }
+
+static int is_ascii(lua_State *L) {
+    if(lua_isstring(L, 1)) {
+        size_t size;
+        char *p_data = (char*)lua_tolstring(L, 1, &size);
+        if((p_data != NULL) && (size > 0)) {
+            for(int i = 0; i < size; i++) {
+                if((p_data[i] < 32) || (p_data[i] > 127)) {
+                    lua_pushboolean(L, 0);
+                    return 1;
+                }
+            }
+            lua_pushboolean(L, 1);
+            return 1;
+        }
+    }
+    lua_pushboolean(L, 0);
+    return 1;
+}
+
 
 /*
 ** Bit 0..15
@@ -415,6 +437,7 @@ static const luaL_Reg R[] = {
     {"set_io_reg",      set_io_reg},
     {"read_h16",        read_h16},
     {"write_h16",       write_h16},
+    {"is_ascii",        is_ascii},
     {"testbit",         testbit},
     {NULL, NULL}
 };
