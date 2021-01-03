@@ -68,6 +68,8 @@ No operation, the CPU does nothing, only consuming time (one VM16 time slot, typ
 ### brk
 
 Breaks/stops the program execution. Used to terminate the program for debugging purposes.
+Valid breakpoint numbers are 0 - 1023.
+Ex: `brk #0`
 
 ### sys
 

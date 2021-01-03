@@ -59,7 +59,7 @@
 
 #### Instructions
 
-| nop  | --   | sys  | --   | jump | call | ret  | halt |
+| nop  | brk  | sys  | --   | jump | call | ret  | halt |
 | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
 | 0000 | 0400 | 0800 | 0C00 | 1000 | 1400 | 1800 | 1C00 |
 

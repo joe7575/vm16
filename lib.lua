@@ -32,10 +32,14 @@ function vm16.set_breakpoint(pos, addr, num)
 	return code
 end
 	
-function vm16.breakpoint_step(pos, addr, code)
+function vm16.breakpoint_step1(pos, addr, code)
 	local val = vm16.peek(pos, addr)
 	vm16.poke(pos, addr, code)
 	vm16.set_pc(pos, addr)
+	return val
+end
+
+function vm16.breakpoint_step2(pos, addr, val)
 	vm16.run(pos, 1)
 	vm16.poke(pos, addr, val)
 end
