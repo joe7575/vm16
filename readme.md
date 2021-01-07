@@ -8,6 +8,8 @@ Download: [GitHub](https://github.com/joe7575/vm16/archive/master.zip)
 
 This mod is not useful on its own. Only a few test nodes are supplied to test and demonstrate the functions.
 
+See also [vm16asm](https://github.com/joe7575/vm16asm) and [PDP-13](https://github.com/joe7575/pdp13).
+
 This mod has two parts:
 
 - C files to be compiled and installed as LuaRocks package
