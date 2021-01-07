@@ -4,6 +4,18 @@ The VM16 virtual machine provides the following API functions.
 
 
 
+
+
+## version
+
+```LUA
+ver = vm16.version()
+```
+
+Read version string of the vm16 library.
+
+
+
 ## create
 
 ```LUA
@@ -95,6 +107,24 @@ num = vm16.write_mem(pos, addr, tbl)
 Write a memory block with values from `tbl` starting at the given `addr`. 
 Function returns the number of written values.
 
+## read_mem_bin
+
+```LUA
+tbl = vm16.read_mem(pos, addr, num)
+```
+
+Read a memory block starting at the given `addr` with `num` number of words.
+Function returns the read values as binary string.
+
+## write_mem_bin
+
+```LUA
+res = vm16.write_mem(pos, addr, s)
+```
+
+Write a memory block provided as binary string, starting at the given `addr` . 
+Function returns true if successful.
+
 ## read_ascii
 
 ```LUA
@@ -103,6 +133,22 @@ s = vm16.read_ascii(pos, addr, num)
 
 Read a memory block starting at the given `addr` and return the
 data as ASCII string with up to `num` characters.
+
+## write_ascii
+
+```LUA
+res = vm16.write_ascii(pos, addr, s)
+```
+
+Write ASCII string to given address `addr`. Function returns true if successful.
+
+## is_ascii
+
+```LUA
+res = vm16.is_ascii(s)
+```
+
+The function checks whether the specified string is a real ASCII string (all values between 32 and 127) and returns true in this case; otherwise, it returns false.
 
 ## peek
 
@@ -164,10 +210,11 @@ Function returns true/false
 ## read_h16
 
 ```LUA
-res = vm16.read_h16(pos)
+res = vm16.read_h16(pos, start_addr, size)
 ```
 
-Read all memory areas which are not equal to zero and return the data as H16 string. This is used to save program code e. g. to tape. 
+Read  memory areas which are not equal to zero and return the data as H16 string. This is used to save program code e. g. to tape. 
+`start_addr` and `size` are optional parameters. If no value is given, the complete RAM will be considered.
 Function returns true/false.
 
 ## testbit

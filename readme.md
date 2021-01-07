@@ -33,11 +33,11 @@ sudo luarocks make
 The program output should like like this:
 
 ```
-vm16 1.1-1 depends on lua 5.1 (5.1-1 provided by VM)
+vm16 2.3-0 depends on lua 5.1 (5.1-1 provided by VM)
 gcc -O2 -fPIC -I/usr/include/lua5.1 -c src/vm16core.c -o src/vm16core.o
 gcc -O2 -fPIC -I/usr/include/lua5.1 -c src/vm16lua.c -o src/vm16lua.o
 gcc -shared -o vm16lib.so src/vm16core.o src/vm16lua.o
-vm16 1.1-1 is now installed in /usr/local (license: GPLv3) 
+vm16 2.3-0 is now installed in /usr/local (license: GPLv3)
 ```
 
 For the installation of 'luarocks' (if not already available), see [luarocks](https://luarocks.org/)
@@ -60,7 +60,7 @@ none
 
 ## License
 
-Copyright (C) 2019-2020 Joachim Stolberg  
+Copyright (C) 2019-2021 Joachim Stolberg  
 Licensed under the GNU GPLv3   (See LICENSE.txt)
 
 
@@ -74,6 +74,7 @@ Licensed under the GNU GPLv3   (See LICENSE.txt)
 - 2020-12-25  v2.1  * Add function 'set_cpu_reg'
 - 2020-12-29  v2.2  * Add breakpoints and read/write_bin functions
 - 2020-12-31  v2.3  * Change vm16_read_h16() parameters
+- 2001-01-07  v2.3  * Update testing modes
 
 
 

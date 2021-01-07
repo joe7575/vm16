@@ -31,8 +31,8 @@ end
 local function formspec(spos, addr, value)
 	return "size[6,6.5]"..
 		"label[0,0;Input]"..
-		"field[1,1.5;5,1;spos;Pos: (-1,2,3);"..spos.."]"..
-		"field[1,3.0;5,1;addr;Address: 0..3;"..addr.."]"..
+		"field[1,1.5;5,1;spos;CPU pos: (-1,2,3);"..spos.."]"..
+		"field[1,3.0;5,1;addr;I/O port: 0..3;"..addr.."]"..
 		"field[1,4.5;5,1;value;Value: 0..65535;"..value.."]"..
 		"button_exit[2,5.5;2,1;exit;Send]"
 end

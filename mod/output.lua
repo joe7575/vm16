@@ -31,8 +31,8 @@ end
 local function formspec(spos, addr, value)
 	return "size[6,6.5]"..
 		"label[0,0;Output]"..
-		"field[1,1.5;5,1;spos;Pos: (-1,2,3);"..spos.."]"..
-		"field[1,3.0;5,1;addr;Address: 0..3;"..addr.."]"..
+		"field[1,1.5;5,1;spos;CPU pos: (-1,2,3);"..spos.."]"..
+		"field[1,3.0;5,1;addr;I/O port: 0..3;"..addr.."]"..
 		"label[1,4.5;Output: "..value.."]"..
 		"button_exit[1.5,5.5;3,1;exit;Register]"
 end
@@ -65,7 +65,7 @@ minetest.register_node("vm16:output", {
 		print("hand_over", addr, value)
 		local meta = minetest.get_meta(pos)
 		local spos = meta:get_string("spos")
-		meta:set_string("formspec", formspec(spos, addr, "-"))
+		meta:set_string("formspec", formspec(spos, addr, value))
 		meta:set_string("infotext", "value = "..value)
 	end,
 })
