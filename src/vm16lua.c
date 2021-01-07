@@ -221,8 +221,8 @@ static int write_ascii(lua_State *L) {
         size_t size;
         char *p_data = (char*)lua_tolstring(L, 3, &size);
         if((C != NULL) && (p_data != NULL) && (size > 0)) {
-            uint16_t chars = vm16_write_ascii(C, addr, size, p_data);
-            lua_pushboolean(L, chars == size);
+            uint16_t chars = vm16_write_ascii(C, addr, size + 1, p_data);
+            lua_pushboolean(L, chars == size + 1);
             return 1;
         }
     }
