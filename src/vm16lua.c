@@ -388,7 +388,8 @@ static int is_ascii(lua_State *L) {
         char *p_data = (char*)lua_tolstring(L, 1, &size);
         if((p_data != NULL) && (size > 0)) {
             for(int i = 0; i < size; i++) {
-                if((p_data[i] < 32) || (p_data[i] > 127)) {
+                if(((p_data[i] < 32) || (p_data[i] > 127))
+                        && (p_data[i] != 13) && (p_data[i] != 10)){
                     lua_pushboolean(L, 0);
                     return 1;
                 }

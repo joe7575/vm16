@@ -148,7 +148,7 @@ Write ASCII string to given address `addr`. Function returns true if successful.
 res = vm16.is_ascii(s)
 ```
 
-The function checks whether the specified string is a real ASCII string (all values between 32 and 127) and returns true in this case; otherwise, it returns false.
+The function checks whether the specified string is a real ASCII string (all values between 32 and 127 or '\n') and returns true in this case; otherwise, it returns false.
 
 ## peek
 
