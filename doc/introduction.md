@@ -9,7 +9,7 @@ Valid memory configuration are 4, 8, 12, up to 64 KByte.
 
 There are four data registers: A, B, C, D. These are intended to hold numbers that will have various mathematical and logical operations performed on them.
 
-There are two address registers: X and Y. These are typically used as pointers (indirect addressing)
+There are two address registers: X and Y. These are typically used as pointers (indirect addressing).
 
 The last two registers are the Stack Pointer (SP) and the Program Counter (PC). 
 
@@ -18,7 +18,7 @@ The **Program Counter (PC)** points to the current instruction and is set after 
 The **Stack Pointer (SP)** is set to zero, too. After a call or push instruction, the SP will first be decremented and then the value will be stored.
 
 Lets say in register A is the value 0x55AA and the SP point to address 0x0000. 
-After a `push A` operation, the SP points to address 0x0FFF (due to the 4K memory) and the value 0x55AA in stored in address 0x0FFF.
+After a `push A` operation, the SP points to address 0xFFFF (or e.g. 0x0FFF in the case of 4K memory) and the value 0x55AA in stored in address 0xFFFF.
 
 
 ## Addressing Modes
@@ -29,21 +29,14 @@ And there are also instruction without any operand, like `ret` (return from subr
 
 Almost all instructions support different types of addressing modes. Addressing modes are:
 
-- **REG** (register addressing) All registers can be used: A, B, C, D, X, Y, SP ,PC. Ex: `inc A`
-- **IMM** (immediate) In immediate addressing, the operand is located immediately after the opcode in the second word of the instruction. But not both operands can be of type IMM (no 3-words instructions). Ex: `sys #100`
+- **REG** (register addressing) All registers can be used: A, B, C, D, X, Y, SP ,PC. Ex: `inc A`.
+  VM16 has two pseudo register #0 and #1, which can also be used as source operand. Ex: `move A, #0`.
+- **IMM** (immediate) In immediate addressing, the operand (constant number in the range of 0..65535) is located immediately after the opcode in the second word of the instruction. But not both operands can be of type IMM (no 3-words instructions). Ex: `sys #100`
 - **DIR** (direct addressing) In direct addressing, the address of the operand is contained in the second word of the instruction. Direct addressing allows the user to directly address the memory. Ex: `inc 100`
 - **IND** (indirect addressing) In indirect addressing, an index register (X or Y) is used to address memory. Ex: `dec [X]`
 - **PINC** (indirect addressing with post-increment) Same as indirect addressing, but the index register will be incremented after the instruction is executed. Ex: `move [X]+, [Y]+` used for memory copying routines.
-- **ABS** (absolute addressing). Used for all branch/jump instructions as absolute jump address. These are 2-word instructions. Ex: `jump 1000`
-- **REL** (relative addressing). Used for all branch/jump instructions to be able to jump relative to the current address (relocatable code). These are 2-word instructions. Ex: `jump -8` or  `jump +4`
-- **CNST** (constant addressing). VM16 has two pseudo register #0 and #1, which can be used as source operand. Ex: `move A, #0`
-
-
-In addition to the Addressing Modes the table below uses the following two addressing groups:
-
-- **DST**  (destination address capable) includes the following addressing modes: REG + DIR + IND + PINC 
-- **SRC**  (source address/value capable) includes the following addressing modes: REG + DIR + IND + PINC  + IMM + CNST
-
+- **ABS** (absolute addressing). Used for all branch/jump instructions as absolute jump address. These are 2-word instructions (valid range = 0..65535). Ex: `jump 1000`
+- **REL** (relative addressing). Used for all branch/jump instructions to be able to jump relative to the current address (relocatable code). These are 2-word instructions (valid range = -32768..+32767). Ex: `jump -8` or  `jump +4`
 
 
 ## Special Signs
@@ -59,7 +52,7 @@ In addition to the Addressing Modes the table below uses the following two addre
 
 ## Instructions
 
-For a table with all instructions, the addrressing modes and opcodes, see "opcodes.md"
+For a table with all instructions, the addressing modes and opcodes, see "opcodes.md"
 
 ### nop
 
@@ -74,7 +67,7 @@ Ex: `brk #0`
 ### sys
 
 System call into the Lua environment. It allows to use some higher level of functionality,
-implemented in Lua, without the need to write everything is assembler (cheating).
+implemented in Lua, without the need to write everything is assembler (some kind of cheating).
 Valid numbers are 0 - 1023. Additional system call parameters a passed with registers A and B. 
 The result is return in register A.
 Ex: `sys #0`
@@ -220,20 +213,21 @@ Ex: `dbnz C, -8`
 ### in
 
 (I/O) operation to read an input value from an external device.
-operand1 can be any memory location/register, operand2 is the port number (immediate).
-Valid numbers for operand2 are application dependent.
+operand1 can be any register, operand2 is the port number (immediate/memory/register).
+Valid port number values are application dependent (max: 0 - 65535).
 Ex: `in A, #1` 
 
 ### out
 
 (I/O) operation to write an output value to an external device.
-operand1 is the port number (immediate), operand2 can be any memory location/register.
-Valid numbers for operand1 are application dependent.
+operand1 is the port number (immediate/memory/register), operand2 can be any register.
+Valid port number values are application dependent (max: 0 - 65535).
 Ex: `out #2, A` 
 
 Some `out` commands need a second parameter. In this case register `B` is used:
 
 ```
+move   A, #1   ; load A
 move   B, #5   ; load B
 out    #2, A   ; perform out command
 ```

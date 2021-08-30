@@ -1,15 +1,32 @@
 # VM16 V1.0
 
+### Operand Types
+
+- IMM = (immediate) constant number in the range of 0..65535
+- DIR = direct memory address in the range of 0..65535
+- REL = relative memory address in the range of -32768..+32767
+- REG = A, B, C, D, X, Y, PC, SP, [X], [Y], [X]+, [Y]+
+- DST = DIR, REL, REG, [SP+n]
+- SRC = DIR, REL, REG, [SP+n], #0, #1, IMM
+
+The Instruction Set table below uses mainly the following two addressing groups:
+
+- **DST**  (destination address capable) includes the following operand types: DIR, REL, REG, [SP+n]
+- **SRC**  (source address/value capable) includes the following operand types: DIR, REL, REG, [SP+n], #0, #1, IMM
+
+**In the case of instructions with two operands, at least one operand must be of type REG, #0, or #1, since three word instructions are not permitted!**
+
+
 ### Instruction Set
 
 | Instr. | Opnd 1 | Opnd 2 | Opcode                |
 | ------ | ------ | ------ | --------------------- |
 | nop    | --     | --     | 0000                  |
-| brk    | CNST   | --     | 0400 + number (10bit) |
-| sys    | CNST   | --     | 0800 + number (10bit) |
+| brk    | const  | --     | 0400 + number (10bit) |
+| sys    | const  | --     | 0800 + number (10bit) |
 | --     | --     | --     | --                    |
-| jump   | ADR    | --     | 1000 + Opnd1          |
-| call   | ADR    | --     | 1400 + Opnd1          |
+| jump   | SRC    | --     | 1000 + Opnd1          |
+| call   | SRC    | --     | 1400 + Opnd1          |
 | ret    | --     | --     | 1800                  |
 | halt   | --     | --     | 1C00                  |
 | move   | DST    | SRC    | 2000 + Opnd1 + Opnd2  |
@@ -24,16 +41,16 @@
 | or     | DST    | SRC    | 4400 + Opnd1 + Opnd2  |
 | xor    | DST    | SRC    | 4800 + Opnd1 + Opnd2  |
 | not    | DST    | --     | 4C00 + Opnd1          |
-| bnze   | DST    | ADR    | 5000 + Opnd1 + Opnd2  |
-| bze    | DST    | ADR    | 5400 + Opnd1 + Opnd2  |
-| bpos   | DST    | ADR    | 5800 + Opnd1 + Opnd2  |
-| bneg   | DST    | ADR    | 5C00 + Opnd1 + Opnd2  |
-| in     | DST    | CNST   | 6000 + Opnd1 + Opnd2  |
-| out    | CNST   | SRC    | 6400 + Opnd1 + Opnd2  |
+| bnze   | SRC    | SRC    | 5000 + Opnd1 + Opnd2  |
+| bze    | SRC    | SRC    | 5400 + Opnd1 + Opnd2  |
+| bpos   | SRC    | SRC    | 5800 + Opnd1 + Opnd2  |
+| bneg   | SRC    | SRC    | 5C00 + Opnd1 + Opnd2  |
+| in     | DST    | SRC    | 6000 + Opnd1 + Opnd2  |
+| out    | SRC    | SRC    | 6400 + Opnd1 + Opnd2  |
 | push   | SRC    | --     | 6800 + Opnd1          |
 | pop    | DST    | --     | 6C00 + Opnd1          |
 | swap   | DST    | --     | 7000 + Opnd1          |
-| dbnz   | DST    | ADR    | 7400 + Opnd1 + Opnd2  |
+| dbnz   | DST    | SRC    | 7400 + Opnd1 + Opnd2  |
 | mod    | DST    | SRC    | 7800 + Opnd1 + Opnd2  |
 | shl    | DST    | SRC    | 7C00 + Opnd1 + Opnd2  |
 | shr    | DST    | SRC    | 8000 + Opnd1 + Opnd2  |
@@ -43,16 +60,6 @@
 | skeq   | SRC    | SRC    | 9000 + Opnd1 + Opnd2  |
 | sklt   | SRC    | SRC    | 9400 + Opnd1 + Opnd2  |
 | skgt   | SRC    | SRC    | 9800 + Opnd1 + Opnd2  |
-
-
-### Addressing Modes
-
-- REG = A, B, C, D, X, Y, PC, SP
-- MEM = [X], [Y], [X]+, [Y]+, IND, [SP+n]
-- ADR = IMM, REL, #0, #1
-- CNST = #0, #1, IMM
-- DST = A, B, C, D, X, Y, PC, SP, [X], [Y], [X]+, [Y]+, IND, [SP+n]
-- SRC = A, B, C, D, X, Y, PC, SP, [X], [Y], [X]+, [Y]+, IND, [SP+n], #0, #1, IMM
 
 
 ### Opcodes
@@ -85,7 +92,7 @@
 |------|------|------|------|------|------|------|------|
 | 0100 | 0120 | 0140 | 0160 | 0180 | 01A0 | 01C0 | 01E0 |
 
-| IMM  | IND  | REL  |[SP+n]|
+| IMM  | DIR  | REL  |[SP+n]|
 |------|------|------|------|
 | 0200 | 0220 | 0240 | 0260 |
 
@@ -99,7 +106,7 @@
 |------|------|------|------|------|------|------|------|
 | 0008 | 0009 | 000A | 000B | 000C | 000D | 000E | 000F |
 
-| IMM  | IND  | REL  |[SP+n]|
+| IMM  | DIR  | REL  |[SP+n]|
 |------|------|------|------|
 | 0010 | 0011 | 0012 | 0013 |
 
