@@ -6,8 +6,6 @@
 - DIR = direct memory address in the range of 0..65535
 - REL = relative memory address in the range of -32768..+32767
 - REG = A, B, C, D, X, Y, PC, SP, [X], [Y], [X]+, [Y]+
-- DST = DIR, REL, REG, [SP+n]
-- SRC = DIR, REL, REG, [SP+n], #0, #1, IMM
 
 The Instruction Set table below uses mainly the following two addressing groups:
 
