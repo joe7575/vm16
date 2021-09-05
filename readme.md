@@ -1,12 +1,15 @@
 # VM16 - 16-bit VM for Minetest mods
 
-The VM16 is a 16-bit virtual machine implemented in C. It enables simulation of vintage computers in the game Minetest and is capable of executing real binary code at a remarkable speed.
+The VM16 is a 16-bit virtual machine implemented in C.
+It enables simulation of vintage computers in the game Minetest
+and is capable of executing real binary code at a remarkable speed.
 
 Browse on: [GitHub](https://github.com/joe7575/vm16)
 
 Download: [GitHub](https://github.com/joe7575/vm16/archive/master.zip)
 
-This mod is not useful on its own. Only a few test nodes are supplied to test and demonstrate the functions.
+This mod is not useful on its own.
+Only a few test nodes are supplied to test and demonstrate the functions.
 
 See also [vm16asm](https://github.com/joe7575/vm16asm) and [PDP-13](https://github.com/joe7575/pdp13).
 
@@ -18,7 +21,9 @@ This mod has two parts:
 
 ## Installation
 
-Download the mod from [GitHub](https://github.com/joe7575/vm16/archive/master.zip), extract the file from the ZIP archive and copy the folder `vm16-master` into your Minetest `mods` folder.
+Download the mod from [GitHub](https://github.com/joe7575/vm16/archive/master.zip),
+extract the file from the ZIP archive and copy the folder `vm16-master`
+into your Minetest `mods` folder.
 
 Change your directory  to `mods/vm16-master` and install the Lua library with:
 
@@ -63,7 +68,7 @@ none
 ## License
 
 Copyright (C) 2019-2021 Joachim Stolberg  
-Licensed under the GNU GPLv3   (See LICENSE.txt)
+Licensed under the GNU GPLv3 (See LICENSE.txt)
 
 
 
@@ -76,7 +81,6 @@ Licensed under the GNU GPLv3   (See LICENSE.txt)
 - 2020-12-25  v2.1  * Add function 'set_cpu_reg'
 - 2020-12-29  v2.2  * Add breakpoints and read/write_bin functions
 - 2020-12-31  v2.3  * Change vm16_read_h16() parameters
-- 2001-01-07  v2.3  * Update testing modes
-
-
+- 2021-01-07  v2.3  * Update testing modes
+- 2021-08-30  v2.3  * Improve documentation
 
