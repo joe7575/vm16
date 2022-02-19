@@ -4,6 +4,8 @@ The VM16 is a 16-bit virtual machine implemented in C.
 It enables simulation of vintage computers in the game Minetest
 and is capable of executing real binary code at a remarkable speed.
 
+![screenshot](https://github.com/joe7575/vm16/blob/master/screenshot.png)
+
 Browse on: [GitHub](https://github.com/joe7575/vm16)
 
 Download: [GitHub](https://github.com/joe7575/vm16/archive/master.zip)
