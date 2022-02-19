@@ -6,7 +6,7 @@
 
 	GPL v3
 	See LICENSE.txt for more information
-	
+
 	vm16 API
 ]]--
 
@@ -38,7 +38,7 @@ vm16.CallResults = {[0]="OK", "NOP", "IN", "OUT", "SYS", "HALT", "BREAK", "ERROR
 
 local SpecialCycles = {} -- for sys calls with reduced/increased cycles
 
-local CYCLES = 10000  -- max CPU cycles / 100 ms 
+local CYCLES = 10000  -- max CPU cycles / 100 ms
 
 vm16.version = vm16lib.version()
 vm16.testbit = vm16lib.testbit
@@ -56,7 +56,7 @@ local function on_output(pos, address, val1, val2)
 	print("on_output", address, val1, val2)
 end
 
-local function on_system(pos, address, val1, val2) 
+local function on_system(pos, address, val1, val2)
 	print("on_system", address, val1, val2)
 	return 1
 end
@@ -93,7 +93,7 @@ function vm16.is_loaded(pos)
 	return VMList[hash] ~= nil
 end
 
--- move VM from storage string to active 
+-- move VM from storage string to active
 function vm16.vm_restore(pos)
 	print("vm_restore")
 	local meta = minetest.get_meta(pos)
@@ -260,18 +260,18 @@ function vm16.run(pos, cycles, clbks)
 	local vm = VMList[hash]
 	local resp = VM16_ERROR
 	local ran
-	
+
 	clbks = clbks or callbacks
 	cycles = math.min(cycles or CYCLES, CYCLES)
-	
+
 	while vm and cycles > 0 do
 		resp, ran = vm16lib.run(vm, cycles)
 		cycles = cycles - ran
-		
+
 		if resp == VM16_NOP then
 			return VM16_NOP
 		elseif resp == VM16_BREAK then
-			local cpu = vm16lib.get_cpu_reg(vm) 
+			local cpu = vm16lib.get_cpu_reg(vm)
 			clbks.on_update(pos, resp, cpu)
 			return VM16_BREAK
 		elseif resp == VM16_IN then
@@ -289,11 +289,11 @@ function vm16.run(pos, cycles, clbks)
 			vm16lib.set_io_reg(vm, io)
 			cycles = cycles - (SpecialCycles[io.addr] or CYCLES/10)
 		elseif resp == VM16_HALT then
-			local cpu = vm16lib.get_cpu_reg(vm) 
+			local cpu = vm16lib.get_cpu_reg(vm)
 			clbks.on_update(pos, resp, cpu)
 			return VM16_HALT
 		elseif resp == VM16_ERROR then
-			local cpu = vm16lib.get_cpu_reg(vm) 
+			local cpu = vm16lib.get_cpu_reg(vm)
 			clbks.on_update(pos, resp, cpu)
 			return VM16_ERROR
 		end
@@ -344,7 +344,7 @@ local function remove_unloaded_vm()
 		end
 	end
 	minetest.after(60, remove_unloaded_vm)
-end	
+end
 
 minetest.after(60, remove_unloaded_vm)
 
@@ -355,7 +355,7 @@ minetest.after(60, remove_unloaded_vm)
 --		print("CPU active at "..minetest.pos_to_string(pos))
 --	end
 --	minetest.after(10, debugging)
---end	
+--end
 
 --minetest.after(10, debugging)
 

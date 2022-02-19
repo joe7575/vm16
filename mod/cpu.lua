@@ -6,7 +6,7 @@
 
 	GPL v3
 	See LICENSE.txt for more information
-	
+
 	VM16 Computer
 ]]--
 
@@ -15,15 +15,16 @@ local M = minetest.get_meta
 
 local Cache = {}    -- [hash] = {}
 
+-- Start example
 local Code = [[
 ; ASCII output example
 
 move A, #$41   ; load A with 'A'
 
 loop:
-    out #00, A    ; output char
-    add  A, #01   ; increment char
-    jump loop
+  out #00, A   ; output char
+  add  A, #01  ; increment char
+  jump loop
 ]]
 
 local function to_char(val)
@@ -92,11 +93,11 @@ local function on_receive_fields(pos, formname, fields, player)
 	if player and minetest.is_protected(pos, player:get_player_name()) then
 		return
 	end
-	
+
 	local mem = get_mem(pos)
 	local meta = minetest.get_meta(pos)
 	local lines = {"Error"}
-	
+
 	if not mem.running then
 		if fields.code and (fields.save or fields.assemble) then
 			M(pos):set_string("code", fields.code)

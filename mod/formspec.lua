@@ -6,7 +6,7 @@
 
 	GPL v3
 	See LICENSE.txt for more information
-	
+
 	Simple CPU for testing purposes
 ]]--
 
@@ -38,7 +38,7 @@ local tinsert = table.insert
 local function strsplit(text)
    local list = {}
    local pos = 1
-   
+
    while true do
       local first, last = strfind(text, "\n", pos)
       if first then -- found?
@@ -102,11 +102,11 @@ local function mem_dump(pos, x, y)
 		"button[3,0.1;1,0.6;inc;" .. minetest.formspec_escape(">") .. "]" ..
 		"box[0,0.7;9,6.6;#006]" ..
 		"textarea[0,0.7;9.6,7;;;"}
-	
+
 	if mem then
 		for i = 0,15 do
 			local offs = i * 8
-			table.insert(lines, string.format("%04X: %04X %04X %04X %04X %04X %04X %04X %04X\n", 
+			table.insert(lines, string.format("%04X: %04X %04X %04X %04X %04X %04X %04X %04X\n",
 					addr+offs, mem[1+offs], mem[2+offs], mem[3+offs], mem[4+offs],
 					mem[5+offs], mem[6+offs], mem[7+offs], mem[8+offs]))
 		end
@@ -123,9 +123,9 @@ local function stack_dump(pos, x, y)
 	local lines = {"container[" .. x .. "," .. y .. "]" ..
 		"box[0,0;9,0.4;#606]" ..
 		"textarea[0,0;9.6,1;;Stack Area;"}
-	
+
 	if mem then
-		table.insert(lines, string.format("%04X: %04X %04X %04X %04X %04X %04X %04X %04X\n", 
+		table.insert(lines, string.format("%04X: %04X %04X %04X %04X %04X %04X %04X %04X\n",
 				0x1F8, mem[1], mem[2], mem[3], mem[4], mem[5], mem[6], mem[7], mem[8]))
 	else
 		table.insert(lines, "Error")
@@ -155,7 +155,7 @@ function vm16.cpu.formspec(pos, mem)
 	else
 		textsize = tostring(textsize)
 	end
-	
+
 	local code, asm_bttn_text, stop_bttn_text, color, status
 	if mem.error then
 		-- Output listing + error
@@ -164,7 +164,7 @@ function vm16.cpu.formspec(pos, mem)
 		color = "#AAA"
 		status = "Edit"
 		code = "style_type[textarea;font=mono;textcolor=#FFF;border=false;font_size="  .. textsize .. "]" ..
-			"textarea[0.2,0.6;8.5,9.6;;Code;" .. 
+			"textarea[0.2,0.6;8.5,9.6;;Code;" ..
 			minetest.formspec_escape(fs_listing(pos, mem.error)) .. "]"
 	elseif not vm16.is_loaded(pos) then
 		-- Edit code
@@ -173,7 +173,7 @@ function vm16.cpu.formspec(pos, mem)
 		color = "#AAA"
 		status = "Edit"
 		code = "style_type[textarea;font=mono;textcolor=#FFF;border=false;font_size="  .. textsize .. "]" ..
-			"textarea[0.2,0.6;8.5,9.6;code;Code;" .. 
+			"textarea[0.2,0.6;8.5,9.6;code;Code;" ..
 			minetest.formspec_escape(M(pos):get_string("code")) .. "]"
 	else
 		-- Run code
@@ -185,7 +185,7 @@ function vm16.cpu.formspec(pos, mem)
 			"style_type[label;font=mono;textcolor=#AAA;font_size="  .. textsize .. "]" ..
 			"label[0.2,0.8;" .. minetest.formspec_escape(fs_code(pos, mem)) .. "]"
 	end
-	
+
 	return "formspec_version[4]" ..
 		"size[18,12]" ..
 		"style_type[textarea;font=mono;textcolor=" .. color .. ";border=false;font_size="  .. textsize .. "]" ..

@@ -6,3 +6,4 @@
 test/bin/
 test/test.lua
 test/test_asm.lua
+del_eol_blanks.py

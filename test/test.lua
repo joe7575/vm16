@@ -78,14 +78,14 @@ for i = 1,10 do
 	assert(vm16lib.poke(vm, 102, 0x42) == true)
 	assert(vm16lib.poke(vm, 103, 0x43) == true)
 	assert(vm16lib.poke(vm, 104, 0) == true)
-	
+
 	print(vm16lib.read_ascii(vm, 100, 16))
 	s = vm16lib.read_ascii(vm, 100, 16)
 	assert(vm16lib.write_ascii(vm, 100, s) == true)
 	local s2 = vm16lib.read_h16(vm, 0, vm16lib.mem_size(vm))
 	vm16lib.write_h16(vm, s2)
 	s2 = vm16lib.read_h16(vm, 0, vm16lib.mem_size(vm))
-	
+
 	local cpu = vm16lib.get_cpu_reg(vm)
 	cpu.A = 0x1111
 	cpu.B = 0x2222
@@ -105,7 +105,7 @@ for i = 1,10 do
 	assert(cpu.Y == 0x6666)
 	assert(cpu.PC == 0x7777)
 	assert(cpu.SP == 0x8888)
-	
+
 -------------------------------------------------------------------------------
 -- test word chars
 -------------------------------------------------------------------------------
@@ -119,16 +119,16 @@ for i = 1,10 do
 	print(vm16lib.read_ascii(vm, 0x0100, 4))
 
 	vm = nil
-	
+
 	assert(vm16lib.testbit(0x1000, 0) == false)
 	assert(vm16lib.testbit(0x1000, 11) == false)
 	assert(vm16lib.testbit(0x1000, 12) == true)
 	assert(vm16lib.testbit(0x1000, 13) == false)
-	
+
 	assert(vm16lib.is_ascii("Hallo joe") == true);
 	assert(vm16lib.is_ascii("\0Hallo joe") == false);
 	assert(vm16lib.is_ascii({}) == false);
-	
+
 end
 
 -------------------------------------------------------------------------------
@@ -152,19 +152,19 @@ local function on_input(pos, address)
 	cnt = cnt + 1
 	print("input", cnt)
 	return address
-end	
+end
 
 local function on_output(pos, address, value)
 	cnt = cnt + 1
 	print("output", cnt)
 	return true
 	--return false
-end	
+end
 
 local function on_system(pos, address, val1, val2)
 	print("on_system", address, val1, val2)
 	return 0x55
-end	
+end
 
 vm16.create(pos, 1)
 vm16.register_callbacks(on_input, on_output, on_system)
@@ -201,7 +201,7 @@ local function hexdump(tbl)
 	end
 	print(table.concat(t, " "))
 end
-		
+
 vm16.write_mem(pos, 0, Code)
 local s = vm16.read_mem_bin(pos, 0, 8)
 assert(#s == 16)

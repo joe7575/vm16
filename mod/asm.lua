@@ -37,7 +37,7 @@ local Opcodes = {[0] =
 	"add:DST:SRC", "sub:DST:SRC", "mul:DST:SRC", "div:DST:SRC",
 	"and:DST:SRC", "or:DST:SRC", "xor:DST:SRC", "not:DST:-",
 	"bnze:DST:ADR", "bze:DST:ADR", "bpos:DST:ADR", "bneg:DST:ADR",
-	"in:DST:CNST", "out:CNST:SRC", "push:SRC:-", "pop:DST:-", 
+	"in:DST:CNST", "out:CNST:SRC", "push:SRC:-", "pop:DST:-",
 	"swap:DST:-", "dbnz:DST:ADR", "mod:DST:SRC",
 	"shl:DST:SRC", "shr:DST:SRC", "addc:DST:SRC", "mulc:DST:SRC",
 	"skne:SRC:SRC", "skeq:SRC:SRC", "sklt:SRC:SRC", "skgt:SRC:SRC",
@@ -48,7 +48,7 @@ local Opcodes = {[0] =
 --
 local Operands = {[0] =
 	"A", "B", "C", "D", "X", "Y", "PC", "SP",
-	"[X]", "[Y]", "[X]+", "[Y]+", "#0", "#1", "-", "-", 
+	"[X]", "[Y]", "[X]+", "[Y]+", "#0", "#1", "-", "-",
 	"IMM", "IND", "REL", "[SP+n]",
 }
 
@@ -56,12 +56,12 @@ local Operands = {[0] =
 -- Need special operand handling
 --
 local JumpInst = {
-	["call"] = true, ["jump"] = true, ["bnze"] = true, ["bze"] = true, 
+	["call"] = true, ["jump"] = true, ["bnze"] = true, ["bze"] = true,
 	["bpos"] = true, ["bneg"] = true, ["dbnz"] = true
 }
 
 for idx,s in pairs(Opcodes) do
-	local opc = string.split(s, ":")[1] 
+	local opc = string.split(s, ":")[1]
 	tOpcodes[opc] = idx
 end
 
@@ -139,7 +139,7 @@ end
 
 local function word_val(s, idx)
 	if s:byte(idx) == 0 then
-		return 0 
+		return 0
 	elseif idx == #s then
 		return s:byte(idx)
 	elseif s:byte(idx+1) == 0 then
@@ -189,7 +189,7 @@ end
 function Asm:scanner(text)
     local lOut = {}  -- {lineno, codestr, txtline}
 
-	if not vm16.is_ascii(text) then 
+	if not vm16.is_ascii(text) then
 		return nil, "Invalid ASCII file format"
 	end
 	for lineno, txtline in ipairs(linessplit(text)) do
@@ -243,7 +243,7 @@ function Asm:operand(s)
 		return tOperands[s2]
 	end
 	local c = string.sub(s, 1, 1)
-	
+
 	if c == "#" then return tOperands["IMM"], value(string.sub(s, 2, -1)) end
 	if c == "$" then return tOperands["IND"], value(s) end
 	-- value without '#' and '$'
@@ -274,14 +274,14 @@ function Asm:decode_code(tok)
 		end
 		return
 	end
-		
+
 	-- Opcodes
 	local opcode, opnd1, opnd2, val1, val2
-	
+
 	opcode = tOpcodes[words[1]]
-	if not opcode then 
+	if not opcode then
 		self:err_msg("Syntax error")
-		return 
+		return
 	end
 	if #words == 2 and opcode < 4 then
 		local num = constant(words[2]) % 1024
@@ -292,13 +292,13 @@ function Asm:decode_code(tok)
 		opnd2, val2 = self:operand(words[3])
 	end
 	-- some checks
-	if val1 and val2 then 
+	if val1 and val2 then
 		self:err_msg("Syntax error")
-		return 
+		return
 	end
-	if not opnd1 and not opnd2 then 
+	if not opnd1 and not opnd2 then
 		self:err_msg("Syntax error")
-		return 
+		return
 	end
 	-- code correction for all jump/branch opcodes: from '0' to '#0'
 	if JumpInst[words[1]] then
@@ -309,7 +309,7 @@ function Asm:decode_code(tok)
 	local tbl = {(opcode * 1024) + ((opnd1 or 0) * 32) + (opnd2 or 0)}
 	if val1 then tbl[#tbl+1] = val1 end
 	if val2 then tbl[#tbl+1] = val2 end
-	
+
 	tok = {tok[LINENO], tok[CODESTR], tok[TXTLINE], self.section, self.address, tbl}
 	self.address = self.address + #tbl
 	return tok
@@ -342,7 +342,7 @@ function Asm:decode_text(tok)
 		codestr = codestr:gsub("\\n", "\n")
 		codestr = codestr:sub(2, -2)
 		local ln = #codestr
-		
+
 		local out = {}
 		for idx = 1, ln, 8 do
 			local tbl = {}
@@ -370,7 +370,7 @@ function Asm:decode_ctext(tok)
 		codestr = codestr:gsub("\\n", "\n")
 		codestr = codestr:sub(2, -2)
 		local ln = #codestr
-		
+
 		local out = {}
 		for idx = 1, ln, 16 do
 			local tbl = {}
@@ -406,7 +406,7 @@ function Asm:assembler(lToken)
 		elseif self.section == CTEXTSEC then
 			extend(lOut, self:decode_ctext(tok))
 		end
-		
+
 	end
 
 	-- pass 2
@@ -439,10 +439,10 @@ function Asm:listing(lToken)
 			end
 		end
 		return table.concat(t, " ")
-	end	
+	end
 
 	local out = {}
-	for _,tok in ipairs(lToken) do 
+	for _,tok in ipairs(lToken) do
 		append(out, string.format("%04X: %-10s %s", tok[ADDRESS], mydump(tok[OPCODES]), tok[TXTLINE]))
 	end
 	return table.concat(out, "\n")

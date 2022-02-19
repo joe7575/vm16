@@ -6,7 +6,7 @@
 
 	GPL v3
 	See LICENSE.txt for more information
-	
+
 	Simple CPU for testing purposes
 ]]--
 

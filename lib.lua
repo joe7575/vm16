@@ -10,7 +10,7 @@
 
 -- Returns the number of operands (0,1) based on the given opcode
 function vm16.num_operands(opcode)
-	if opcode then 
+	if opcode then
 		local idx1 = math.floor(opcode / 1024)
 		local rest = opcode - (idx1 * 1024)
 		local idx2 = math.floor(rest / 32)
@@ -31,7 +31,7 @@ function vm16.set_breakpoint(pos, addr, num)
 	vm16.poke(pos, addr, 0x0400 + num)
 	return code
 end
-	
+
 function vm16.breakpoint_step1(pos, addr, code)
 	local val = vm16.peek(pos, addr)
 	vm16.poke(pos, addr, code)

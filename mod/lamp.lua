@@ -6,7 +6,7 @@
 
 	GPL v3
 	See LICENSE.txt for more information
-	
+
 	VM16 Color Lamp
 ]]--
 
@@ -74,7 +74,7 @@ end
 minetest.register_node("vm16:lamp_off", {
 	description = DESCRIPTION,
 	tiles = {"vm16_lamp.png"},
-	
+
 	after_place_node = function(pos, placer, itemstack, pointed_thing)
 		M(pos):set_string("infotext", DESCRIPTION)
 		M(pos):set_string("formspec", formspec())
@@ -108,7 +108,7 @@ minetest.register_node("vm16:lamp_on", {
 	on_receive_fields = on_receive_fields,
 	on_vm16_start_cpu = on_vm16_start_cpu,
 	on_vm16_output = on_vm16_output,
-	
+
 	paramtype = "light",
 	paramtype2 = "color",
 	palette = "vm16_palette64.png",
