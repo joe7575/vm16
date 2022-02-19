@@ -2,15 +2,15 @@
 
 ### Operand Types
 
-- IMM = (immediate) constant number in the range of 0..65535
-- DIR = direct memory address in the range of 0..65535
+- CONST = constant number in the range of 0..65535
+- MEM = direct memory address in the range of 0..65535
 - REL = relative memory address in the range of -32768..+32767
 - REG = A, B, C, D, X, Y, PC, SP, [X], [Y], [X]+, [Y]+
 
 The Instruction Set table below uses mainly the following two addressing groups:
 
-- **DST**  (destination address capable) includes the following operand types: DIR, REL, REG, [SP+n]
-- **SRC**  (source address/value capable) includes the following operand types: DIR, REL, REG, [SP+n], #0, #1, IMM
+- **DST**  (destination address capable) includes the following operand types: MEM, REL, REG, [SP+n]
+- **SRC**  (source address/value capable) includes the following operand types: MEM, REL, REG, [SP+n], #0, #1, CONST
 
 **In the case of instructions with two operands, at least one operand must be of type REG, #0, or #1, since three word instructions are not permitted!**
 
@@ -90,7 +90,7 @@ The Instruction Set table below uses mainly the following two addressing groups:
 |------|------|------|------|------|------|------|------|
 | 0100 | 0120 | 0140 | 0160 | 0180 | 01A0 | 01C0 | 01E0 |
 
-| IMM  | DIR  | REL  |[SP+n]|
+|CONST | MEM  | REL  |[SP+n]|
 |------|------|------|------|
 | 0200 | 0220 | 0240 | 0260 |
 
@@ -104,7 +104,7 @@ The Instruction Set table below uses mainly the following two addressing groups:
 |------|------|------|------|------|------|------|------|
 | 0008 | 0009 | 000A | 000B | 000C | 000D | 000E | 000F |
 
-| IMM  | DIR  | REL  |[SP+n]|
+|CONST | MEM  | REL  |[SP+n]|
 |------|------|------|------|
 | 0010 | 0011 | 0012 | 0013 |
 
