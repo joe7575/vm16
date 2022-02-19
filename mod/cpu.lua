@@ -195,3 +195,11 @@ minetest.register_node("vm16:cpu", {
 	is_ground_content = false,
 })
 
+minetest.register_craft({
+	output = "vm16:cpu",
+	recipe = {
+		{"", "default:obsidian_glass", ""},
+		{"default:steelblock", "basic_materials:gold_wire", "default:steelblock"},
+		{"basic_materials:ic", "basic_materials:ic", "basic_materials:ic"},
+	},
+})
