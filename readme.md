@@ -39,7 +39,7 @@ For Linux like systems, use:
 sudo luarocks make
 ```
 
-The program output should like like this:
+The program output should look like this:
 
 ```
 vm16 2.4-0 depends on lua 5.1 (5.1-1 provided by VM)
