@@ -49,7 +49,6 @@ local function get_mem(pos)
 end
 
 local function on_update(pos, resp, cpu)
-	print("on_update", resp)
 	local mem = get_mem(pos)
 	mem.running = resp < vm16.HALT
 	M(pos):set_string("formspec", vm16.cpu.formspec(pos, get_mem(pos)))
@@ -156,7 +155,7 @@ local function on_receive_fields(pos, formname, fields, player)
 end
 
 local function on_timer(pos, elapsed)
-	print("on_timer")
+	--print("on_timer")
 	if vm16.is_loaded(pos) then
 		local mem = get_mem(pos)
 		if mem.steps then

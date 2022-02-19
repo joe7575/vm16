@@ -11,7 +11,7 @@
 ]]--
 
 local vm16lib = ...
-assert(vm16lib.version() == "2.3")
+assert(vm16lib.version() == "2.4")
 
 local VMList = {}
 local storage = minetest.get_mod_storage()
@@ -48,25 +48,20 @@ vm16.is_ascii = vm16lib.is_ascii
 local callbacks = {}
 
 local function on_input(pos, address)
-	print("on_input", address)
 	return address
 end
 
 local function on_output(pos, address, val1, val2)
-	print("on_output", address, val1, val2)
 end
 
 local function on_system(pos, address, val1, val2)
-	print("on_system", address, val1, val2)
 	return 1
 end
 
 local function on_update(pos, resp, cpu)
-	print("on_update", vm16.CallResults[resp])
 end
 
 local function on_unload(pos)
-	print("on_unload")
 end
 
 -- ram_size is from 1 (4K) to 16 (64KB) or 0 for 0.5K
@@ -347,17 +342,6 @@ local function remove_unloaded_vm()
 end
 
 minetest.after(60, remove_unloaded_vm)
-
-
---local function debugging()
---	for hash, _ in pairs(VMList) do
---		local pos = minetest.get_position_from_hash(hash)
---		print("CPU active at "..minetest.pos_to_string(pos))
---	end
---	minetest.after(10, debugging)
---end
-
---minetest.after(10, debugging)
 
 -- Deprecated! Use `generate_callback_table` instead.
 function vm16.register_callbacks(on_inp, on_outp, on_sys, on_upd, on_unld)

@@ -258,11 +258,15 @@ function Asm:operand(s)
 	return
 end
 
+function Asm:no_code(tok)
+	return {tok[LINENO], tok[CODESTR], tok[TXTLINE], self.section, self.address, {}}
+end
+
 function Asm:decode_code(tok)
 	local codestr = tok[CODESTR]
 	local words = strsplit(codestr)
 	if codestr == "" then
-		return {tok[LINENO], tok[CODESTR], tok[TXTLINE], self.section, self.address, {}}
+		return self:no_code(tok)
 	end
 	-- Aliases
 	if words[2] == "=" then
@@ -272,7 +276,7 @@ function Asm:decode_code(tok)
 		else
 			self:err_msg("Invalid left value")
 		end
-		return
+		return self:no_code(tok)
 	end
 
 	-- Opcodes
@@ -281,7 +285,7 @@ function Asm:decode_code(tok)
 	opcode = tOpcodes[words[1]]
 	if not opcode then
 		self:err_msg("Syntax error")
-		return
+		return self:no_code(tok)
 	end
 	if #words == 2 and opcode < 4 then
 		local num = constant(words[2]) % 1024
@@ -294,11 +298,11 @@ function Asm:decode_code(tok)
 	-- some checks
 	if val1 and val2 then
 		self:err_msg("Syntax error")
-		return
+		return self:no_code(tok)
 	end
 	if not opnd1 and not opnd2 then
 		self:err_msg("Syntax error")
-		return
+		return self:no_code(tok)
 	end
 	-- code correction for all jump/branch opcodes: from '0' to '#0'
 	if JumpInst[words[1]] then
@@ -318,7 +322,7 @@ end
 function Asm:decode_data(tok)
 	local codestr = tok[CODESTR]
 	if codestr == "" then
-		return {{tok[LINENO], tok[CODESTR], tok[TXTLINE], self.section, self.address, {}}}
+		return self:no_code(tok)
 	end
 	local words = strsplit(codestr)
 	local tbl = {}
@@ -335,7 +339,7 @@ end
 function Asm:decode_text(tok)
 	local codestr = tok[CODESTR]
 	if codestr == "" then
-		return {{tok[LINENO], tok[CODESTR], tok[TXTLINE], self.section, self.address, {}}}
+		return {self:no_code(tok)}
 	end
 	if codestr:byte(1) == 34 and codestr:byte(-1) == 34 then
 		codestr = codestr:gsub("\\0", "\0")
@@ -356,14 +360,14 @@ function Asm:decode_text(tok)
 		return out
 	else
 		self:err_msg("Invalid string")
-		return
+		return {self:no_code(tok)}
 	end
 end
 
 function Asm:decode_ctext(tok)
 	local codestr = tok[CODESTR]
 	if codestr == "" then
-		return {{tok[LINENO], tok[CODESTR], tok[TXTLINE], self.section, self.address, {}}}
+		return  {self:no_code(tok)}
 	end
 	if codestr:byte(1) == 34 and codestr:byte(-1) == 34 then
 		codestr = codestr:gsub("\\0", "\0\0")
@@ -384,7 +388,7 @@ function Asm:decode_ctext(tok)
 		return out
 	else
 		self:err_msg("Invalid string")
-		return
+		return {self:no_code(tok)}
 	end
 end
 
@@ -400,7 +404,7 @@ function Asm:assembler(lToken)
 		if self.section == CODESEC then
 			append(lOut, self:decode_code(tok))
 		elseif self.section == DATASEC then
-			extend(lOut, self:decode_data(tok))
+			append(lOut, self:decode_data(tok))
 		elseif self.section == TEXTSEC then
 			extend(lOut, self:decode_text(tok))
 		elseif self.section == CTEXTSEC then

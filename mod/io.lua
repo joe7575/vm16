@@ -41,7 +41,6 @@ function vm16.on_start_cpu(cpu_pos)
 				-- Output node
 				local addr = ndef.on_vm16_start_cpu(pos, cpu_pos)
 				if addr then
-					print("Output block at " .. P2S(pos))
 					Outputs[hash] = Outputs[hash] or {}
 					Outputs[hash][addr] = {pos = pos, output = ndef.on_vm16_output}
 				end
@@ -49,7 +48,6 @@ function vm16.on_start_cpu(cpu_pos)
 				-- Input node
 				local addr = ndef.on_vm16_start_cpu(pos, cpu_pos)
 				if addr then
-					print("Input block at " .. P2S(pos))
 					Inputs[hash] = Inputs[hash] or {}
 					Inputs[hash][addr] = 0
 				end
@@ -58,17 +56,15 @@ function vm16.on_start_cpu(cpu_pos)
 	end
 end
 
--- Used by input nodes
+-- Used by 'input' nodes
 function vm16.input_data(pos, addr, value)
-	print("input_data", P2S(pos), addr, value)
 	local hash = minetest.hash_node_position(pos)
 	Inputs[hash] = Inputs[hash] or {}
 	Inputs[hash][addr] = value
 end
 
--- Used by CPU for output nodes
+-- Used by CPU to output data
 function vm16.on_output(pos, addr, val1, val2)
-	print("on_output", P2S(pos), addr, val1, val2)
 	local hash = minetest.hash_node_position(pos)
 	local item = Outputs[hash] and Outputs[hash][addr]
 	if item then
@@ -78,7 +74,6 @@ end
 
 -- Used by CPU to read input data
 function vm16.on_input(pos, address)
-	print("on_input", P2S(pos), address)
 	local hash = minetest.hash_node_position(pos)
 	Inputs[hash] = Inputs[hash] or {}
 	return Inputs[hash][address] or 0

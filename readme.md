@@ -8,15 +8,15 @@ Browse on: [GitHub](https://github.com/joe7575/vm16)
 
 Download: [GitHub](https://github.com/joe7575/vm16/archive/master.zip)
 
-This mod is not useful on its own.
-Only a few test nodes are supplied to test and demonstrate the functions.
+This mod is not very useful on its own, but it can be used as
+learning system for VM16 assembler.
 
-See also [vm16asm](https://github.com/joe7575/vm16asm) and [PDP-13](https://github.com/joe7575/pdp13).
+See also [PDP-13](https://github.com/joe7575/pdp13).
 
 This mod has two parts:
 
 - C files to be compiled and installed as LuaRocks package
-- Lua files to be used as Minetest mod
+- Lua files to be used as Minetest mod containing the VM16 computer blocks
 
 
 ## Installation
@@ -40,11 +40,11 @@ sudo luarocks make
 The program output should like like this:
 
 ```
-vm16 2.3-0 depends on lua 5.1 (5.1-1 provided by VM)
+vm16 2.4-0 depends on lua 5.1 (5.1-1 provided by VM)
 gcc -O2 -fPIC -I/usr/include/lua5.1 -c src/vm16core.c -o src/vm16core.o
 gcc -O2 -fPIC -I/usr/include/lua5.1 -c src/vm16lua.c -o src/vm16lua.o
 gcc -shared -o vm16lib.so src/vm16core.o src/vm16lua.o
-vm16 2.3-0 is now installed in /usr/local (license: GPLv3)
+vm16 2.4-0 is now installed in /usr/local (license: GPLv3)
 ```
 
 For the installation of 'luarocks' (if not already available), see [luarocks](https://luarocks.org/)
@@ -61,13 +61,13 @@ secure.trusted_mods = vm16
 
 ## Dependencies
 
-none
+default, basic_materials
 
 
 
 ## License
 
-Copyright (C) 2019-2021 Joachim Stolberg  
+Copyright (C) 2019-2022 Joachim Stolberg
 Licensed under the GNU GPLv3 (See LICENSE.txt)
 
 
@@ -83,4 +83,5 @@ Licensed under the GNU GPLv3 (See LICENSE.txt)
 - 2020-12-31  v2.3  * Change vm16_read_h16() parameters
 - 2021-01-07  v2.3  * Update testing modes
 - 2021-08-30  v2.3  * Improve documentation
+- 2022-02-19  v2.4  * Allow 0 for memory size (= 512 words), add computer demo blocks
 
