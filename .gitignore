@@ -4,3 +4,5 @@
 *.depend
 *.layout
 test/bin/
+test/test.lua
+test/test_asm.lua

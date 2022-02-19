@@ -24,14 +24,16 @@ end
 
 local MP = minetest.get_modpath("vm16")
 
-assert(loadfile(MP.."/instances.lua"))(vm16lib)
-dofile(MP.."/events.lua")
+assert(loadfile(MP.."/api.lua"))(vm16lib)
 dofile(MP.."/lib.lua")
 
 IE = nil
 vm16lib = nil
 
 -- for testing purposes
+vm16.cpu = {}
+dofile(MP.."/mod/asm.lua")
+dofile(MP.."/mod/formspec.lua")
 dofile(MP.."/mod/cpu.lua")
 dofile(MP.."/mod/input.lua")
 dofile(MP.."/mod/output.lua")

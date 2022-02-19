@@ -2,7 +2,7 @@
 	vm16
 	====
 
-	Copyright (C) 2019-2020 Joachim Stolberg
+	Copyright (C) 2019-2022 Joachim Stolberg
 
 	GPL v3
 	See LICENSE.txt for more information
@@ -47,4 +47,4 @@ end
 function vm16.reset_breakpoint(pos, addr, code)
 	vm16.poke(pos, addr, code)
 end
-	
+

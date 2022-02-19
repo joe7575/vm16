@@ -2,12 +2,12 @@
 	vm16
 	====
 
-	Copyright (C) 2019-2020 Joachim Stolberg
+	Copyright (C) 2019-2022 Joachim Stolberg
 
 	GPL v3
 	See LICENSE.txt for more information
 	
-	Wrapper to the C-lib and VM instance management
+	vm16 API
 ]]--
 
 local vm16lib = ...
@@ -44,7 +44,32 @@ vm16.version = vm16lib.version()
 vm16.testbit = vm16lib.testbit
 vm16.is_ascii = vm16lib.is_ascii
 
--- ram_size is from 1 (4K) to 16 (64KB)
+-- default event callback handlers
+local callbacks = {}
+
+local function on_input(pos, address)
+	print("on_input", address)
+	return address
+end
+
+local function on_output(pos, address, val1, val2)
+	print("on_output", address, val1, val2)
+end
+
+local function on_system(pos, address, val1, val2) 
+	print("on_system", address, val1, val2)
+	return 1
+end
+
+local function on_update(pos, resp, cpu)
+	print("on_update", vm16.CallResults[resp])
+end
+
+local function on_unload(pos)
+	print("on_unload")
+end
+
+-- ram_size is from 1 (4K) to 16 (64KB) or 0 for 0.5K
 function vm16.create(pos, ram_size)
 	print("vm_create")
 	local hash = minetest.hash_node_position(pos)
@@ -89,6 +114,31 @@ local function vm_store(pos, vm)
 	local hash = minetest.hash_node_position(pos)
 	local s = vm16lib.get_vm(vm)
 	storage:set_string(hash, s)
+end
+
+function vm16.on_power_on(pos, ram_size)
+	print("on_power_on")
+	if not vm16.is_loaded(pos) then
+		if vm16.create(pos, ram_size) then
+			return true
+		end
+	end
+end
+
+function vm16.on_power_off(pos)
+	print("on_power_off")
+	if vm16.is_loaded(pos) then
+		vm16.destroy(pos)
+		return true
+	end
+end
+
+function vm16.on_load(pos)
+	print("on_load")
+	if not vm16.is_loaded(pos) then
+		vm16.vm_restore(pos)
+		return true
+	end
 end
 
 -- returns size in words
@@ -205,12 +255,13 @@ function vm16.read_h16(pos, start_addr, size)
 	return vm and vm16lib.read_h16(vm, start_addr, size)
 end
 
-function vm16.run(pos, cycles)
+function vm16.run(pos, cycles, clbks)
 	local hash = minetest.hash_node_position(pos)
 	local vm = VMList[hash]
 	local resp = VM16_ERROR
 	local ran
 	
+	clbks = clbks or callbacks
 	cycles = math.min(cycles or CYCLES, CYCLES)
 	
 	while vm and cycles > 0 do
@@ -221,29 +272,29 @@ function vm16.run(pos, cycles)
 			return VM16_NOP
 		elseif resp == VM16_BREAK then
 			local cpu = vm16lib.get_cpu_reg(vm) 
-			vm16.on_update(pos, resp, cpu)
+			clbks.on_update(pos, resp, cpu)
 			return VM16_BREAK
 		elseif resp == VM16_IN then
 			local io = vm16lib.get_io_reg(vm)
-			io.data = vm16.on_input(pos, io.addr) or 0xFFFF
+			io.data = clbks.on_input(pos, io.addr) or 0xFFFF
 			vm16lib.set_io_reg(vm, io)
 			cycles = cycles - CYCLES/10
 		elseif resp == VM16_OUT then
 			local io = vm16lib.get_io_reg(vm)
-			if vm16.on_output(pos, io.addr, io.data, io.B) then return resp end
+			if clbks.on_output(pos, io.addr, io.data, io.B) then return resp end
 			cycles = cycles - CYCLES/20
 		elseif resp == VM16_SYS then
 			local io = vm16lib.get_io_reg(vm)
-			io.data = vm16.on_system(pos, io.addr, io.A, io.B) or 0xFFFF
+			io.data = clbks.on_system(pos, io.addr, io.A, io.B) or 0xFFFF
 			vm16lib.set_io_reg(vm, io)
 			cycles = cycles - (SpecialCycles[io.addr] or CYCLES/10)
 		elseif resp == VM16_HALT then
 			local cpu = vm16lib.get_cpu_reg(vm) 
-			vm16.on_update(pos, resp, cpu)
+			clbks.on_update(pos, resp, cpu)
 			return VM16_HALT
 		elseif resp == VM16_ERROR then
 			local cpu = vm16lib.get_cpu_reg(vm) 
-			vm16.on_update(pos, resp, cpu)
+			clbks.on_update(pos, resp, cpu)
 			return VM16_ERROR
 		end
 	end
@@ -252,6 +303,21 @@ end
 
 function vm16.register_sys_cycles(address, cycles)
 	SpecialCycles[address] = cycles
+end
+
+-- result = on_input(pos, address)
+--          on_output(pos, address, val1, val2)
+-- result = on_system(pos, address, val1, val2)
+--          on_update(pos, resp, cpu)
+--          on_unload(pos)
+function vm16.generate_callback_table(on_inp, on_outp, on_sys, on_upd, on_unld)
+	return {
+		on_input  = on_inp  or on_input,
+		on_output = on_outp or on_output,
+		on_system = on_sys  or on_system,
+		on_update = on_upd  or on_update,
+		on_unload = on_unld or on_unload,
+	}
 end
 
 minetest.register_on_shutdown(function()
@@ -283,12 +349,22 @@ end
 minetest.after(60, remove_unloaded_vm)
 
 
-local function debugging()
-	for hash, _ in pairs(VMList) do
-		local pos = minetest.get_position_from_hash(hash)
-		print("CPU active at "..minetest.pos_to_string(pos))
-	end
-	minetest.after(10, debugging)
-end	
+--local function debugging()
+--	for hash, _ in pairs(VMList) do
+--		local pos = minetest.get_position_from_hash(hash)
+--		print("CPU active at "..minetest.pos_to_string(pos))
+--	end
+--	minetest.after(10, debugging)
+--end	
 
 --minetest.after(10, debugging)
+
+-- Deprecated! Use `generate_callback_table` instead.
+function vm16.register_callbacks(on_inp, on_outp, on_sys, on_upd, on_unld)
+	callbacks.on_input  = on_inp  or on_input
+	callbacks.on_output = on_outp or on_output
+	callbacks.on_system = on_sys  or on_system
+	callbacks.on_update = on_upd  or on_update
+	callbacks.on_unload = on_unld or on_unload
+end
+

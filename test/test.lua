@@ -17,8 +17,7 @@ local MP = "/home/joachim/minetest5/mods/vm16"
 vm16 = {}
 local vm16lib = require("vm16lib")
 print(vm16lib.version())
-assert(loadfile(MP.."/instances.lua"))(vm16lib)
-dofile(MP.."/events.lua")
+assert(loadfile(MP.."/api.lua"))(vm16lib)
 dofile(MP.."/lib.lua")
 
 print("Do some tests...")

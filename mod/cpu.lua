@@ -2,7 +2,7 @@
 	vm16
 	====
 
-	Copyright (C) 2019-2020 Joachim Stolberg
+	Copyright (C) 2019-2022 Joachim Stolberg
 
 	GPL v3
 	See LICENSE.txt for more information
@@ -13,147 +13,182 @@
 -- for lazy programmers
 local M = minetest.get_meta
 
-local CpuInputs = {}   -- [addr] = value
-local CpuOutputs = {}  -- [addr] = dest_pos
+local Inputs = {}   -- [hash] = {}
+local Outputs = {}  -- [hash] = {}
+local Cache = {}    -- [hash] = {}
 
-local function formspec(pos, lines)
-	local spos = minetest.pos_to_string(pos)
-	return "size[10,7]"..
-		"style_type[label,field;font=mono]"..
-		"background[0.25,0.25;9.5,4.6;vm16_form_mask.png]"..
-		"label[0.5,0.4;"..minetest.formspec_escape(lines[1] or "").."]"..
-		"label[0.5,0.8;"..minetest.formspec_escape(lines[2] or "").."]"..
-		"label[0.5,1.2;"..minetest.formspec_escape(lines[3] or "").."]"..
-		"label[0.5,1.6;"..minetest.formspec_escape(lines[4] or "").."]"..
-		"label[0.5,2.0;"..minetest.formspec_escape(lines[5] or "").."]"..
-		"label[0.5,2.4;"..minetest.formspec_escape(lines[6] or "").."]"..
-		"label[0.5,2.8;"..minetest.formspec_escape(lines[7] or "").."]"..
-		"label[0.5,3.2;"..minetest.formspec_escape(lines[8] or "").."]"..
-		"label[0.5,3.6;"..minetest.formspec_escape(lines[9] or "").."]"..
-		"label[0.5,4.0;"..minetest.formspec_escape(lines[10] or "").."]"..
-		"label[0.5,5.5;h = help]"..
-		"label[5.5,5.5;CPU pos = "..spos.."]"..
-		"field[0.7,6.4;7,0.8;command;;]"..
-		"button[8.0,6.0;1.7,1;enter;enter]"..
-		"field_close_on_enter[command;false]"
+local Code = [[
+; ASCII output example
+
+move A, #$41   ; load A with 'A'
+
+loop:
+    out #00, A    ; output char
+    add  A, #01   ; increment char
+    jump loop
+]]
+
+local function to_char(val)
+	if val >= 32 and val <= 127 then
+		return string.char(val)
+	end
+	return "."
 end
 
-local function mem_dump(pos, s)
-	local addr = vm16.hex2number(s) or 0
-	local mem = vm16.read_mem(pos, addr, 8*4)
-	local lines = {}
-	
-	if mem then
-		for i = 0,7 do
-			local offs = i * 4
-			lines[i+1] = string.format("%04X: %04X %04X %04X %04X", 
-					addr+offs, mem[1+offs], mem[2+offs], mem[3+offs], mem[4+offs])
+local function to_string(val)
+	if val > 255 then
+		return to_char(val / 256) .. to_char(val % 256)
+	else
+		return to_char(val)
+	end
+end
+
+local function get_mem(pos)
+	local hash = minetest.hash_node_position(pos)
+	Cache[hash] = Cache[hash] or {}
+	return Cache[hash]
+end
+
+local function on_input(pos, address)
+	local hash = minetest.hash_node_position(pos)
+	Inputs[hash] = Inputs[hash] or {}
+	local value = Inputs[hash][address] or 0xFFFF
+	print(string.format("[VM16] in  #%02X = %04X", address, value))
+	return value
+end
+
+local function on_output(pos, address, val1, val2)
+	if address == 0 then
+		local mem = get_mem(pos)
+		if val1 == 0 then
+			mem.output = ""
+		elseif mem.output and #mem.output < 80 then
+			mem.output = mem.output .. to_string(val1)
 		end
 	else
-		lines[1] = "Error"
-	end
-	return lines
-end
-
-local function reg_dump(pos, resp)
-	local cpu = vm16.get_cpu_reg(pos)
-	local lines = {}
-	
-	if cpu then
-		lines[1] = vm16.CallResults[resp]
-		lines[2] = string.format("A:%04X   B:%04X   C:%04X   D:%04X", cpu.A, cpu.B, cpu.C, cpu.D)
-		lines[3] = string.format("X:%04X   Y:%04X  SP:%04X  PC:%04X", cpu.X, cpu.Y, cpu.SP, cpu.PC)
-		local operand = ""
-		if vm16.num_operands(cpu.mem0) == 1 then
-			operand = string.format("%04X", cpu.mem1)
+		local hash = minetest.hash_node_position(pos)
+		Outputs[hash] = Outputs[hash] or {}
+		local dest_pos = Outputs[hash][address]
+		print(string.format("[VM16] out #%02X = %04X", address, val1))
+		if dest_pos then
+			local node = minetest.get_node(dest_pos)
+			if node.name == "vm16:output" then
+				local ndef = minetest.registered_nodes[node.name]
+				ndef.hand_over(dest_pos, address, val1)
+			else
+				print("[VM16] No output position")
+			end
+		else
+			print("[VM16] Invalid position")
 		end
-		lines[4] = string.format(">%04X: %04X %s", cpu.PC, cpu.mem0, operand)
-	else
-		lines[1] = "Error"
 	end
-	return lines
 end
 
-local function enter_data(pos, s)
-	local s1, s2 = unpack(string.split(s, " "))
-	local lines
-	
-	if s2 then
-		local val1 = vm16.hex2number(s1)
-		local val2 = vm16.hex2number(s2)
-		local addr = vm16.get_pc(pos) or 0
-		lines = {string.format("%04X: %04X %04X", addr, val1, val2)}
-		vm16.deposit(pos, val1)
-		vm16.deposit(pos, val2)
-	else
-		local val = vm16.hex2number(s1)
-		local addr = vm16.get_pc(pos) or 0
-		lines = {string.format("%04X: %04X", addr, val)}
-		vm16.deposit(pos, val)
-	end
-	return lines
+local function on_update(pos, resp, cpu)
+	print("on_update", resp)
+	local mem = get_mem(pos)
+	mem.running = resp < vm16.HALT
+	M(pos):set_string("formspec", vm16.cpu.formspec(pos, get_mem(pos)))
 end
 
-local function help()
-	return {
-		"d <addr>        - memory dump",
-		"a <addr>        - set PC to address",
-		"n               - next CPU step",
-		"e <opc> <opnd>  - enter code and ",
-		"                  postincrement PC",
-		"r               - run CPU",
-		"s               - stop CPU",
-		"Ex: 6010 0001   ; in   A, #1",
-		"    6600 0001   ; out  #1, A",
-		"    1200 0000   ; jump #0",
-	}
+local clbks = vm16.generate_callback_table(on_input, on_output, nil, on_update, nil)
+
+local function assemble(code)
+	local a = vm16.Asm:new({})
+	local lToken, err = a:scanner(code)
+	lToken, err = a:assembler(lToken)
+	return lToken, err
 end
-	
+
+local function init_cpu(pos, lToken)
+	vm16.create(pos, 0)
+	for _,tok in ipairs(lToken) do
+		local _, _, _, _, address, opcodes = unpack(tok)
+		for i, opc in pairs(opcodes) do
+			vm16.poke(pos, address + i - 1, opc)
+		end
+	end
+	vm16.set_pc(pos, 0)
+end
+
 local function on_receive_fields(pos, formname, fields, player)
+	local mem = get_mem(pos)
 	local meta = minetest.get_meta(pos)
 	local lines = {"Error"}
 	
-	if (fields.key_enter_field or fields.enter) and fields.command ~= "" then
-		local cmd = string.sub(fields.command, 1, 1)
-		local data = string.sub(fields.command, 3)
-			
-		if vm16.is_loaded(pos) then
-			if minetest.get_node_timer(pos):is_started() then
-				if cmd == "s" then
-					minetest.get_node_timer(pos):stop()
-					lines = {"stopped"}
-				else
-					lines = help()
+	if not mem.running then
+		if fields.code and (fields.save or fields.assemble) then
+			M(pos):set_string("code", fields.code)
+		end
+		if fields.larger then
+			M(pos):set_int("textsize", math.min(M(pos):get_int("textsize") + 1, 8))
+		elseif fields.smaller then
+			M(pos):set_int("textsize", math.max(M(pos):get_int("textsize") - 1, -8))
+		elseif fields.inc then
+			M(pos):set_int("startaddr", math.min(M(pos):get_int("startaddr") + 64, 0x180))
+		elseif fields.dec then
+			M(pos):set_int("startaddr", math.max(M(pos):get_int("startaddr") - 64, 0))
+		elseif fields.assemble then
+			if mem.error then
+				mem.error = nil
+			elseif not vm16.is_loaded(pos) then
+				mem.lToken, mem.error = assemble(M(pos):get_string("code"))
+				if mem.lToken then
+					init_cpu(pos, mem.lToken)
+					mem.output = ""
 				end
-			else -- stopped
-				if cmd == "d" then
-					lines = mem_dump(pos, data)
-				elseif cmd == "a" then
-					local addr = vm16.hex2number(data)
-					vm16.set_pc(pos, addr)
-					lines = {string.format("%04X:", addr)}
-				elseif cmd == "n" then
-					local resp = vm16.run(pos, 1)
-					lines = reg_dump(pos, resp)
-				elseif cmd == "e" then
-					lines = enter_data(pos, data)
-				elseif cmd == "r" then
-					minetest.get_node_timer(pos):start(0.1)
-					lines = {"running (stop with s)"}
-				else
-					lines = help()
-				end
+			else
+				-- edit code
+				minetest.get_node_timer(pos):stop()
+				vm16.destroy(pos)
+			end
+		elseif fields.step then
+			if vm16.is_loaded(pos) then
+				vm16.run(pos, 1, clbks)
+			end
+		elseif fields.step10 then
+			if vm16.is_loaded(pos) then
+				minetest.get_node_timer(pos):start(0.4)
+				mem.steps = 10
+				vm16.run(pos, 1, clbks)
+			end
+		elseif fields.run then
+			if vm16.is_loaded(pos) then
+				mem.steps = nil
+				vm16.run(pos, nil, clbks)
+				minetest.get_node_timer(pos):start(0.1)
+				mem.running = true
+			end
+		elseif fields.stop then
+			if vm16.is_loaded(pos) then
+				vm16.set_cpu_reg(pos, {A=0, B=0, C=0, D=0, X=0, Y=0, SP=0, PC=0})
+				mem.output = ""
 			end
 		end
-	else
-		lines = help()
 	end
-	meta:set_string("formspec", formspec(pos, lines))
+	if mem.running and fields.stop then
+		minetest.get_node_timer(pos):stop()
+		mem.running = false
+	end
+	meta:set_string("formspec", vm16.cpu.formspec(pos, mem))
 end
 
 local function on_timer(pos, elapsed)
-	print("timer")
-	return vm16.run(pos) < vm16.HALT
+	print("on_timer")
+	if vm16.is_loaded(pos) then
+		local mem = get_mem(pos)
+		if mem.steps then
+			mem.steps = mem.steps - 1
+			M(pos):set_string("formspec", vm16.cpu.formspec(pos, mem))
+			return mem.steps > 0 and vm16.run(pos, 1, clbks) < vm16.HALT
+		elseif mem.running then
+			return vm16.run(pos, nil, clbks) < vm16.HALT
+		end
+	end
+end
+
+local function on_rightclick(pos)
+	M(pos):set_string("formspec", vm16.cpu.formspec(pos, get_mem(pos)))
 end
 
 minetest.register_node("vm16:cpu", {
@@ -162,10 +197,12 @@ minetest.register_node("vm16:cpu", {
 		"vm16_cpu.png",
 	},
 	after_place_node = function(pos, placer, itemstack, pointed_thing)
-		M(pos):set_string("formspec", formspec(pos, {}))
-		vm16.create(pos, 1)
+		local meta = M(pos)
+		meta:set_string("code", Code)
+		meta:set_string("formspec", vm16.cpu.formspec(pos, get_mem(pos)))
 	end,
 	on_timer = on_timer,
+	on_rightclick = on_rightclick,
 	on_receive_fields = on_receive_fields,
 	after_dig_node = function(pos)
 		vm16.destroy(pos)
@@ -188,49 +225,3 @@ minetest.register_node("vm16:cpu", {
 	end
 })
 
-minetest.register_lbm({
-    label = "VM16 Load CPU",
-    name = "vm16:load_cpu",
-    nodenames = {"vm16:cpu"},
-    run_at_every_load = true,
-    action = function(pos, node)
-		if vm16.on_load(pos) then
-			M(pos):set_string("formspec", formspec(pos, {"powered"}))
-		else
-			M(pos):set_string("formspec", formspec(pos, {"unpowered"}))
-		end
-	end
-})
-
-local function on_input(pos, address)
-	local hash = minetest.hash_node_position(pos)
-	CpuInputs[hash] = CpuInputs[hash] or {}
-	local value = CpuInputs[hash][address] or 0xFFFF
-	print(string.format("[VM16] in  #%02X = %04X", address, value))
-	return value
-end
-	
-local function on_output(pos, address, val1, val2)	
-	local hash = minetest.hash_node_position(pos)
-	CpuOutputs[hash] = CpuOutputs[hash] or {}
-	local dest_pos = CpuOutputs[hash][address]
-	print(string.format("[VM16] out #%02X = %04X", address, val1))
-	if dest_pos then
-		local node = minetest.get_node(dest_pos)
-		if node.name == "vm16:output" then
-			local ndef = minetest.registered_nodes[node.name]
-			ndef.hand_over(dest_pos, address, val1)
-		else
-			print("[VM16] No output position")
-		end
-	else
-		print("[VM16] Invalid position")
-	end
-end		
-
-local function on_update(pos, resp, cpu)
-	local lines = reg_dump(pos, resp)
-	M(pos):set_string("formspec", formspec(pos, lines))
-end
-
-vm16.register_callbacks(on_input, on_output, nil, on_update, nil)
