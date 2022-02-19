@@ -7,14 +7,12 @@
 	GPL v3
 	See LICENSE.txt for more information
 	
-	Simple CPU for testing purposes
+	VM16 Computer
 ]]--
 
 -- for lazy programmers
 local M = minetest.get_meta
 
-local Inputs = {}   -- [hash] = {}
-local Outputs = {}  -- [hash] = {}
 local Cache = {}    -- [hash] = {}
 
 local Code = [[
@@ -49,12 +47,11 @@ local function get_mem(pos)
 	return Cache[hash]
 end
 
-local function on_input(pos, address)
-	local hash = minetest.hash_node_position(pos)
-	Inputs[hash] = Inputs[hash] or {}
-	local value = Inputs[hash][address] or 0xFFFF
-	print(string.format("[VM16] in  #%02X = %04X", address, value))
-	return value
+local function on_update(pos, resp, cpu)
+	print("on_update", resp)
+	local mem = get_mem(pos)
+	mem.running = resp < vm16.HALT
+	M(pos):set_string("formspec", vm16.cpu.formspec(pos, get_mem(pos)))
 end
 
 local function on_output(pos, address, val1, val2)
@@ -66,32 +63,11 @@ local function on_output(pos, address, val1, val2)
 			mem.output = mem.output .. to_string(val1)
 		end
 	else
-		local hash = minetest.hash_node_position(pos)
-		Outputs[hash] = Outputs[hash] or {}
-		local dest_pos = Outputs[hash][address]
-		print(string.format("[VM16] out #%02X = %04X", address, val1))
-		if dest_pos then
-			local node = minetest.get_node(dest_pos)
-			if node.name == "vm16:output" then
-				local ndef = minetest.registered_nodes[node.name]
-				ndef.hand_over(dest_pos, address, val1)
-			else
-				print("[VM16] No output position")
-			end
-		else
-			print("[VM16] Invalid position")
-		end
+		vm16.on_output(pos, address, val1, val2)
 	end
 end
 
-local function on_update(pos, resp, cpu)
-	print("on_update", resp)
-	local mem = get_mem(pos)
-	mem.running = resp < vm16.HALT
-	M(pos):set_string("formspec", vm16.cpu.formspec(pos, get_mem(pos)))
-end
-
-local clbks = vm16.generate_callback_table(on_input, on_output, nil, on_update, nil)
+local clbks = vm16.generate_callback_table(vm16.on_input, on_output, nil, on_update, nil)
 
 local function assemble(code)
 	local a = vm16.Asm:new({})
@@ -101,6 +77,7 @@ local function assemble(code)
 end
 
 local function init_cpu(pos, lToken)
+	vm16.on_start_cpu(pos)
 	vm16.create(pos, 0)
 	for _,tok in ipairs(lToken) do
 		local _, _, _, _, address, opcodes = unpack(tok)
@@ -112,6 +89,10 @@ local function init_cpu(pos, lToken)
 end
 
 local function on_receive_fields(pos, formname, fields, player)
+	if player and minetest.is_protected(pos, player:get_player_name()) then
+		return
+	end
+	
 	local mem = get_mem(pos)
 	local meta = minetest.get_meta(pos)
 	local lines = {"Error"}
@@ -192,14 +173,17 @@ local function on_rightclick(pos)
 end
 
 minetest.register_node("vm16:cpu", {
-	description = "VM16 Test CPU",
+	description = "VM16 Computer",
 	tiles = {
+		"vm16_cpu_top.png",
+		"vm16_cpu_top.png",
 		"vm16_cpu.png",
 	},
 	after_place_node = function(pos, placer, itemstack, pointed_thing)
 		local meta = M(pos)
 		meta:set_string("code", Code)
 		meta:set_string("formspec", vm16.cpu.formspec(pos, get_mem(pos)))
+		meta:set_string("infotext", "VM16 Computer")
 	end,
 	on_timer = on_timer,
 	on_rightclick = on_rightclick,
@@ -209,19 +193,5 @@ minetest.register_node("vm16:cpu", {
 	end,
 	groups = {cracky=2, crumbly=2, choppy=2},
 	is_ground_content = false,
-	
-	hand_over = function(pos, addr, value)
-		print("hand_over", addr, value)
-		local hash = minetest.hash_node_position(pos)
-		CpuInputs[hash] = CpuInputs[hash] or {}
-		CpuInputs[hash][addr] = value
-	end,
-
-	reg_output = function(pos, addr, dest_pos)
-		print("reg_output", addr, minetest.pos_to_string(dest_pos))
-		local hash = minetest.hash_node_position(pos)
-		CpuOutputs[hash] = CpuOutputs[hash] or {}
-		CpuOutputs[hash][addr] = dest_pos
-	end
 })
 

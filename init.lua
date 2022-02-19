@@ -31,10 +31,12 @@ IE = nil
 vm16lib = nil
 
 -- for testing purposes
-vm16.cpu = {}
-dofile(MP.."/mod/asm.lua")
-dofile(MP.."/mod/formspec.lua")
-dofile(MP.."/mod/cpu.lua")
-dofile(MP.."/mod/input.lua")
-dofile(MP.."/mod/output.lua")
-
+if minetest.settings:get_bool("vm16_testblocks_enabled") == true then
+	vm16.cpu = {}
+	dofile(MP.."/mod/asm.lua")
+	dofile(MP.."/mod/io.lua")
+	dofile(MP.."/mod/formspec.lua")
+	dofile(MP.."/mod/cpu.lua")
+	dofile(MP.."/mod/switch.lua")
+	dofile(MP.."/mod/lamp.lua")
+end
