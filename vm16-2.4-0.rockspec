@@ -1,5 +1,5 @@
 package = "vm16"
-version = "2.3-0"
+version = "2.4-0"
 source = {
     url = "git+https://github.com/joe7575/vm16.git"
 }
