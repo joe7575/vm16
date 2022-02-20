@@ -10,6 +10,9 @@ Browse on: [GitHub](https://github.com/joe7575/vm16)
 
 Download: [GitHub](https://github.com/joe7575/vm16/archive/master.zip)
 
+Documentation: [GitHub](https://github.com/joe7575/vm16/wiki)
+
+
 This mod is not very useful on its own, but it can be used as
 learning system for VM16 assembler.
 
