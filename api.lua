@@ -61,9 +61,6 @@ end
 local function on_update(pos, resp, cpu)
 end
 
-local function on_unload(pos)
-end
-
 -- ram_size is from 1 (4K) to 16 (64KB) or 0 for 0.5K
 function vm16.create(pos, ram_size)
 	print("vm_create")
@@ -304,14 +301,12 @@ end
 --          on_output(pos, address, val1, val2)
 -- result = on_system(pos, address, val1, val2)
 --          on_update(pos, resp, cpu)
---          on_unload(pos)
-function vm16.generate_callback_table(on_inp, on_outp, on_sys, on_upd, on_unld)
+function vm16.generate_callback_table(on_inp, on_outp, on_sys, on_upd)
 	return {
 		on_input  = on_inp  or on_input,
 		on_output = on_outp or on_output,
 		on_system = on_sys  or on_system,
 		on_update = on_upd  or on_update,
-		on_unload = on_unld or on_unload,
 	}
 end
 
@@ -335,7 +330,6 @@ local function remove_unloaded_vm()
 			cnt = cnt + 1
 		else
 			vm_store(pos, vm)
-			vm16.on_unload(pos)
 		end
 	end
 	minetest.after(60, remove_unloaded_vm)
@@ -344,11 +338,10 @@ end
 minetest.after(60, remove_unloaded_vm)
 
 -- Deprecated! Use `generate_callback_table` instead.
-function vm16.register_callbacks(on_inp, on_outp, on_sys, on_upd, on_unld)
+function vm16.register_callbacks(on_inp, on_outp, on_sys, on_upd)
 	callbacks.on_input  = on_inp  or on_input
 	callbacks.on_output = on_outp or on_output
 	callbacks.on_system = on_sys  or on_system
 	callbacks.on_update = on_upd  or on_update
-	callbacks.on_unload = on_unld or on_unload
 end
 
