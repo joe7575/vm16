@@ -90,9 +90,9 @@ The Instruction Set table below uses mainly the following two addressing groups:
 |------|------|------|------|------|------|------|------|
 | 0100 | 0120 | 0140 | 0160 | 0180 | 01A0 | 01C0 | 01E0 |
 
-|CONST | MEM  | REL  |[SP+n]|
-|------|------|------|------|
-| 0200 | 0220 | 0240 | 0260 |
+| CONST | MEM  | REL*) | [SP+n] | REL2 |
+| ----- | ---- | ----- | ------ | ---- |
+| 0200  | 0220 | 0240  | 0260   | 0280 |
 
 #### Operand 2 (Opnd2)
 
@@ -104,9 +104,11 @@ The Instruction Set table below uses mainly the following two addressing groups:
 |------|------|------|------|------|------|------|------|
 | 0008 | 0009 | 000A | 000B | 000C | 000D | 000E | 000F |
 
-|CONST | MEM  | REL  |[SP+n]|
-|------|------|------|------|
-| 0010 | 0011 | 0012 | 0013 |
+| CONST | MEM  | REL*) | [SP+n] | REL2 |
+| ----- | ---- | ----- | ------ | ---- |
+| 0010  | 0011 | 0012  | 0013   | 0014 |
+
+*) REL instructions are deprecated. Use REL2 instead!
 
 
 
@@ -168,13 +170,13 @@ The Instruction Set table below uses mainly the following two addressing groups:
 4810, 0008     xor  A, #8
 4811, 0100     xor  A, $100
 4C00           not  A
-5012, 0002     bnze A, +2
+5014, 0002     bnze A, +2
 5010, 0100     bnze A, $100
-5412, FFFE     bze  A, -2
+5414, FFFE     bze  A, -2
 5410, 0100     bze  A, $100
-5812, FFFC     bpos A, -4
+5814, FFFC     bpos A, -4
 5810, 0100     bpos A, $100
-5C12, FFFC     bneg A, -4
+5C14, FFFC     bneg A, -4
 5C10, 0100     bneg A, $100
 6010, 0002     in   A, #2
 6600, 0003     out  #3, A

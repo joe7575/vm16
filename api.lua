@@ -11,7 +11,7 @@
 ]]--
 
 local vm16lib = ...
-assert(vm16lib.version() == "2.4")
+assert(vm16lib.version() == "2.5")
 
 local VMList = {}
 local storage = minetest.get_mod_storage()

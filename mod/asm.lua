@@ -9,6 +9,8 @@
   See LICENSE.txt for more information
 ]]--
 
+local version = "2.0"
+
 -- Tok Elems {1, "add A, 1",  "add A, 1  ; start value", CODESEC, 10, {0x1234, 0x001}}
 local LINENO  = 1
 local CODESTR = 2
@@ -25,7 +27,8 @@ local CTEXTSEC = 4
 
 local tOpcodes = {}
 local tOperands = {}
-local IDENT = "^[A-Za-z_][A-Za-z_0-9%.]+"
+local IDENT  = "^[A-Za-z_][A-Za-z_0-9%.]+"
+local RIPLBL = "^PC%+[A-Za-z_][A-Za-z_0-9%.]+"
 
 --
 -- OP-codes
@@ -49,7 +52,7 @@ local Opcodes = {[0] =
 local Operands = {[0] =
 	"A", "B", "C", "D", "X", "Y", "PC", "SP",
 	"[X]", "[Y]", "[X]+", "[Y]+", "#0", "#1", "-", "-",
-	"IMM", "IND", "REL", "[SP+n]",
+	"IMM", "IND", "REL", "[SP+n]", "REL2",
 }
 
 --
@@ -137,6 +140,20 @@ local function value(s, is_hex)
 	end
 end
 
+local function pos_value(s, is_hex)
+	if s:match(IDENT) then
+		return "PC+" .. s
+	end
+	return value(s, is_hex)
+end
+
+local function neg_value(s, is_hex)
+	if s:match(IDENT) then
+		return "PC+" .. s
+	end
+	return 0x10000 - value(s, is_hex)
+end
+
 local function word_val(s, idx)
 	if s:byte(idx) == 0 then
 		return 0
@@ -168,13 +185,14 @@ end
 -------------------------------------------------------------------------------
 local Asm = {}
 
-function Asm:new(attr)
-	local o = {
-		section = attr.section or CODESEC,
-		address = attr.address or 0,
-		symbols = {},
-		errors = {},
-	}
+function Asm:new(o)
+	o = o or {}
+	o.section = o.section or CODESEC
+	o.address = o.address or 0
+	o.globals = {}
+	o.symbols = {}
+	o.errors = {}
+	o.namespace_cnt = 1
 	setmetatable(o, self)
 	self.__index = self
 	return o
@@ -206,11 +224,35 @@ function Asm:scanner(text)
 	return lOut
 end
 
+function Asm:posfix(label)
+	return label .. string.format("$%03d", self.namespace_cnt)
+end
+
 function Asm:address_label(tok)
 	local codestr = tok[CODESTR]
 	local _, pos, label = codestr:find("^([A-Za-z_][A-Za-z_0-9]+):( *)")
 	if label then
-		self.symbols[label] = self.address
+		if self.globals[label] == -1 then
+			self.globals[label] = self.address
+		else
+			if self.symbols[self:posfix(label)] then
+				self:err_msg("Redefinition of label " .. label)
+			end
+			self.symbols[self:posfix(label)] = self.address
+		end
+		tok[CODESTR] = codestr:sub(pos+1, -1)
+	end
+	return tok
+end
+
+function Asm:global_def(tok)
+	local codestr = tok[CODESTR]
+	local _, pos, label = codestr:find("^ *global +([A-Za-z_][A-Za-z_0-9]+)( *)")
+	if label then
+		if self.globals[label] then
+			self:err_msg("Redefinition of global " .. label)
+		end
+		self.globals[label] = -1
 		tok[CODESTR] = codestr:sub(pos+1, -1)
 	end
 	return tok
@@ -248,8 +290,8 @@ function Asm:operand(s)
 	if c == "$" then return tOperands["IND"], value(s) end
 	-- value without '#' and '$'
 	if string.byte(c) >= 48 and string.byte(c) <= 57 then return tOperands["IND"], value(s) end
-	if c == "+" then return tOperands["REL"], value(string.sub(s, 2, -1)) end
-	if c == "-" then return tOperands["REL"], 0x10000 - value(string.sub(s, 2, -1)) end
+	if c == "+" then return tOperands["REL2"], pos_value(string.sub(s, 2, -1)) end
+	if c == "-" then return tOperands["REL2"], neg_value(string.sub(s, 2, -1)) end
 	if string.sub(s, 1, 4) == "[SP+" then return tOperands["[SP+n]"], value(string.sub(s, 5, -2)) end
 	-- valid label keyword
 	if s:match(IDENT) then
@@ -268,11 +310,18 @@ function Asm:decode_code(tok)
 	if codestr == "" then
 		return self:no_code(tok)
 	end
+	if codestr == "namespace" then
+		self.namespace_cnt = self.namespace_cnt + 1
+		return self:no_code(tok)
+	end
 	-- Aliases
 	if words[2] == "=" then
 		if words[1]:match(IDENT) then
-			local ident = words[1]
-			self.symbols[ident] = value(words[3])
+			local label = words[1]
+			if self.symbols[self:posfix(label)] then
+				self:err_msg("Redefinition of symbol " .. label)
+			end
+			self.symbols[self:posfix(label)] = value(words[3])
 		else
 			self:err_msg("Invalid left value")
 		end
@@ -392,14 +441,39 @@ function Asm:decode_ctext(tok)
 	end
 end
 
+function Asm:handle_rip_label(tok, i, opc)
+	if opc:match(RIPLBL) then
+		local label = string.sub(opc, 4, -1)
+		if self.symbols[self:posfix(label)] then
+			tok[OPCODES][i] = self.symbols[self:posfix(label)] - (tok[ADDRESS] or 0)
+		elseif self.globals[label] then
+			tok[OPCODES][i] = self.globals[label] - (tok[ADDRESS] or 0)
+		else
+			self:err_msg("Unknown label " .. label)
+		end
+		return true
+	end
+end
+
+function Asm:handle_label(tok, i, label)
+	if self.symbols[self:posfix(label)] then
+		tok[OPCODES][i] = self.symbols[self:posfix(label)]
+	elseif self.globals[label] then
+		tok[OPCODES][i] = self.globals[label]
+	else
+		self:err_msg("Unknown label " .. label)
+	end
+end
+
 function Asm:assembler(lToken)
 	local lOut = {}
 	-- pass 1
+	self.namespace_cnt = 1
 	for _,tok in ipairs(lToken or {}) do
 		self.lineno = tok[LINENO]
-		tok = self:address_label(tok)
 		tok = self:section_def(tok)
 		tok = self:org_directive(tok)
+		tok = self:address_label(tok)
 
 		if self.section == CODESEC then
 			append(lOut, self:decode_code(tok))
@@ -410,17 +484,19 @@ function Asm:assembler(lToken)
 		elseif self.section == CTEXTSEC then
 			extend(lOut, self:decode_ctext(tok))
 		end
-
 	end
 
 	-- pass 2
+	self.namespace_cnt = 1
 	for _,tok in ipairs(lOut) do
+		self.lineno = tok[LINENO]
+		if tok[CODESTR] == "namespace" then
+			self.namespace_cnt = self.namespace_cnt + 1
+		end
 		for i, opc in ipairs(tok[OPCODES] or {}) do
 			if type(opc) == "string" then
-				if self.symbols[opc] then
-					tok[OPCODES][i] = self.symbols[opc]
-				else
-					self:err_msg("Unknown label " .. opc)
+				if not self:handle_rip_label(tok, i, opc) then
+					self:handle_label(tok, i, opc)
 				end
 			end
 		end
@@ -447,13 +523,20 @@ function Asm:listing(lToken)
 
 	local out = {}
 	for _,tok in ipairs(lToken) do
-		append(out, string.format("%04X: %-10s %s", tok[ADDRESS], mydump(tok[OPCODES]), tok[TXTLINE]))
+		if #tok[OPCODES] > 2 then
+			append(out, string.format("       %-10s %s\n%04X: %s", "", tok[TXTLINE], tok[ADDRESS], mydump(tok[OPCODES])))
+		elseif #tok[OPCODES] > 0 then
+			append(out, string.format("%04X: %-10s %s", tok[ADDRESS], mydump(tok[OPCODES]), tok[TXTLINE]))
+		else
+			append(out, string.format("      %-10s %s", "", tok[TXTLINE]))
+		end
 	end
 	return table.concat(out, "\n")
 end
 
 vm16.Asm = Asm
 
+vm16.Asm.version = version
 vm16.Asm.LINENO  = LINENO
 vm16.Asm.CODESTR = CODESTR
 vm16.Asm.TXTLINE = TXTLINE

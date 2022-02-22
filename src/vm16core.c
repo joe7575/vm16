@@ -57,8 +57,9 @@ along with VM16.  If not, see <https://www.gnu.org/licenses/>.
 
 #define  CNST  (0x10)     // constant: move a, #1234; jump 0
 #define  ABS   (0x11)     // absolute: move a, 100
-#define  REL   (0x12)     // relative: jump -10
+#define  REL   (0x12)     // relative: jump (deprecated)
 #define  SREL  (0x13)     // stack relative: inc [SP+1]
+#define  REL2  (0x14)     // relative: jump -10
 
 
 /* OP codes */
@@ -171,6 +172,7 @@ static uint16_t *getaddr(vm16_t *C, uint8_t addr_mod) {
             C->pcnt++;
             return ADDR_DST(C, C->sptr + offs);
         }
+        case REL2: return ADDR_DST(C, 0); // invalid
         default: return ADDR_DST(C, 0);
     }
 }
@@ -221,6 +223,11 @@ static uint16_t getoprnd(vm16_t *C, uint8_t addr_mod) {
             uint16_t offs = *ADDR_SRC(C, C->pcnt);
             C->pcnt++;
             return C->sptr + offs;
+        }
+        case REL2: {
+            uint16_t offs = *ADDR_SRC(C, C->pcnt);
+            C->pcnt--;
+            return C->pcnt + offs;
         }
         default: return 0;
     }

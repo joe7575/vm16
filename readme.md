@@ -45,11 +45,11 @@ sudo luarocks make
 The program output should look like this:
 
 ```
-vm16 2.4-0 depends on lua 5.1 (5.1-1 provided by VM)
+vm16 2.x-y depends on lua 5.1 (5.1-1 provided by VM)
 gcc -O2 -fPIC -I/usr/include/lua5.1 -c src/vm16core.c -o src/vm16core.o
 gcc -O2 -fPIC -I/usr/include/lua5.1 -c src/vm16lua.c -o src/vm16lua.o
 gcc -shared -o vm16lib.so src/vm16core.o src/vm16lua.o
-vm16 2.4-0 is now installed in /usr/local (license: GPLv3)
+vm16 2.x-y is now installed in /usr/local (license: GPLv3)
 ```
 
 For the installation of 'luarocks' (if not already available), see [luarocks](https://luarocks.org/)
@@ -62,6 +62,11 @@ To enable this `unsafe` package, add 'vm16' to the list of trusted mods in minet
 secure.trusted_mods = vm16
 ```
 
+
+## Configuration
+
+Open the tab Settings -> All Settings -> Mods -> vm16
+to enable the CPU/demo blocks or check settingtypes.txt.
 
 
 ## Dependencies
@@ -78,6 +83,17 @@ Licensed under the GNU GPLv3 (See LICENSE.txt)
 
 
 ## History
+
+### v2.5 (2022-02-22)
+
+- C-core: Add REL2 addressing mode (as replacement for wrong REL implementation)
+- Asm: Fix RIP addressing bug (reported by DS)
+- Asm: Add 'namespace' and 'global' keyword to enable local and global labels
+- Docu: Updates
+
+
+
+### Older Versions
 
 - 2020-11-21  v1.1  * First commit as LuaRocks project
 - 2020-11-29  v1.2  * Complete rework, Add test nodes
