@@ -30,6 +30,7 @@ The computer block is the core of the system. The block has a menu that shows th
 - A running CPU can be  stopped with the "Stop" button. 
 - The program counter is set to zero using the "Reset" button (CPU must be stopped for this).
 - With the '+' and '-' button the text size can be changed, which can be useful for smaller displays.
+- With the text field / "Breakp." breakpoints can be set/reset at the entered memory addresses.
 
 A newly placed computer comes with the following default program:
 
