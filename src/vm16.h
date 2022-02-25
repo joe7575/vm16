@@ -37,7 +37,7 @@ LUALIB_API int luaopen_vm16(lua_State *L);
 
 #define IDENT           (0x36314D56)
 #define VERSION         (2)    // VM compatibility
-#define SVERSION        "2.5"  // see history in readme.md
+#define SVERSION        "2.6"  // see history in readme.md
 #define VM16_WORD_SIZE  (16)
 #define MEM_BLOCK_SIZE  (4096)
 #define MAX_MEM_BLOCKS  (16)     // = 64 KW

@@ -53,6 +53,9 @@ local function strsplit(text)
 end
 
 local function get_window(mem, lineno, size)
+	if mem.scroll_lineno then
+		return mem.scroll_lineno, mem.scroll_lineno + 16
+	end
 	mem.start_idx = mem.start_idx or 1
 	if lineno > mem.start_idx + 12 then
 		mem.start_idx = lineno - 12
@@ -70,11 +73,16 @@ local function fs_code(pos, mem)
 		local lines = {}
 		for idx = start, stop do
 			local tok = mem.lToken[idx]
-			local addr = string.format("%04X: ", tok[vm16.Asm.ADDRESS])
-			if idx == lineno then
-				lines[#lines + 1] = addr .. minetest.colorize("#0FF", tok[vm16.Asm.TXTLINE])
-			else
-				lines[#lines + 1] = addr .. tok[vm16.Asm.TXTLINE]
+			if tok then
+				local addr = string.format("%04X: ", tok[vm16.Asm.ADDRESS])
+				if tok.breakpoint then
+					addr = minetest.colorize("#FF0", addr)
+				end
+				if idx == lineno and not mem.scroll_lineno then
+					lines[#lines + 1] = addr .. minetest.colorize("#0FF", tok[vm16.Asm.TXTLINE])
+				else
+					lines[#lines + 1] = addr .. tok[vm16.Asm.TXTLINE]
+				end
 			end
 		end
 		return table.concat(lines, "\n")
@@ -156,19 +164,21 @@ function vm16.cpu.formspec(pos, mem)
 		textsize = tostring(textsize)
 	end
 
-	local code, asm_bttn_text, stop_bttn_text, color, status
+	local code, save_breakpoint_bttn, asm_edit_bttn, stop_bttn_text, color, status
 	if mem.error then
 		-- Output listing + error
-		asm_bttn_text = "Edit"
+		asm_edit_bttn = "button[5.5,10.4;2,0.8;edit;Edit]"
+		save_breakpoint_bttn = ""
 		stop_bttn_text = "Stop"
 		color = "#AAA"
-		status = "Edit"
+		status = "Error !!!"
 		code = "style_type[textarea;font=mono;textcolor=#FFF;border=false;font_size="  .. textsize .. "]" ..
 			"textarea[0.2,0.6;8.5,9.6;;Code;" ..
 			minetest.formspec_escape(fs_listing(pos, mem.error)) .. "]"
 	elseif not vm16.is_loaded(pos) then
 		-- Edit code
-		asm_bttn_text = "Assemble"
+		asm_edit_bttn = "button[4.5,10.4;3,0.8;assemble;Assemble]"
+		save_breakpoint_bttn = "button[1.3,10.4;3,0.8;save;Save]"
 		stop_bttn_text = "Stop"
 		color = "#AAA"
 		status = "Edit"
@@ -177,13 +187,18 @@ function vm16.cpu.formspec(pos, mem)
 			minetest.formspec_escape(M(pos):get_string("code")) .. "]"
 	else
 		-- Run code
-		asm_bttn_text = "Edit"
+		asm_edit_bttn = "button[5.5,10.4;2,0.8;edit;Edit]"
+		save_breakpoint_bttn = "field[0.2,10.45;2.8,0.7;address;;]button[3.1,10.4;2,0.8;breakpoint;Breakp.]"
 		stop_bttn_text = mem.running and "Stop" or "Reset"
 		color = mem.running and "#AAA" or "#FFF"
 		status = mem.running and "Running..." or minetest.formspec_escape("Debug  |  Out[0]: " .. (mem.output or ""))
 		code  = "label[0.2,0.4;Code]" ..
 			"style_type[label;font=mono;textcolor=#AAA;font_size="  .. textsize .. "]" ..
-			"label[0.2,0.8;" .. minetest.formspec_escape(fs_code(pos, mem)) .. "]"
+			"label[0.2,0.8;" .. minetest.formspec_escape(fs_code(pos, mem)) .. "]" ..
+--			"button[8,0.5;0.6,1.0;up;\x25\xB2]" ..
+--			"button[8,9.5;0.6,1.0;down;\x25\xBC]"
+			"image_button[7.9,0.6;0.5,0.6;vm16_arrow.png;up;]" ..
+			"image_button[7.9,9.6;0.5,0.6;vm16_arrow.png^[transformR180;down;]"
 	end
 
 	return "formspec_version[4]" ..
@@ -196,8 +211,8 @@ function vm16.cpu.formspec(pos, mem)
 		code ..
 		"button[16.6,0;0.6,0.6;larger;+]" ..
 		"button[17.2,0;0.6,0.6;smaller;-]" ..
-		"button[1.3,10.4;3,0.8;save;Save]" ..
-		"button[4.5,10.4;3,0.8;assemble;" .. asm_bttn_text .. "]" ..
+		save_breakpoint_bttn ..
+		asm_edit_bttn ..
 		"button[8.8,10.4;2,0.8;step;Step]" ..
 		"button[11.1,10.4;2,0.8;step10;Step 10]" ..
 		"button[13.4,10.4;2,0.8;run;Run]" ..

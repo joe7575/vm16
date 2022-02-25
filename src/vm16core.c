@@ -428,6 +428,7 @@ int vm16_run(vm16_t *C, uint32_t num_cycles, uint32_t *ran) {
                 C->p_in_dest = &C->areg;
                 C->l_addr = code & 0x03FF;
                 *ran = num_cycles - num;
+                C->pcnt--;
                 return VM16_BREAK;
             }
             case SYS: {

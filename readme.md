@@ -84,6 +84,13 @@ Licensed under the GNU GPLv3 (See LICENSE.txt)
 
 ## History
 
+### v2.6 (2022-02-25)
+
+- C-core: Change BRK instruction
+- API: Add breakpoint functionality
+- CPU: Add breakpoint functionality
+
+
 ### v2.5 (2022-02-22)
 
 - C-core: Add REL2 addressing mode (as replacement for wrong REL implementation)
@@ -95,14 +102,14 @@ Licensed under the GNU GPLv3 (See LICENSE.txt)
 
 ### Older Versions
 
-- 2020-11-21  v1.1  * First commit as LuaRocks project
-- 2020-11-29  v1.2  * Complete rework, Add test nodes
-- 2020-11-30  v1.3  * Add functions read_h16/write_h16
-- 2020-12-02  v2.0  * Switch to mod storage for VMs
-- 2020-12-25  v2.1  * Add function 'set_cpu_reg'
-- 2020-12-29  v2.2  * Add breakpoints and read/write_bin functions
-- 2020-12-31  v2.3  * Change vm16_read_h16() parameters
-- 2021-01-07  v2.3  * Update testing modes
-- 2021-08-30  v2.3  * Improve documentation
 - 2022-02-19  v2.4  * Allow 0 for memory size (= 512 words), add computer demo blocks
+- 2021-08-30  v2.3  * Improve documentation
+- 2021-01-07  v2.3  * Update testing modes
+- 2020-12-31  v2.3  * Change vm16_read_h16() parameters
+- 2020-12-29  v2.2  * Add breakpoints and read/write_bin functions
+- 2020-12-25  v2.1  * Add function 'set_cpu_reg'
+- 2020-12-02  v2.0  * Switch to mod storage for VMs
+- 2020-11-30  v1.3  * Add functions read_h16/write_h16
+- 2020-11-29  v1.2  * Complete rework, Add test nodes
+- 2020-11-21  v1.1  * First commit as LuaRocks project
 

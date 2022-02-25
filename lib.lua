@@ -25,26 +25,3 @@ function vm16.hex2number(s)
 	if not addr or addr == "" then addr = "0" end
 	return (tonumber(addr, 16) % 0x10000) or 0
 end
-
-function vm16.set_breakpoint(pos, addr, num)
-	local code = vm16.peek(pos, addr)
-	vm16.poke(pos, addr, 0x0400 + num)
-	return code
-end
-
-function vm16.breakpoint_step1(pos, addr, code)
-	local val = vm16.peek(pos, addr)
-	vm16.poke(pos, addr, code)
-	vm16.set_pc(pos, addr)
-	return val
-end
-
-function vm16.breakpoint_step2(pos, addr, val)
-	vm16.run(pos, 1)
-	vm16.poke(pos, addr, val)
-end
-
-function vm16.reset_breakpoint(pos, addr, code)
-	vm16.poke(pos, addr, code)
-end
-

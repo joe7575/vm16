@@ -194,6 +194,8 @@ Code = {
 	0x1200, 0x0000,  -- jump, #0
 }
 
+local Breakpoints = {}
+
 local function hexdump(tbl)
 	local t = {}
 	for i,val in ipairs(tbl) do
@@ -211,15 +213,16 @@ assert(vm16.set_pc(pos, 0) == true)
 assert(vm16.run(pos, 100) == vm16.OK)
 hexdump(vm16.read_mem(pos, 0, 8))
 
-local opc = vm16.set_breakpoint(pos, 4, 1)
-assert(vm16.run(pos, 8) == vm16.BREAK)
-assert(vm16.get_pc(pos) == 5)
-local val = vm16.breakpoint_step1(pos, 4, opc)
+local opc = vm16.set_breakpoint(pos, 4, Breakpoints)
+assert(vm16.run(pos, 8, nil, Breakpoints) == vm16.BREAK)
 assert(vm16.get_pc(pos) == 4)
-vm16.breakpoint_step2(pos, 4, val)
 hexdump(vm16.read_mem(pos, 0, 8))
-
-vm16.reset_breakpoint(pos, 4, opc)
+assert(vm16.run(pos, 1, nil, Breakpoints) == vm16.OK)
+hexdump(vm16.read_mem(pos, 0, 8))
+assert(vm16.run(pos, 8, nil, Breakpoints) == vm16.BREAK)
+assert(vm16.get_pc(pos) == 4)
+hexdump(vm16.read_mem(pos, 0, 8))
+vm16.reset_breakpoint(pos, 4, Breakpoints)
 hexdump(vm16.read_mem(pos, 0, 8))
 assert(vm16.run(pos, 100) == vm16.OK)
 

@@ -48,9 +48,10 @@ local function get_mem(pos)
 	return Cache[hash]
 end
 
-local function on_update(pos, resp, cpu)
+local function on_update(pos, resp)
 	local mem = get_mem(pos)
 	mem.running = resp < vm16.HALT
+	mem.scroll_lineno = nil
 	M(pos):set_string("formspec", vm16.cpu.formspec(pos, get_mem(pos)))
 end
 
@@ -77,6 +78,8 @@ local function assemble(code)
 end
 
 local function init_cpu(pos, lToken)
+	local mem = get_mem(pos)
+	mem.breakpoints = {}
 	vm16.on_start_cpu(pos)
 	vm16.create(pos, 0)
 	for _,tok in ipairs(lToken) do
@@ -86,6 +89,22 @@ local function init_cpu(pos, lToken)
 		end
 	end
 	vm16.set_pc(pos, 0)
+end
+
+local function mark_code_line(pos, mem, addr)
+	if not addr or addr == 0 then return end
+	for _,tok in ipairs(mem.lToken or {}) do
+		if tok[vm16.Asm.ADDRESS] == addr then
+			if tok.breakpoint then
+				tok.breakpoint = nil
+				vm16.reset_breakpoint(pos, addr, mem.breakpoints)
+			else
+				tok.breakpoint = true
+				vm16.set_breakpoint(pos, addr, mem.breakpoints)
+			end
+			break
+		end
+	end
 end
 
 local function on_receive_fields(pos, formname, fields, player)
@@ -118,32 +137,49 @@ local function on_receive_fields(pos, formname, fields, player)
 					init_cpu(pos, mem.lToken)
 					mem.output = ""
 				end
-			else
-				-- edit code
+			end
+		elseif fields.breakpoint then
+			local addr = vm16.hex2number(fields.address or "")
+			mark_code_line(pos, mem, addr)
+		elseif fields.edit then
+			if vm16.is_loaded(pos) then
 				minetest.get_node_timer(pos):stop()
 				vm16.destroy(pos)
 			end
+			mem.error = nil
 		elseif fields.step then
 			if vm16.is_loaded(pos) then
-				vm16.run(pos, 1, clbks)
+				vm16.run(pos, 1, clbks, mem.breakpoints)
+				mem.scroll_lineno = nil
 			end
 		elseif fields.step10 then
 			if vm16.is_loaded(pos) then
 				minetest.get_node_timer(pos):start(0.4)
 				mem.steps = 10
-				vm16.run(pos, 1, clbks)
+				vm16.run(pos, 1, clbks, mem.breakpoints)
+				mem.scroll_lineno = nil
 			end
 		elseif fields.run then
 			if vm16.is_loaded(pos) then
 				mem.steps = nil
-				vm16.run(pos, nil, clbks)
+				vm16.run(pos, nil, clbks, mem.breakpoints)
 				minetest.get_node_timer(pos):start(0.1)
 				mem.running = true
+				mem.scroll_lineno = nil
 			end
 		elseif fields.stop then
 			if vm16.is_loaded(pos) then
 				vm16.set_cpu_reg(pos, {A=0, B=0, C=0, D=0, X=0, Y=0, SP=0, PC=0})
 				mem.output = ""
+				mem.scroll_lineno = nil
+			end
+		elseif fields.down then
+			if vm16.is_loaded(pos) and mem.lToken then
+				mem.scroll_lineno = math.min((mem.scroll_lineno or 1) + 8, #mem.lToken - 8)
+			end
+		elseif fields.up then
+			if vm16.is_loaded(pos) and mem.lToken then
+				mem.scroll_lineno = math.max((mem.scroll_lineno or 1) - 8, 1)
 			end
 		end
 	end
@@ -155,15 +191,14 @@ local function on_receive_fields(pos, formname, fields, player)
 end
 
 local function on_timer(pos, elapsed)
-	--print("on_timer")
 	if vm16.is_loaded(pos) then
 		local mem = get_mem(pos)
 		if mem.steps then
 			mem.steps = mem.steps - 1
 			M(pos):set_string("formspec", vm16.cpu.formspec(pos, mem))
-			return mem.steps > 0 and vm16.run(pos, 1, clbks) < vm16.HALT
+			return mem.steps > 0 and vm16.run(pos, 1, clbks, mem.breakpoints) < vm16.HALT
 		elseif mem.running then
-			return vm16.run(pos, nil, clbks) < vm16.HALT
+			return vm16.run(pos, nil, clbks, mem.breakpoints) < vm16.HALT
 		end
 	end
 end
