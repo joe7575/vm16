@@ -84,6 +84,12 @@ Licensed under the GNU GPLv3 (See LICENSE.txt)
 
 ## History
 
+### v3.0 (2022-02-26)
+
+- C-core: (2.6.1) Change memory size calculation
+- Rework the I/O API and blocks
+- Docu: Update vm16_api.md
+
 ### v2.6 (2022-02-25)
 
 - C-core: Change BRK instruction

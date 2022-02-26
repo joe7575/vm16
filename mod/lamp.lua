@@ -43,13 +43,12 @@ local function switch_off(pos, node, player)
 end
 
 local function on_vm16_start_cpu(pos, cpu_pos)
-	M(pos):set_string("cpu_pos", P2S(cpu_pos))
-	return M(pos):get_int("address")
-end
-
-local function on_vm16_output(pos, addr, value)
-	local node = minetest.get_node(pos)
-	switch_on(pos, node, nil, value)
+	vm16.register_output_address(pos, cpu_pos, M(pos):get_int("address"),
+		function(pos, address, value)
+			local node = minetest.get_node(pos)
+			switch_on(pos, node, nil, value)
+		end
+	)
 end
 
 local function formspec()
@@ -86,7 +85,6 @@ minetest.register_node("vm16:lamp_off", {
 	on_rightclick = switch_on,
 	on_receive_fields = on_receive_fields,
 	on_vm16_start_cpu = on_vm16_start_cpu,
-	on_vm16_output = on_vm16_output,
 
 	paramtype = "light",
 	paramtype2 = "color",
@@ -107,7 +105,6 @@ minetest.register_node("vm16:lamp_on", {
 	on_rightclick = switch_off,
 	on_receive_fields = on_receive_fields,
 	on_vm16_start_cpu = on_vm16_start_cpu,
-	on_vm16_output = on_vm16_output,
 
 	paramtype = "light",
 	paramtype2 = "color",

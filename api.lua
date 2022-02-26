@@ -11,14 +11,18 @@
 ]]--
 
 local vm16lib = ...
-if vm16lib.version() ~= "2.6" then
-	minetest.log("error", "[vm16] Install Lua library v2.6 (see readme.md)!")
+if vm16lib.version() ~= "2.6.1" then
+	minetest.log("error", "[vm16] Install Lua library v2.6-0 (see readme.md)!")
 end
 
 local M = minetest.get_meta
 local VMList = {}
 local storage = minetest.get_mod_storage()
 
+-------------------------------------------------------------------------------
+local VERSION     = 3.0  -- See readme.md
+-------------------------------------------------------------------------------
+local CYCLES = 10000  -- max CPU cycles / 100 ms
 local VM16_OK     = 0  -- run to the end
 local VM16_NOP    = 1  -- nop command
 local VM16_IN     = 2  -- input command
@@ -36,33 +40,20 @@ vm16.SYS    = VM16_SYS
 vm16.HALT   = VM16_HALT
 vm16.BREAK  = VM16_BREAK
 vm16.ERROR  = VM16_ERROR
-
+vm16.version  = VERSION
+vm16.testbit  = vm16lib.testbit
+vm16.is_ascii = vm16lib.is_ascii
 vm16.CallResults = {[0]="OK", "NOP", "IN", "OUT", "SYS", "HALT", "BREAK", "ERROR"}
 
 local SpecialCycles = {} -- for sys calls with reduced/increased cycles
 
-local CYCLES = 10000  -- max CPU cycles / 100 ms
-
-vm16.version = vm16lib.version()
-vm16.testbit = vm16lib.testbit
-vm16.is_ascii = vm16lib.is_ascii
-
 -- default event callback handlers
-local Callbacks = {}
-
-local function on_input(pos, address)
-	return address
-end
-
-local function on_output(pos, address, val1, val2)
-end
-
-local function on_system(pos, address, val1, val2)
-	return 1
-end
-
-local function on_update(pos, resp, cpu)
-end
+local Callbacks = {
+	on_input  = function(pos, address) print("on_input", address); return address end,
+	on_output = function(pos, address, val1, val2) print("output", address, val1, val2) end,
+	on_system = function(pos, address, val1, val2) print("on_system", address, val1, val2); return 1 end,
+	on_update = function(pos, resp, cpu) print("on_update", resp) end,
+}
 
 local function store_breakpoint_addr(pos, vm, breakpoints)
 	local addr = vm16lib.get_pc(vm)
@@ -94,19 +85,21 @@ local function skip_break_instr(pos, vm, breakpoints)
 end
 
 function vm16.set_breakpoint(pos, addr, breakpoints)
-	breakpoints[addr] = vm16.peek(pos, addr)
-	vm16.poke(pos, addr, 0x0400)
+	if breakpoints then
+		breakpoints[addr] = vm16.peek(pos, addr)
+		vm16.poke(pos, addr, 0x0400)
+	end
 end
 
 function vm16.reset_breakpoint(pos, addr, breakpoints)
-	if breakpoints[addr] then
+	if breakpoints and breakpoints[addr] then
 		breakpoints.address = nil
 		vm16.poke(pos, addr, breakpoints[addr])
 		return true
 	end
 end
 
--- ram_size is from 1 (4K) to 16 (64KB) or 0 for 0.5K
+-- ram_size is from 0 (512 words) to 7 (64 Kwords)
 function vm16.create(pos, ram_size)
 	print("vm_create")
 	local hash = minetest.hash_node_position(pos)
@@ -319,15 +312,18 @@ function vm16.run(pos, cycles, callbacks, breakpoints)
 			local io = vm16lib.get_io_reg(vm)
 			io.data = callbacks.on_input(pos, io.addr) or 0xFFFF
 			vm16lib.set_io_reg(vm, io)
-			cycles = cycles - CYCLES/10
+			-- max. 20 inputs per run
+			cycles = cycles - CYCLES/20
 		elseif resp == VM16_OUT then
 			local io = vm16lib.get_io_reg(vm)
 			if callbacks.on_output(pos, io.addr, io.data, io.B) then return resp end
-			cycles = cycles - CYCLES/20
+			-- max. 10 outputs per run
+			cycles = cycles - CYCLES/10
 		elseif resp == VM16_SYS then
 			local io = vm16lib.get_io_reg(vm)
 			io.data = callbacks.on_system(pos, io.addr, io.A, io.B) or 0xFFFF
 			vm16lib.set_io_reg(vm, io)
+			-- max. 10 sys-calls per run
 			cycles = cycles - (SpecialCycles[io.addr] or CYCLES/10)
 		elseif resp == VM16_HALT then
 			local cpu = vm16lib.get_cpu_reg(vm)
@@ -388,9 +384,9 @@ minetest.after(60, remove_unloaded_vm)
 
 -- Deprecated! Use `generate_callback_table` instead.
 function vm16.register_callbacks(on_inp, on_outp, on_sys, on_upd)
-	Callbacks.on_input  = on_inp  or on_input
-	Callbacks.on_output = on_outp or on_output
-	Callbacks.on_system = on_sys  or on_system
-	Callbacks.on_update = on_upd  or on_update
+	Callbacks.on_input  = on_inp  or Callbacks.on_input
+	Callbacks.on_output = on_outp or Callbacks.on_output
+	Callbacks.on_system = on_sys  or Callbacks.on_system
+	Callbacks.on_update = on_upd  or Callbacks.on_update
 end
 

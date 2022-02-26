@@ -12,6 +12,7 @@
 
 -- for lazy programmers
 local M = minetest.get_meta
+local H = minetest.hash_node_position
 local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
 local S2P = function(s) return minetest.string_to_pos(s) end
 
@@ -21,60 +22,59 @@ local Inputs = {}   -- [hash] = {addr = value}
 local Outputs = {}  -- [hash] = {addr = pos}
 local IONodes = {}  -- Known I/O nodes
 
+-------------------------------------------------------------------------------
+-- API for I/O nodes
+-------------------------------------------------------------------------------
 function vm16.register_io_nodes(names)
 	for _, name in ipairs(names) do
 		table.insert(IONodes, name)
 	end
 end
 
--- Used by CPU
-function vm16.on_start_cpu(cpu_pos)
-	local hash = minetest.hash_node_position(cpu_pos)
-	local pos1 = {x = cpu_pos.x - RADIUS, y = cpu_pos.y - RADIUS, z = cpu_pos.z - RADIUS}
-	local pos2 = {x = cpu_pos.x + RADIUS, y = cpu_pos.y + RADIUS, z = cpu_pos.z + RADIUS}
+function vm16.register_input_address(pos, cpu_pos, address, on_input)
+	assert(pos and cpu_pos and address and on_input)
+	local hash = H(cpu_pos)
+	Inputs[hash] = Inputs[hash] or {}
+	Inputs[hash][address] = {pos = pos, input = on_input}
+end
+
+function vm16.register_output_address(pos, cpu_pos, address, on_output)
+	assert(pos and cpu_pos and address and on_output)
+	local hash = H(cpu_pos)
+	Outputs[hash] = Outputs[hash] or {}
+	Outputs[hash][address] = {pos = pos, output = on_output}
+end
+
+-------------------------------------------------------------------------------
+-- API for the CPU
+-------------------------------------------------------------------------------
+function vm16.find_io_nodes(cpu_pos, radius)
+	radius = radius or RADIUS
+	local hash = H(cpu_pos)
+	local pos1 = {x = cpu_pos.x - radius, y = cpu_pos.y - radius, z = cpu_pos.z - radius}
+	local pos2 = {x = cpu_pos.x + radius, y = cpu_pos.y + radius, z = cpu_pos.z + radius}
 	local posses = minetest.find_nodes_in_area(pos1, pos2, IONodes)
 	for _,pos in ipairs(posses) do
 		local node = minetest.get_node(pos)
 		local ndef = minetest.registered_nodes[node.name]
 		if ndef and ndef.on_vm16_start_cpu then
-			if ndef.on_vm16_output then
-				-- Output node
-				local addr = ndef.on_vm16_start_cpu(pos, cpu_pos)
-				if addr then
-					Outputs[hash] = Outputs[hash] or {}
-					Outputs[hash][addr] = {pos = pos, output = ndef.on_vm16_output}
-				end
-			else
-				-- Input node
-				local addr = ndef.on_vm16_start_cpu(pos, cpu_pos)
-				if addr then
-					Inputs[hash] = Inputs[hash] or {}
-					Inputs[hash][addr] = 0
-				end
-			end
+			ndef.on_vm16_start_cpu(pos, cpu_pos)
 		end
 	end
 end
 
--- Used by 'input' nodes
-function vm16.input_data(pos, addr, value)
-	local hash = minetest.hash_node_position(pos)
-	Inputs[hash] = Inputs[hash] or {}
-	Inputs[hash][addr] = value
-end
-
--- Used by CPU to output data
-function vm16.on_output(pos, addr, val1, val2)
-	local hash = minetest.hash_node_position(pos)
-	local item = Outputs[hash] and Outputs[hash][addr]
+function vm16.on_output(pos, address, val1, val2)
+	local hash = H(pos)
+	local item = Outputs[hash] and Outputs[hash][address]
 	if item then
-		item.output(item.pos, addr, val1, val2)
+		item.output(item.pos, address, val1, val2)
 	end
 end
 
--- Used by CPU to read input data
 function vm16.on_input(pos, address)
-	local hash = minetest.hash_node_position(pos)
-	Inputs[hash] = Inputs[hash] or {}
-	return Inputs[hash][address] or 0
+	local hash = H(pos)
+	local item = Inputs[hash] and Inputs[hash][address]
+	if item then
+		return item.input(item.pos, address) or 0
+	end
 end

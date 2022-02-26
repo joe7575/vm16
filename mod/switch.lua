@@ -12,31 +12,32 @@
 
 -- for lazy programmers
 local M = minetest.get_meta
+local H = minetest.hash_node_position
 local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
 local S2P = function(s) return minetest.string_to_pos(s) end
 
 local DESCRIPTION = "VM16 On/Off Switch"
 
+local Cache = {}
+
 local function switch_on(pos, node, player, color)
 	if player and minetest.is_protected(pos, player:get_player_name()) then
 		return
 	end
-	if player and M(pos):get_int("address") == 0 then
+	local address = M(pos):get_int("address")
+	if player and address == 0 then
 		return
 	end
 	if node.name == "vm16:switch_off" then
 		node.name = "vm16:switch_on"
 		minetest.swap_node(pos, node)
-		local cpu_pos = S2P(M(pos):get_string("cpu_pos"))
-		if cpu_pos then
-			vm16.input_data(cpu_pos, M(pos):get_int("address"), 1)
-		end
 		minetest.sound_play("button", {
 				pos = pos,
 				gain = 0.5,
 				max_hear_distance = 5,
 			})
 	end
+	Cache[H(pos)][address] = nil
 end
 
 local function switch_off(pos, node, player)
@@ -46,21 +47,27 @@ local function switch_off(pos, node, player)
 	if node.name == "vm16:switch_on" then
 		node.name = "vm16:switch_off"
 		minetest.swap_node(pos, node)
-		local cpu_pos = S2P(M(pos):get_string("cpu_pos"))
-		if cpu_pos then
-			vm16.input_data(cpu_pos, M(pos):get_int("address"), 0)
-		end
 		minetest.sound_play("button", {
 				pos = pos,
 				gain = 0.5,
 				max_hear_distance = 5,
 			})
 	end
+	local address = M(pos):get_int("address")
+	Cache[H(pos)][address] = nil
 end
 
 local function on_vm16_start_cpu(pos, cpu_pos)
-	M(pos):set_string("cpu_pos", P2S(cpu_pos))
-	return M(pos):get_int("address")
+	vm16.register_input_address(pos, cpu_pos, M(pos):get_int("address"), 
+		function(pos, address)
+			local hash = H(pos)
+			if not Cache[hash] or not Cache[hash][address] then
+				Cache[hash] = Cache[hash] or {}
+				Cache[hash][address] = minetest.get_node(pos).name == "vm16:switch_on" and 1 or 0
+			end
+			return Cache[hash][address]
+		end
+	)
 end
 
 local function formspec()

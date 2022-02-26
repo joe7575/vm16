@@ -233,15 +233,9 @@ static uint16_t getoprnd(vm16_t *C, uint8_t addr_mod) {
     }
 }
 
-// size in number of 4K blocks
+// size from 0 (0x200 words) to 7 (0x10000 words)
 uint32_t vm16_calc_size(uint8_t size) {
-    uint32_t mem_size;
-    
-    if(size == 0) {
-        mem_size = 0x200; // for testing purposes
-    } else {
-        mem_size = MIN(size, MAX_MEM_BLOCKS) * MEM_BLOCK_SIZE;
-    }
+    uint32_t mem_size = 0x200 << MIN(size, 7);
     return VM_SIZE(mem_size);
 }
 

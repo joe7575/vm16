@@ -68,7 +68,7 @@ local function on_output(pos, address, val1, val2)
 	end
 end
 
-local clbks = vm16.generate_callback_table(vm16.on_input, on_output, nil, on_update, nil)
+local clbks = vm16.generate_callback_table(vm16.on_input, on_output, nil, on_update)
 
 local function assemble(code)
 	local a = vm16.Asm:new({})
@@ -80,7 +80,7 @@ end
 local function init_cpu(pos, lToken)
 	local mem = get_mem(pos)
 	mem.breakpoints = {}
-	vm16.on_start_cpu(pos)
+	vm16.find_io_nodes(pos)
 	vm16.create(pos, 0)
 	for _,tok in ipairs(lToken) do
 		local _, _, _, _, address, opcodes = unpack(tok)

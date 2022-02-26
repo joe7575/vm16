@@ -4,37 +4,36 @@ The VM16 virtual machine provides the following API functions.
 
 
 
-
-
 ## version
 
-```LUA
-ver = vm16.version()
+```lua
+vm16.version
 ```
 
-Read version string of the vm16 library.
-
-
+Version float number of the vm16 library, like `3.01`.
 
 ## create
 
-```LUA
+```lua
 vm = vm16.create(pos, ram_size)
 ```
 
 Initially create the virtual machine VM13. Valid values for `ram_size` are:
 
-- 1 for 4 KWords memory
-- 2 for 8 KWords memory
-- 4 for 16 KWords memory
-- 8 for 32 KWords memory
-- 16 for 64 KWords memory
+- 0 for 512 words of memory
+- 1 for 1 KWord of memory
+- 2 for 2 KWords of memory
+- 3 for 4 KWords of memory
+- 4 for 8 KWords of memory
+- 5 for 16 KWords of memory
+- 6 for 32 KWords of memory
+- 7 for 64 KWords of memory
 
 The function returns true/false.
 
 ## destroy
 
-```LUA
+```lua
 vm16.destroy(pos)
 ```
 
@@ -50,15 +49,16 @@ Return true if VM is loaded, otherwise false.
 
 ## vm_restore
 
-```LUA
+```lua
 vm16.vm_restore(pos)
 ```
 
-Move stored VM back to active. Typically called from the node LBM function.
+Move stored VM back to active. Typically called from the node LBM function. 
+(The `vm_store` function is called automatically when the block gets unloaded)
 
 ## mem_size
 
-```LUA
+```lua
 vm16.mem_size(pos)
 ```
 
@@ -66,7 +66,7 @@ Returns the VM memory size in words.
 
 ## set_pc
 
-```LUA
+```lua
  res = vm16.set_pc(pos, addr)
 ```
 
@@ -75,7 +75,7 @@ The function returns true/false.
 
 ## get_pc
 
-```LUA
+```lua
  addr = vm16.get_pc(pos)
 ```
 
@@ -83,7 +83,7 @@ Return the current PC value.
 
 ## deposit
 
-```
+```lua
 res = vm16.deposit(pos, value)
 ```
 
@@ -91,7 +91,7 @@ Store the given value in the memory cell where the PC points to and post-increme
 
 ## read_mem
 
-```LUA
+```lua
 tbl = vm16.read_mem(pos, addr, num)
 ```
 
@@ -100,7 +100,7 @@ Function returns an table/array with the read values.
 
 ## write_mem
 
-```LUA
+```lua
 num = vm16.write_mem(pos, addr, tbl)
 ```
 
@@ -109,7 +109,7 @@ Function returns the number of written values.
 
 ## read_mem_bin
 
-```LUA
+```lua
 tbl = vm16.read_mem(pos, addr, num)
 ```
 
@@ -118,7 +118,7 @@ Function returns the read values as binary string.
 
 ## write_mem_bin
 
-```LUA
+```lua
 res = vm16.write_mem(pos, addr, s)
 ```
 
@@ -127,7 +127,7 @@ Function returns true if successful.
 
 ## read_ascii
 
-```LUA
+```lua
 s = vm16.read_ascii(pos, addr, num)
 ```
 
@@ -136,7 +136,7 @@ data as ASCII string with up to `num` characters.
 
 ## write_ascii
 
-```LUA
+```lua
 res = vm16.write_ascii(pos, addr, s)
 ```
 
@@ -144,7 +144,7 @@ Write ASCII string to given address `addr`. Function returns true if successful.
 
 ## is_ascii
 
-```LUA
+```lua
 res = vm16.is_ascii(s)
 ```
 
@@ -152,7 +152,7 @@ The function checks whether the specified string is a real ASCII string (all val
 
 ## peek
 
-```LUA
+```lua
 val = vm16.peek(pos, addr)
 ```
 
@@ -160,7 +160,7 @@ Peek and return the memory cell at `addr`.
 
 ## poke
 
-```LUA
+```lua
 res = vm16.poke(pos, addr, value)
 ```
 
@@ -168,7 +168,7 @@ Write a value to the given `addr`.  Function returns true/false.
 
 ## get_cpu_reg
 
-```
+```lua
 tbl = vm16.get_cpu_reg(pos)
 ```
 
@@ -176,7 +176,7 @@ Return the complete register set as table with the keys `A`, `B`, `C`, `D`, `X`,
 
 ## set_cpu_reg
 
-```
+```lua
 tbl = vm16.set_cpu_reg(pos, regs)
 ```
 
@@ -184,7 +184,7 @@ Set the complete register set via the given table with the keys `A`, `B`, `C`, `
 
 ## get_io_reg
 
-```
+```lua
 tbl = vm16.get_cpu_reg(pos)
 ```
 
@@ -192,7 +192,7 @@ Return a reduced register set as table with the keys `A`, `B`, `addr` and `data`
 
 ## set_io_reg
 
-```
+```lua
 tbl = vm16.get_cpu_reg(pos, io)
 ```
 
@@ -200,7 +200,7 @@ Store the values from the given io table (keys: `A`, `B`, `addr` and `data`)
 
 ## write_h16
 
-```LUA
+```lua
 res = vm16.write_h16(pos, s)
 ```
 
@@ -209,7 +209,7 @@ Function returns true/false
 
 ## read_h16
 
-```LUA
+```lua
 res = vm16.read_h16(pos, start_addr, size)
 ```
 
@@ -219,7 +219,7 @@ Function returns true/false.
 
 ## testbit
 
-```LUA
+```lua
 res = vm16.testbit(value, bit)
 ```
 
@@ -228,15 +228,112 @@ Function returns true/false
 
 ## run
 
-```LUA
-resp, ran = vm16.run(pos, cycles)
+```lua
+resp, ran = vm16.run(pos, cycles, callbacks, breakpoints)
 ```
 
-Call the VM to execute the given number of `cycles` (1..n).
+Call the VM to execute the given number of `cycles`. If `cycles` is nil, the default value 10000 is used.
+`callbacks` is a table, generated via `vm16.generate_callback_table()`.
+`breakpoints` is a table, maintained by `set_breakpoint` and `reset_breakpoint`.
 
 The response value is one of:
 
 - `vm16.OK` - the VM terminated after the given number of cycles (or slot time expired)
+- `VM16_BREAK` - the VM terminated with a `brk` instruction
 - `vm16.HALT` - the VM terminated with a `halt` instruction
 - `vm16.ERROR` - the VM terminated because of an internal error
 
+## generate_callback_table
+
+```lua
+callbacks = vm16.generate_callback_table(on_inp, on_outp, on_sys, on_upd)
+```
+
+Funktion to setup the `callbacks` table with the following callback function:
+
+```lua
+value = on_input(pos, address)                -- called for each `in <reg>, #<address>`
+on_output(pos, address, val1, val2)           -- called for each `out #<address>, <reg>`
+result = on_system(pos, address, val1, val2)  -- called for each `sys #<number>`
+on_update(pos, resp, regs)                    -- called for each CPU interruption
+```
+
+## set_breakpoint
+
+```lua
+vm16.set_breakpoint(pos, address, breakpoints)
+```
+
+Set a breakpoint on the given `address`. The table `breakpoints` is used to store the breakpoint data for the call of `vm16.run`.
+
+## reset_breakpoint
+
+```lua
+vm16.reset_breakpoint(pos, addr, breakpoints)
+```
+
+Reset a breakpoint on the given `address`. The table `breakpoints` is used to store the breakpoint data for the call of `vm16.run`.
+
+
+
+# API for I/O Nodes
+
+The `io.lua` file provides the following API for I/O nodes.
+
+
+
+## register_io_nodes
+
+```lua
+vm16.register_io_nodes(names)
+```
+
+Register a table of `names` of I/O nodes. When the CPU starts, it looks around for registered nodes to set up the input/output tables.
+
+## register_input_address
+
+```lua
+vm16.register_input_address(pos, cpu_pos, address, function(pos, address))
+```
+
+Function is used to register an input address and a callback function. This function is then called for each `in <reg>, #<address>` CPU instruction to read the input value.
+
+## register_output_address
+
+```lua
+vm16.register_output_address(pos, cpu_pos, address, function(pos, address, value))
+```
+
+Function is used to register an output address and a callback function. This function is then called for each `out #<address>, <reg>` CPU instruction to output the provided `value`.
+
+
+
+# CPU I/O API
+
+The `io.lua` file provides the following API for the CPU.
+
+
+
+## find_io_nodes
+
+```lua
+vm16.find_io_nodes(cpu_pos, radius)
+```
+
+Funktion is called, when the CPU is created, to collect all I/O nodes and setup the input/output tables.
+
+## on_output
+
+```lua
+vm16.on_output(pos, address, val1, val2)
+```
+
+Called by the CPU for each `out #<address>, <reg>` instruction.
+
+## on_input
+
+```lua
+vm16.on_input(pos, address)
+```
+
+Called by the CPU for each `in <reg>, #<address>` instruction.
