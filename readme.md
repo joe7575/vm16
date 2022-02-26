@@ -71,7 +71,7 @@ to enable the CPU/demo blocks or check settingtypes.txt.
 
 ## Dependencies
 
-default, basic_materials
+optional: default, basic_materials (for demo CPU and blocks)
 
 
 

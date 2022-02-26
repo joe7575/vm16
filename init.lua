@@ -31,7 +31,9 @@ IE = nil
 vm16lib = nil
 
 -- for testing purposes
-if minetest.settings:get_bool("vm16_testblocks_enabled") == true then
+if minetest.settings:get_bool("vm16_testblocks_enabled") == true and
+		minetest.global_exists("default") and
+                minetest.global_exists("basic_materials") then
 	vm16.cpu = {}
 	dofile(MP.."/mod/asm.lua")
 	dofile(MP.."/mod/io.lua")

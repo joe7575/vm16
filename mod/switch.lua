@@ -37,7 +37,9 @@ local function switch_on(pos, node, player, color)
 				max_hear_distance = 5,
 			})
 	end
-	Cache[H(pos)][address] = nil
+	local hash = H(pos)
+	Cache[hash] = Cache[hash] or {}
+	Cache[hash][address] = nil
 end
 
 local function switch_off(pos, node, player)
@@ -53,7 +55,9 @@ local function switch_off(pos, node, player)
 				max_hear_distance = 5,
 			})
 	end
+	local hash = H(pos)
 	local address = M(pos):get_int("address")
+	Cache[hash] = Cache[hash] or {}
 	Cache[H(pos)][address] = nil
 end
 
