@@ -24,7 +24,7 @@ print("Do some tests...")
 
 for i = 1,10 do
 
-	local vm = vm16lib.init(1)
+	local vm = vm16lib.init(3)
 	assert(vm16lib.mem_size(vm) == 4096)
 
 	assert(vm16lib.set_pc(vm, 0x1234) == true)

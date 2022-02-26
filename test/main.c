@@ -15,7 +15,7 @@ void test1(void) {
     static uint16_t code[] = {
         0x2010, 0x1111, 0x2030, 0x2222, 0x2050, 0x3333, 0x2070, 0x4444,
         0x3001, 0x3462, 0x3870, 0x0003, 0x3C10, 0x0003, 0x1600, 0x0021,
-        0x0400, 0x6A00, 0x0015, 0x5010, 0x0023, 0x0000, 0x6A00, 0x001A,
+        0x0000, 0x6A00, 0x0015, 0x5010, 0x0023, 0x0000, 0x6A00, 0x001A,
         0x5810, 0x0025, 0x6A00, 0x001E, 0x5C10, 0x0027, 0x0000, 0x1200,
         0x002A, 0x2800, 0x1800, 0x7C0D, 0x1800, 0x4C00, 0x1800, 0x4810,
         0xFFFF, 0x1800, 0x2220, 0x1000, 0x2090, 0x1001, 0x2101, 0x2880,
@@ -27,7 +27,7 @@ void test1(void) {
     uint16_t val;
     char *p_data;
     uint32_t bytes;
-    uint32_t size = vm16_calc_size(1);
+    uint32_t size = vm16_calc_size(3);
     vm16_t *C = (vm16_t *)malloc(size);
     vm16_init(C, size);
     vm16_write_mem(C, 0, sizeof(code) / 2, code);
@@ -78,13 +78,13 @@ void test2(void) {
     static uint16_t code[] = {
         0x2010, 0x1111, 0x2030, 0x2222, 0x2050, 0x3333, 0x2070, 0x4444,
         0x3001, 0x3462, 0x3870, 0x0003, 0x3C10, 0x0003, 0x1600, 0x0021,
-        0x0400, 0x6A00, 0x0015, 0x5010, 0x0023, 0x0000, 0x6A00, 0x001A,
+        0x0000, 0x6A00, 0x0015, 0x5010, 0x0023, 0x0000, 0x6A00, 0x001A,
         0x5810, 0x0025, 0x6A00, 0x001E, 0x5C10, 0x0027, 0x0000, 0x1200,
         0x002A, 0x2800, 0x1800, 0x7C0D, 0x1800, 0x4C00, 0x1800, 0x4810,
         0xFFFF, 0x1800, 0x2220, 0x1000, 0x2090, 0x1001, 0x2101, 0x2880,
         0x2142, 0x2143, 0x1C00
     };
-    uint32_t size = vm16_calc_size(3);
+    uint32_t size = vm16_calc_size(5);
     vm16_t *C = (vm16_t *)malloc(size);
     vm16_init(C, size);
 
@@ -104,7 +104,7 @@ void test3(void) {
         0x2030, 0x0043, 0x4030, 0x00BF
     };
     uint32_t ran;
-    uint32_t size = vm16_calc_size(3);
+    uint32_t size = vm16_calc_size(5);
     vm16_t *C = (vm16_t *)malloc(size);
     vm16_init(C, size);
 
@@ -130,7 +130,7 @@ void test4(void) {
     char buffer[BUFF_SIZE];
 
     uint32_t ran;
-    uint32_t size = vm16_calc_size(3);
+    uint32_t size = vm16_calc_size(5);
     vm16_t *C = (vm16_t *)malloc(size);
     vm16_init(C, size);
 
@@ -162,7 +162,7 @@ void test4(void) {
 
     printf("ok\n");
 
-    vm16_read_h16(C, buffer, BUFF_SIZE);
+    vm16_read_h16(C, buffer, 0, BUFF_SIZE);
     printf("%s", buffer);
 
     free(C);
@@ -170,7 +170,7 @@ void test4(void) {
 
 int main() {
     test1();
-    //test2();
+    test2();
     //test3();
     test4();
     return 0;
