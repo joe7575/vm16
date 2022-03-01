@@ -32,17 +32,22 @@ Almost all instructions support different types of operands. Operand types are:
 move A, B
 
 ; Constants (CONST):  #0, #1, #1000, #$3AF
-move A, #10		; load A with decimal value
-move A, #$3AF	; load A with hexdecimal value
+move A, #10     ; load A with decimal value
+move A, #$3AF   ; load A with hexdecimal value
 
 ; Memory (MEM): memory addresses (0 to 65535)
-move A, $100		; load A with value from memory address 100h
+move A, $100    ; load A with value from memory address 100h
 
 ; Indirect (IND): use X/Y register as address to the memory
-move A, [X]		; the value in X is used as address
+move A, [X]     ; the value in X is used as address
 
-; Post-increment (IND): use X/Y register as address to the memory
-move A, [X]+		; the value in X is incremented after the move instruction
+; Post-increment (INC): use X/Y register as address to the memory
+move A, [X]+    ; the value in X is incremented after the move instruction
+
+; Stack-pointer-relative (SPREL): use SP register plus offset as address to the memory
+; (valid offset range = -32768..+32767)
+move A, [SP+2]
+move [SP+3], B
 
 ; Absolute (ABS): Used for all branch/jump instructions as absolute jump address
 jump 0

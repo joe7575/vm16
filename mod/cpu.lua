@@ -72,7 +72,11 @@ local clbks = vm16.generate_callback_table(vm16.on_input, on_output, nil, on_upd
 
 local function assemble(code)
 	local a = vm16.Asm:new({})
+	code = code:gsub("\t", "  ")
 	local lToken, err = a:scanner(code)
+	if err then
+		return nil, err
+	end
 	lToken, err = a:assembler(lToken)
 	return lToken, err
 end
@@ -136,6 +140,8 @@ local function on_receive_fields(pos, formname, fields, player)
 				if mem.lToken then
 					init_cpu(pos, mem.lToken)
 					mem.output = ""
+					mem.scroll_lineno = nil
+					mem.start_idx = 1
 				end
 			end
 		elseif fields.breakpoint then

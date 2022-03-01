@@ -208,7 +208,7 @@ function Asm:scanner(text)
     local lOut = {}  -- {lineno, codestr, txtline}
 
 	if not vm16.is_ascii(text) then
-		return nil, "Invalid ASCII file format"
+		return nil, "Error: Invalid ASCII file format!"
 	end
 	for lineno, txtline in ipairs(linessplit(text)) do
 		local _, _, codestr = txtline:find("(.+);")

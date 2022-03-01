@@ -222,7 +222,7 @@ static uint16_t getoprnd(vm16_t *C, uint8_t addr_mod) {
         case SREL: {
             uint16_t offs = *ADDR_SRC(C, C->pcnt);
             C->pcnt++;
-            return C->sptr + offs;
+            return *ADDR_SRC(C, C->sptr + offs);
         }
         case REL2: {
             uint16_t offs = *ADDR_SRC(C, C->pcnt);

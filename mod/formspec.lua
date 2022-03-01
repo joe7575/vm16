@@ -92,12 +92,14 @@ end
 
 local function fs_listing(pos, err)
 	local out = {}
+	if err then
+		out[#out + 1] = err
+		out[#out + 1] = ""
+	end
 	for i, line in ipairs(strsplit(M(pos):get_string("code"))) do
 		local lineno = string.format("%3d: ", i)
-		out[i] = lineno .. line
+		out[#out + 1] = lineno .. line
 	end
-	out[#out + 1] = ""
-	out[#out + 1] = err
 	return table.concat(out, "\n")
 end
 
