@@ -331,9 +331,9 @@ bneg  A, -2      ; jump to the prior address
 bneg  [X], +4    ; skip the next 2 word instruction
 ```
 
-### dbnz - Decrement and branch if zero
+### dbnz - Decrement and branch if not zero
 
-Decrement operand1 and branch to the address operand2 when operand1 becomes zero.
+Decrement operand1 and branch to the address operand2 until operand1 becomes zero.
 operand1 can be any memory location/register, operand2 an absolute and relative address.
 
 ```

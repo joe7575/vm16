@@ -534,6 +534,9 @@ int vm16_run(vm16_t *C, uint32_t num_cycles, uint32_t *ran) {
                 if(opd1 != 0) {
                     C->pcnt = opd2;
                 }
+                else {
+                    C->pcnt += 2;
+                }
                 break;
             }
             case BZE: {
@@ -550,6 +553,9 @@ int vm16_run(vm16_t *C, uint32_t num_cycles, uint32_t *ran) {
                 if(opd1 <= 0x7FFF) {
                     C->pcnt = opd2;
                 }
+                else {
+                    C->pcnt += 2;
+                }
                 break;
             }
             case BNEG: {
@@ -557,6 +563,9 @@ int vm16_run(vm16_t *C, uint32_t num_cycles, uint32_t *ran) {
                 uint16_t opd2 = getoprnd(C, addr_mode2);
                 if(opd1 > 0x7FFF) {
                     C->pcnt = opd2;
+                }
+                else {
+                    C->pcnt += 2;
                 }
                 break;
             }
@@ -595,6 +604,9 @@ int vm16_run(vm16_t *C, uint32_t num_cycles, uint32_t *ran) {
                 uint16_t opd2 = getoprnd(C, addr_mode2);
                 if(*p_opd1 != 0) {
                     C->pcnt = opd2;
+                }
+                else {
+                    C->pcnt += 2;
                 }
                 break;
             }
