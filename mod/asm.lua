@@ -24,6 +24,7 @@ local DATASEC  = 1
 local CODESEC  = 2
 local TEXTSEC  = 3
 local CTEXTSEC = 4
+local COMMENT  = 5
 
 local tOpcodes = {}
 local tOperands = {}
@@ -189,6 +190,7 @@ function Asm:new(o)
 	o = o or {}
 	o.section = o.section or CODESEC
 	o.address = o.address or 0
+	o.support_namespaces = o.support_namespaces
 	o.globals = {}
 	o.symbols = {}
 	o.errors = {}
@@ -224,8 +226,11 @@ function Asm:scanner(text)
 	return lOut
 end
 
-function Asm:posfix(label)
-	return label .. string.format("$%03d", self.namespace_cnt)
+function Asm:postfix(label)
+	if self.support_namespaces then
+		return label .. string.format("$%03d", self.namespace_cnt)
+	end
+	return label
 end
 
 function Asm:address_label(tok)
@@ -235,10 +240,10 @@ function Asm:address_label(tok)
 		if self.globals[label] == -1 then
 			self.globals[label] = self.address
 		else
-			if self.symbols[self:posfix(label)] then
+			if self.symbols[self:postfix(label)] then
 				self:err_msg("Redefinition of label " .. label)
 			end
-			self.symbols[self:posfix(label)] = self.address
+			self.symbols[self:postfix(label)] = self.address
 		end
 		tok[CODESTR] = codestr:sub(pos+1, -1)
 	end
@@ -301,7 +306,12 @@ function Asm:operand(s)
 end
 
 function Asm:no_code(tok)
-	return {tok[LINENO], tok[CODESTR], tok[TXTLINE], self.section, self.address, {}}
+	local pos1, pos2 = tok[TXTLINE]:find(";")
+	if pos1 == 1 and pos2 == 1 then
+		return {tok[LINENO], tok[CODESTR], tok[TXTLINE], COMMENT, self.address, {}}
+	else
+		return {tok[LINENO], tok[CODESTR], tok[TXTLINE], self.section, self.address, {}}
+	end
 end
 
 function Asm:decode_code(tok)
@@ -318,10 +328,10 @@ function Asm:decode_code(tok)
 	if words[2] == "=" then
 		if words[1]:match(IDENT) then
 			local label = words[1]
-			if self.symbols[self:posfix(label)] then
+			if self.symbols[self:postfix(label)] then
 				self:err_msg("Redefinition of symbol " .. label)
 			end
-			self.symbols[self:posfix(label)] = value(words[3])
+			self.symbols[self:postfix(label)] = value(words[3])
 		else
 			self:err_msg("Invalid left value")
 		end
@@ -444,8 +454,8 @@ end
 function Asm:handle_rip_label(tok, i, opc)
 	if opc:match(RIPLBL) then
 		local label = string.sub(opc, 4, -1)
-		if self.symbols[self:posfix(label)] then
-			tok[OPCODES][i] = self.symbols[self:posfix(label)] - (tok[ADDRESS] or 0)
+		if self.symbols[self:postfix(label)] then
+			tok[OPCODES][i] = self.symbols[self:postfix(label)] - (tok[ADDRESS] or 0)
 		elseif self.globals[label] then
 			tok[OPCODES][i] = self.globals[label] - (tok[ADDRESS] or 0)
 		else
@@ -456,8 +466,8 @@ function Asm:handle_rip_label(tok, i, opc)
 end
 
 function Asm:handle_label(tok, i, label)
-	if self.symbols[self:posfix(label)] then
-		tok[OPCODES][i] = self.symbols[self:posfix(label)]
+	if self.symbols[self:postfix(label)] then
+		tok[OPCODES][i] = self.symbols[self:postfix(label)]
 	elseif self.globals[label] then
 		tok[OPCODES][i] = self.globals[label]
 	else
@@ -523,12 +533,12 @@ function Asm:listing(lToken)
 
 	local out = {}
 	for _,tok in ipairs(lToken) do
-		if #tok[OPCODES] > 2 then
-			append(out, string.format("       %-10s %s\n%04X: %s", "", tok[TXTLINE], tok[ADDRESS], mydump(tok[OPCODES])))
+		if #tok[OPCODES] > 3 then
+			append(out, string.format("       %-15s %s\n%04X: %s", "", tok[TXTLINE], tok[ADDRESS], mydump(tok[OPCODES])))
 		elseif #tok[OPCODES] > 0 then
-			append(out, string.format("%04X: %-10s %s", tok[ADDRESS], mydump(tok[OPCODES]), tok[TXTLINE]))
+			append(out, string.format("%04X: %-15s %s", tok[ADDRESS], mydump(tok[OPCODES]), tok[TXTLINE]))
 		else
-			append(out, string.format("      %-10s %s", "", tok[TXTLINE]))
+			append(out, string.format("      %-15s %s", "", tok[TXTLINE]))
 		end
 	end
 	return table.concat(out, "\n")
@@ -548,4 +558,5 @@ vm16.Asm.DATASEC  = DATASEC
 vm16.Asm.CODESEC  = CODESEC
 vm16.Asm.TEXTSEC  = TEXTSEC
 vm16.Asm.CTEXTSEC = CTEXTSEC
+vm16.Asm.COMMENT  = COMMENT
 
