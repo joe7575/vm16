@@ -9,7 +9,7 @@
   See LICENSE.txt for more information
 ]]--
 
-local version = "2.0"
+local version = "2.1"
 
 -- Tok Elems {1, "add A, 1",  "add A, 1  ; start value", CODESEC, 10, {0x1234, 0x001}}
 local LINENO  = 1
@@ -345,10 +345,10 @@ function Asm:decode_code(tok)
 		opnd2, val2 = self:operand(words[3])
 	end
 	-- some checks
-	if val1 and val2 then
-		self:err_msg("Syntax error")
-		return self:no_code(tok)
-	end
+--	if val1 and val2 then
+--		self:err_msg("Syntax error")
+--		return self:no_code(tok)
+--	end
 	if not opnd1 and not opnd2 then
 		self:err_msg("Syntax error")
 		return self:no_code(tok)

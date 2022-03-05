@@ -138,7 +138,7 @@ halt
 Move a constant or value from memory/register to memory/register. 
 The VM16 assembler follows the Intel syntax: The destination operand is preceded by the source operand.
 `move A, B` means move the content from B to A. The move instruction has a variable number of words, from
-`move A, [X]` (one word) or `move X,#$1234` (to words). 3 words instructions are not allowed.
+`move A, [X]` (one word) or `move X,#$1234` (to words).
 
 ```
 move A, #1

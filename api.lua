@@ -348,10 +348,10 @@ end
 --          on_update(pos, resp, cpu)
 function vm16.generate_callback_table(on_inp, on_outp, on_sys, on_upd)
 	return {
-		on_input  = on_inp  or on_input,
-		on_output = on_outp or on_output,
-		on_system = on_sys  or on_system,
-		on_update = on_upd  or on_update,
+		on_input  = on_inp,
+		on_output = on_outp,
+		on_system = on_sys,
+		on_update = on_upd,
 	}
 end
 

@@ -12,8 +12,6 @@ The Instruction Set table below uses mainly the following two addressing groups:
 - **DST**  (destination address capable) includes the following operand types: MEM, REL, REG, [SP+n]
 - **SRC**  (source address/value capable) includes the following operand types: MEM, REL, REG, [SP+n], #0, #1, CONST
 
-**In the case of instructions with two operands, at least one operand must be of type REG, #0, or #1, since three word instructions are not permitted!**
-
 
 ### Instruction Set
 

@@ -68,7 +68,9 @@ local function on_output(pos, address, val1, val2)
 	end
 end
 
-local clbks = vm16.generate_callback_table(vm16.on_input, on_output, nil, on_update)
+local function on_system() end
+
+local clbks = vm16.generate_callback_table(vm16.on_input, on_output, on_system, on_update)
 
 local function assemble(code)
 	local a = vm16.Asm:new({})
