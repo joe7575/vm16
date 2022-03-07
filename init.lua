@@ -41,4 +41,10 @@ if minetest.settings:get_bool("vm16_testblocks_enabled") == true and
 	dofile(MP.."/mod/cpu.lua")
 	dofile(MP.."/mod/switch.lua")
 	dofile(MP.."/mod/lamp.lua")
+	dofile(MP.."/bcomp/bgenerator.lua")
+	dofile(MP.."/bcomp/bscanner.lua")
+	dofile(MP.."/bcomp/bsymbols.lua")
+	dofile(MP.."/bcomp/bexpression.lua")
+	dofile(MP.."/bcomp/bparser.lua")
+	dofile(MP.."/bcomp/bcompiler.lua")
 end
