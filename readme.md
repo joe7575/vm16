@@ -84,15 +84,23 @@ Licensed under the GNU GPLv3 (See LICENSE.txt)
 
 ## History
 
-### v3.0 (2022-02-26)
+### API v3.1/Core v2.6.2 (2022-03-07)
 
-- C-core: (2.6.1) Change memory size calculation
+- Add BLL compiler prototype (B like language),
+  is unused so far
+- ASM: Add support for namespaces (for macro ASM)
+- ASM: Allow 3-word instructions (needed by BLL)
+- Core: Fix bug in branch instructions
+
+### API v3.0/Core v2.6.1 (2022-02-26)
+
+- Core: Change memory size calculation
 - Rework the I/O API and blocks
 - Docu: Update vm16_api.md
 
 ### v2.6 (2022-02-25)
 
-- C-core: Change BRK instruction
+- Core: Change BRK instruction
 - API: Add breakpoint functionality
 - CPU: Add breakpoint functionality
 

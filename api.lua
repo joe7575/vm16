@@ -11,8 +11,8 @@
 ]]--
 
 local vm16lib = ...
-if vm16lib.version() ~= "2.6.1" then
-	minetest.log("error", "[vm16] Install Lua library v2.6-0 (see readme.md)!")
+if vm16lib.version() ~= "2.6.2" then
+	minetest.log("error", "[vm16] Install Lua library v2.6-2 (see readme.md)!")
 end
 
 local M = minetest.get_meta
@@ -20,7 +20,7 @@ local VMList = {}
 local storage = minetest.get_mod_storage()
 
 -------------------------------------------------------------------------------
-local VERSION     = 3.0  -- See readme.md
+local VERSION     = 3.1  -- See readme.md
 -------------------------------------------------------------------------------
 local CYCLES = 10000  -- max CPU cycles / 100 ms
 local VM16_OK     = 0  -- run to the end
