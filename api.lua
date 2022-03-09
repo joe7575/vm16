@@ -11,8 +11,8 @@
 ]]--
 
 local vm16lib = ...
-if vm16lib.version() ~= "2.6.2" then
-	minetest.log("error", "[vm16] Install Lua library v2.6-2 (see readme.md)!")
+if vm16lib.version() ~= "2.6.4" then
+	minetest.log("error", "[vm16] Install Lua library v2.6.4 (see readme.md)!")
 end
 
 local M = minetest.get_meta
@@ -99,7 +99,7 @@ function vm16.reset_breakpoint(pos, addr, breakpoints)
 	end
 end
 
--- ram_size is from 0 (512 words) to 7 (64 Kwords)
+-- ram_size is from 0 for 64 words, 1 for 128 words, up to 10 for 64 Kwords
 function vm16.create(pos, ram_size)
 	print("vm_create")
 	local hash = minetest.hash_node_position(pos)

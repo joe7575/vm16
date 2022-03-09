@@ -275,6 +275,7 @@ static int get_cpu_reg(lua_State *L) {
             setfield(L, "Y", C->yreg);
             setfield(L, "PC", C->pcnt);
             setfield(L, "SP", C->sptr);
+            setfield(L, "BP", C->bptr);
             setfield(L, "mem0", mem[0]);
             setfield(L, "mem1", mem[1]);
             return 1;

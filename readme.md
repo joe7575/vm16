@@ -84,6 +84,12 @@ Licensed under the GNU GPLv3 (See LICENSE.txt)
 
 ## History
 
+### API v3.2/Core v2.6.4/asm v2.2 (2022-03-09)
+
+- Core: Add BP register and [X+n], [Y+1] opernand types
+- ASM: Adapt assembler for the new instructions
+- Doc: Adapt manuals for the new instructions
+
 ### API v3.1/Core v2.6.2 (2022-03-07)
 
 - Add BLL compiler prototype (B like language),

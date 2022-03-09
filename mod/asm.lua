@@ -9,7 +9,7 @@
   See LICENSE.txt for more information
 ]]--
 
-local version = "2.1"
+local version = "2.2"
 
 -- Tok Elems {1, "add A, 1",  "add A, 1  ; start value", CODESEC, 10, {0x1234, 0x001}}
 local LINENO  = 1
@@ -53,7 +53,7 @@ local Opcodes = {[0] =
 local Operands = {[0] =
 	"A", "B", "C", "D", "X", "Y", "PC", "SP",
 	"[X]", "[Y]", "[X]+", "[Y]+", "#0", "#1", "-", "-",
-	"IMM", "IND", "REL", "[SP+n]", "REL2",
+	"IMM", "IND", "REL", "[SP+n]", "REL2", "[X+n]", "[Y+n]"
 }
 
 --
@@ -298,6 +298,8 @@ function Asm:operand(s)
 	if c == "+" then return tOperands["REL2"], pos_value(string.sub(s, 2, -1)) end
 	if c == "-" then return tOperands["REL2"], neg_value(string.sub(s, 2, -1)) end
 	if string.sub(s, 1, 4) == "[SP+" then return tOperands["[SP+n]"], value(string.sub(s, 5, -2)) end
+	if string.sub(s, 1, 3) == "[X+" then return tOperands["[X+n]"], value(string.sub(s, 4, -2)) end
+	if string.sub(s, 1, 3) == "[Y+" then return tOperands["[Y+n]"], value(string.sub(s, 4, -2)) end
 	-- valid label keyword
 	if s:match(IDENT) then
 		return tOperands["IND"], s

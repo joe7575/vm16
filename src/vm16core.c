@@ -60,6 +60,8 @@ along with VM16.  If not, see <https://www.gnu.org/licenses/>.
 #define  REL   (0x12)     // relative: jump (deprecated)
 #define  SREL  (0x13)     // stack relative: inc [SP+1]
 #define  REL2  (0x14)     // relative: jump -10
+#define  XREL  (0x15)     // X register relative [X+1]
+#define  YREL  (0x16)     // Y register relative [Y+1]
 
 
 /* OP codes */
@@ -173,6 +175,16 @@ static uint16_t *getaddr(vm16_t *C, uint8_t addr_mod) {
             return ADDR_DST(C, C->sptr + offs);
         }
         case REL2: return ADDR_DST(C, 0); // invalid
+        case XREL: {
+            uint16_t offs = *ADDR_SRC(C, C->pcnt);
+            C->pcnt++;
+            return ADDR_DST(C, C->xreg + offs);
+        }
+        case YREL: {
+            uint16_t offs = *ADDR_SRC(C, C->pcnt);
+            C->pcnt++;
+            return ADDR_DST(C, C->yreg + offs);
+        }
         default: return ADDR_DST(C, 0);
     }
 }
@@ -229,13 +241,23 @@ static uint16_t getoprnd(vm16_t *C, uint8_t addr_mod) {
             C->pcnt++;
             return C->pcnt + offs - 2;
         }
+        case XREL: {
+            uint16_t offs = *ADDR_SRC(C, C->pcnt);
+            C->pcnt++;
+            return *ADDR_SRC(C, C->xreg + offs);
+        }
+        case YREL: {
+            uint16_t offs = *ADDR_SRC(C, C->pcnt);
+            C->pcnt++;
+            return *ADDR_SRC(C, C->yreg + offs);
+        }
         default: return 0;
     }
 }
 
-// size from 0 (0x200 words) to 7 (0x10000 words)
+// size from 0 for 64 words, 1 for 128 words, up to 10 for 64 Kwords
 uint32_t vm16_calc_size(uint8_t size) {
-    uint32_t mem_size = 0x200 << MIN(size, 7);
+    uint32_t mem_size = 64 << MIN(size, 10);
     return VM_SIZE(mem_size);
 }
 
@@ -441,6 +463,7 @@ int vm16_run(vm16_t *C, uint32_t num_cycles, uint32_t *ran) {
                 C->sptr = C->sptr - 1;
                 *ADDR_DST(C, C->sptr) = C->pcnt;
                 C->pcnt = addr;
+                C->bptr = C->sptr;
                 break;
             }
             case RETN: {
@@ -448,6 +471,7 @@ int vm16_run(vm16_t *C, uint32_t num_cycles, uint32_t *ran) {
                 uint16_t addr = *ADDR_DST(C, C->sptr);
                 C->sptr = C->sptr + 1;
                 C->pcnt = addr;
+                C->bptr = C->sptr;
                 break;
             }
             case HALT: {

@@ -4,13 +4,13 @@
 
 - CONST = constant number in the range of 0..65535
 - MEM = direct memory address in the range of 0..65535
-- REL = relative memory address in the range of -32768..+32767
+- REL = relative memory address in the range of -32768..+32767 (jump/branch) or +0..+65535 (SP, X, Y)
 - REG = A, B, C, D, X, Y, PC, SP, [X], [Y], [X]+, [Y]+
 
 The Instruction Set table below uses mainly the following two addressing groups:
 
-- **DST**  (destination address capable) includes the following operand types: MEM, REL, REG, [SP+n]
-- **SRC**  (source address/value capable) includes the following operand types: MEM, REL, REG, [SP+n], #0, #1, CONST
+- **DST**  (destination address capable) includes the following operand types: MEM, REL, REG, [SP+n], [X+n], [Y+n]
+- **SRC**  (source address/value capable) includes the following operand types: MEM, REL, REG, [SP+n], [X+n], [Y+n], #0, #1, CONST
 
 
 ### Instruction Set
@@ -88,9 +88,9 @@ The Instruction Set table below uses mainly the following two addressing groups:
 |------|------|------|------|------|------|------|------|
 | 0100 | 0120 | 0140 | 0160 | 0180 | 01A0 | 01C0 | 01E0 |
 
-| CONST | MEM  | REL*) | [SP+n] | REL2 |
-| ----- | ---- | ----- | ------ | ---- |
-| 0200  | 0220 | 0240  | 0260   | 0280 |
+| CONST | MEM  | REL*) | [SP+n] | REL2 | [X+n] | [Y+n] |
+| ----- | ---- | ----- | ------ | ---- | ----- | ----- |
+| 0200  | 0220 | 0240  | 0260   | 0280 | 02A0  | 02C0  |
 
 #### Operand 2 (Opnd2)
 
@@ -102,9 +102,9 @@ The Instruction Set table below uses mainly the following two addressing groups:
 |------|------|------|------|------|------|------|------|
 | 0008 | 0009 | 000A | 000B | 000C | 000D | 000E | 000F |
 
-| CONST | MEM  | REL*) | [SP+n] | REL2 |
-| ----- | ---- | ----- | ------ | ---- |
-| 0010  | 0011 | 0012  | 0013   | 0014 |
+| CONST | MEM  | REL*) | [SP+n] | REL2 | [X+n] | [Y+n] |
+| ----- | ---- | ----- | ------ | ---- | ----- | ----- |
+| 0010  | 0011 | 0012  | 0013   | 0014 | 0015  | 0016  |
 
 *) REL instructions are deprecated. Use REL2 instead!
 

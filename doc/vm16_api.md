@@ -20,14 +20,17 @@ vm = vm16.create(pos, ram_size)
 
 Initially create the virtual machine VM13. Valid values for `ram_size` are:
 
-- 0 for 512 words of memory
-- 1 for 1 KWord of memory
-- 2 for 2 KWords of memory
-- 3 for 4 KWords of memory
-- 4 for 8 KWords of memory
-- 5 for 16 KWords of memory
-- 6 for 32 KWords of memory
-- 7 for 64 KWords of memory
+- 0 for 64 words of memory
+- 1 for 128 words of memory
+- 2 for 256 words of memory
+- 3 for 512 words of memory
+- 4 for 1 KWord of memory
+- 5 for 2 KWords of memory
+- 6 for 4 KWords of memory
+- 7 for 8 KWords of memory
+- 8 for 16 KWords of memory
+- 9 for 32 KWords of memory
+- 10 for 64 KWords of memory
 
 The function returns true/false.
 

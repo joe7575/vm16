@@ -147,12 +147,12 @@ end
 
 local function reg_dump(pos, x, y)
 	local lines = {"container[" .. x .. "," .. y .. "]"}
-	local cpu = vm16.get_cpu_reg(pos) or {A=0, B=0, C=0, D=0, X=0, Y=0, SP=0, PC=0}
+	local cpu = vm16.get_cpu_reg(pos) or {A=0, B=0, C=0, D=0, X=0, Y=0, SP=0, PC=0, BP=0}
 	table.insert(lines, "box[0,0;9,0.8;#060]")
-	table.insert(lines, "textarea[0,0;9,0.8;;Registers;")
-	table.insert(lines, " A    B    C    D     X    Y    PC   SP\n")
+	table.insert(lines, "textarea[0,0;9.6,0.8;;Registers;")
+	table.insert(lines, " A    B    C    D     X    Y    PC   SP   BP\n")
 	table.insert(lines, string.format("%04X %04X %04X %04X", cpu.A, cpu.B, cpu.C, cpu.D) .. "  " ..
-		string.format("%04X %04X %04X %04X", cpu.X, cpu.Y, cpu.PC, cpu.SP))
+		string.format("%04X %04X %04X %04X %04X", cpu.X, cpu.Y, cpu.PC, cpu.SP, cpu.BP))
 	table.insert(lines, "]")
 	table.insert(lines, "container_end[]")
 	return table.concat(lines, "")

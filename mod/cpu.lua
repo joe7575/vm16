@@ -87,7 +87,7 @@ local function init_cpu(pos, lToken)
 	local mem = get_mem(pos)
 	mem.breakpoints = {}
 	vm16.find_io_nodes(pos)
-	vm16.create(pos, 0)
+	vm16.create(pos, 3)
 	for _,tok in ipairs(lToken) do
 		local _, _, _, _, address, opcodes = unpack(tok)
 		for i, opc in pairs(opcodes) do

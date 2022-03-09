@@ -3,13 +3,13 @@
 This document contains information on how to program the VM16 Computer/CPU in assembly language. 
 
 All VM16 registers are 16-bits wide. 16 bit means, each register can store values between 0 and 65535. The VM16 supports only 16-bit memory addressing, the memory is also organized in 16-bit words.
-Valid memory configuration are 4, 8, 12, up to 64 KWords.
+Valid memory configuration are 0 for 64 words, 1 for 128 words, up to 10 for 64 Kwords.
 
 There are four data registers: A, B, C, D. These are intended to hold numbers that will have various mathematical and logical operations performed on them.
 
 There are two address registers: X and Y. These are typically used as pointers (indirect addressing).
 
-The last two registers are the Stack Pointer (SP) and the Program Counter (PC). 
+The last three registers are the Stack Pointer (SP), the Program Counter (PC), and the Base Pointer (BP). 
 
 The **Program Counter (PC)** points to the current instruction and is set after power on / reset to address zero. 
 
@@ -17,6 +17,10 @@ The **Stack Pointer (SP)** is set to zero, too. After a call or push instruction
 
 Lets say in register A is the value 0x55AA and the SP point to address 0x0000. 
 After a `push A` operation, the SP points to address 0xFFFF (or e.g. 0x0FFF in the case of 4K memory) and the value 0x55AA in stored in address 0xFFFF.
+
+The **Base Pointer (BP)** is set with each jump/ret instruction and indicates the base for function local variables (needed by the debugger).
+
+
 
 
 ## Addressing Modes
@@ -45,9 +49,14 @@ move A, [X]     ; the value in X is used as address
 move A, [X]+    ; the value in X is incremented after the move instruction
 
 ; Stack-pointer-relative (SPREL): use SP register plus offset as address to the memory
-; (valid offset range = -32768..+32767)
+; (valid offset range = +0..+65535)
 move A, [SP+2]
 move [SP+3], B
+
+; X/Y register-relative (XREL/YREL): use X/Y register plus offset as address to the memory
+; (valid offset range = +0..+65535)
+move A, [X+2]
+move [Y+3], B
 
 ; Absolute (ABS): Used for all branch/jump instructions as absolute jump address
 jump 0
