@@ -125,6 +125,18 @@ function BGen:pop_regs()
 	return reg
 end
 
+function BGen:get_instr_pos()
+	return #self.lCode
+end
+
+function BGen:instr_move(pos1, pos2, pos3)
+	local n = pos2 - pos1
+	for idx = 1, n do
+		local val = table.remove(self.lCode, pos1 + 1)
+		table.insert(self.lCode, pos3, val)
+	end
+end
+
 function BGen:get_last_instr()
 	return self.last_instr
 end

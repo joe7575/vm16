@@ -64,9 +64,15 @@ local function get_mem(pos)
 end
 
 local function on_update(pos, resp)
+	print("on_update", vm16.CallResults[resp])
 	local mem = get_mem(pos)
 	vm16.debug.on_update(pos, mem)
 	M(pos):set_string("formspec", vm16.prog.formspec(pos, mem))
+end
+
+local function on_input(pos, address) 
+	print("on_input", address); 
+	return address
 end
 
 local function on_output(pos, address, val1, val2)
@@ -78,13 +84,13 @@ local function on_output(pos, address, val1, val2)
 			mem.output = mem.output .. to_string(val1)
 		end
 	else
-		vm16.on_output(pos, address, val1, val2)
+		print("output", address, val1, val2)
 	end
 end
 
 local function on_system() end
 
-local clbks = vm16.generate_callback_table(vm16.on_input, on_output, on_system, on_update)
+local clbks = vm16.generate_callback_table(on_input, on_output, on_system, on_update)
 
 local function compile(code)
 	local result = vm16.BCompiler(code, false)

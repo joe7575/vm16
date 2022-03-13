@@ -25,9 +25,9 @@ local function format_watch(pos, mem)
 	local lines = {}
 	local cpu = vm16.get_cpu_reg(pos)
 
-	lines[#lines + 1] = string.format("%-16s: %04X", "PC", cpu.PC)
-	lines[#lines + 1] = string.format("%-16s: %04X", "SP", cpu.SP)
-	lines[#lines + 1] = string.format("%-16s: %04X", "TOS", cpu.TOS)
+--	lines[#lines + 1] = string.format("%-16s: %04X", "PC", cpu.PC)
+--	lines[#lines + 1] = string.format("%-16s: %04X", "SP", cpu.SP)
+--	lines[#lines + 1] = string.format("%-16s: %04X", "TOS", cpu.TOS)
 
 	-- Globals
 	for _, var in ipairs(mem.lVars or {}) do

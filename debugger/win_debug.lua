@@ -122,23 +122,26 @@ function vm16.debug.on_receive_fields(pos, mem, fields, clbks)
 			if vm16.is_loaded(pos) then
 				local lineno = get_next_lineno(pos, mem)
 				set_temp_breakpoint(pos, mem, lineno)
+				mem.running = true
+				minetest.get_node_timer(pos):start(0.1)
 				vm16.run(pos, nil, clbks, mem.breakpoints)
 			end
 		elseif fields.runto then
 			if vm16.is_loaded(pos) then
-				minetest.get_node_timer(pos):start(0.1)
 				set_temp_breakpoint(pos, mem, mem.cursorline or 1)
+				mem.running = true
+				minetest.get_node_timer(pos):start(0.1)
 				vm16.run(pos, nil, clbks, mem.breakpoints)
 			end
 		elseif fields.run then
 			if vm16.is_loaded(pos) then
-				minetest.get_node_timer(pos):start(0.1)
 				mem.running = true
+				minetest.get_node_timer(pos):start(0.1)
 				vm16.run(pos, nil, clbks, mem.breakpoints)
 			end
 		elseif fields.stop then  -- reset
 			if vm16.is_loaded(pos) then
-				vm16.set_cpu_reg(pos, {A=0, B=0, C=0, D=0, X=0, Y=0, SP=0, PC=0, BP=0})
+				vm16.set_cpu_reg(pos, {A=0, B=0, C=0, D=0, X=0, Y=0, SP=0, PC=0})
 				mem.output = ""
 				mem.cursorline = 1
 				mem.curr_lineno = 1

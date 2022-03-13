@@ -146,49 +146,22 @@ end
 
 --[[
 statement:
-    = 'if' '(' comparison ')' '{' stmnt_list '}'
-    | 'while' '(' comparison ')' '{' stmnt_list '}'
-    | left_value '=' expression ";"
+    = if_statement
+    | for_statement
+    | while_statement
     | 'return' expression ";"
     | 'return' ";"
+    | assignment ";"
     | expression ";"
 ]]--
 function BPars:statement()
 	local val = self:tk_peek().val
 	if val == "if" then
-		self:tk_match("if")
-		self:tk_match("(")
-		self:comparison()
-		self:tk_match(")")
-		local lbl = self:get_label()
-		self:add_instr("jump", lbl)
-		self:tk_match("{")
-		self:reset_reg_use()
-		self:stmnt_list()
-		self:tk_match("}")
-		self:add_label(lbl)
+		self:if_statement()
+	elseif val == "for" then
+		self:for_statement()
 	elseif val == "while" then
-		self:tk_match("while")
-		self:tk_match("(")
-		local loop = self:get_label()
-		local lend = self:get_label()
-		self:add_label(loop)
-		self:comparison()
-		self:tk_match(")")
-		self:add_instr("jump", lend)
-		self:tk_match("{")
-		self:reset_reg_use()
-		self:stmnt_list()
-		self:add_instr("jump", loop)
-		self:tk_match("}")
-		self:add_label(lend)
-	elseif self:tk_next().val == "=" then
-		local left = self:left_value()
-		self:tk_match("=")
-		local right = self:expression()
-		self:tk_match(";")
-		self:add_instr("move", left, right)
-		self:reset_reg_use()
+		self:while_statement()
 	elseif val == "return" then
 		self:tk_match("return")
 		if self:tk_peek().val ~= ";" then
@@ -201,6 +174,8 @@ function BPars:statement()
 		self:tk_match(";")
 		self:func_return(self.func_name or "")
 		self:reset_reg_use()
+	elseif self:assignment() then
+		self:tk_match(";")
 	else
 		self:expression()
 		self:tk_match(";")
@@ -209,7 +184,117 @@ function BPars:statement()
 end
 
 --[[
-comparison:
+if_statement:
+    = 'if' '(' condition ')' '{' stmnt_list '}' [ 'else' '{' stmnt_list '}' ]
+]]--
+function BPars:if_statement()
+	self:tk_match("if")
+	self:tk_match("(")
+	self:condition()
+	self:reset_reg_use()
+	self:tk_match(")")
+	local lbl1 = self:get_label()
+	self:add_instr("jump", lbl1)
+	self:tk_match("{")
+	self:stmnt_list()
+	self:tk_match("}")
+	if self:tk_peek().val == 'else' then
+		self:tk_match("else")
+		local lbl2 = self:get_label()
+		self:add_instr("jump", lbl2)
+		self:add_label(lbl1)
+		self:tk_match("{")
+		self:stmnt_list()
+		self:tk_match("}")
+		self:add_label(lbl2)
+	else
+		self:add_label(lbl1)
+	end
+end
+
+--[[
+for_statement:
+    = 'for' '(' assignment ";" condition ";" assignment ')' '{' stmnt_list '}'
+]]--
+function BPars:for_statement()
+	self:tk_match("for")
+	self:tk_match("(")
+	self:assignment()
+	self:tk_match(";")
+	local loop = self:get_label()
+	local lend = self:get_label()
+	self:add_label(loop)
+	self:condition()
+	self:reset_reg_use()
+	self:tk_match(";")
+	self:add_instr("jump", lend)
+	local pos1 = self:get_instr_pos()
+	self:assignment()
+	local pos2 = self:get_instr_pos()
+	self:reset_reg_use()
+	self:tk_match(")")
+	self:tk_match("{")
+	self:stmnt_list()
+	local pos3 = self:get_instr_pos()
+	self:add_instr("jump", loop)
+	self:tk_match("}")
+	self:add_label(lend)
+	self:instr_move(pos1, pos2, pos3)
+end
+
+--[[
+while_statement:
+    = 'while' '(' condition ')' '{' stmnt_list '}'
+]]--
+function BPars:while_statement()
+	self:tk_match("while")
+	self:tk_match("(")
+	local loop = self:get_label()
+	local lend = self:get_label()
+	self:add_label(loop)
+	self:condition()
+	self:reset_reg_use()
+	self:tk_match(")")
+	self:add_instr("jump", lend)
+	self:tk_match("{")
+	self:stmnt_list()
+	self:add_instr("jump", loop)
+	self:tk_match("}")
+	self:add_label(lend)
+end
+
+--[[
+assignment:
+    = left_value '=' expression
+    | left_value '++'
+    | left_value '--'
+]]--
+function BPars:assignment()
+	local val = self:tk_next().val
+	if val == "=" then
+		local left = self:left_value()
+		self:tk_match("=")
+		local right = self:expression()
+		self:add_instr("move", left, right)
+		self:reset_reg_use()
+		return true
+	elseif val == "++" then
+		local left = self:left_value()
+		self:tk_match("++")
+		self:add_instr("inc", left)
+		self:reset_reg_use()
+		return true
+	elseif val == "--" then
+		local left = self:left_value()
+		self:tk_match("--")
+		self:add_instr("dec", left)
+		self:reset_reg_use()
+		return true
+	end
+end
+
+--[[
+condition:
     = 'true'
     | 'false'
     | expression '<' expression
@@ -218,7 +303,7 @@ comparison:
     | expression '!=' expression
     | expression
 ]]--
-function BPars:comparison()
+function BPars:condition()
 	if self:tk_peek().val == "true" then
 		return "#1"
 	elseif self:tk_peek().val == "false" then

@@ -19,6 +19,6 @@ function vm16.edit.fs_window(pos, mem, x, y, xsize, ysize, fontsize, file, text)
 	local color = mem.running and "#AAA" or "#FFF"
 	return "box[" .. x .. "," .. y .. ";" .. xsize .. "," .. ysize .. ";#000]" ..
 		"style_type[textarea;font=mono;textcolor=#FFF;border=false;font_size="  .. fontsize .. "]" ..
-		"textarea[0.2,0.6;8.5,9.6;code;File: " .. file .. ";" ..
+		"textarea[" .. x .. "," .. y .. ";" .. xsize .. "," .. ysize .. ";code;File: " .. file .. ";" ..
 		minetest.formspec_escape(text) .. "]"
 end
