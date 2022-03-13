@@ -9,7 +9,7 @@ There are four data registers: A, B, C, D. These are intended to hold numbers th
 
 There are two address registers: X and Y. These are typically used as pointers (indirect addressing).
 
-The last three registers are the Stack Pointer (SP), the Program Counter (PC), and the Base Pointer (BP). 
+The last two registers are the Stack Pointer (SP) and the Program Counter (PC). 
 
 The **Program Counter (PC)** points to the current instruction and is set after power on / reset to address zero. 
 
@@ -17,8 +17,6 @@ The **Stack Pointer (SP)** is set to zero, too. After a call or push instruction
 
 Lets say in register A is the value 0x55AA and the SP point to address 0x0000. 
 After a `push A` operation, the SP points to address 0xFFFF (or e.g. 0x0FFF in the case of 4K memory) and the value 0x55AA in stored in address 0xFFFF.
-
-The **Base Pointer (BP)** is set with each jump/ret instruction and indicates the base for function local variables (needed by the debugger).
 
 
 

@@ -84,6 +84,14 @@ Licensed under the GNU GPLv3 (See LICENSE.txt)
 
 ## History
 
+### API v3.2/Core v2.6.5/asm v2.2 (2022-03-13)
+
+**Work in progress!**
+
+- Core: Add TOS register for the debugger
+- Add test block "VM16 Computer2" with compiler, debugger, and
+  variable watch window
+
 ### API v3.2/Core v2.6.4/asm v2.2 (2022-03-09)
 
 - Core: Add BP register and [X+n], [Y+1] opernand types
