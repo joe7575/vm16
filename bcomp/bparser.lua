@@ -20,6 +20,7 @@ local BPars = vm16.BExpr:new({})
 
 function BPars:bpars_init()
 	self:bexpr_init()
+	self.tLineno2Func = {}
 end
 
 --[[
@@ -64,6 +65,7 @@ function BPars:func_def_list()
 		self:tk_match("func")
 		local ident = self:ident()
 		self.func_name = ident
+		self.tLineno2Func[self.lineno] = ident
 		self:add_label(ident)
 		self:tk_match("(")
 		self:local_new()
@@ -161,6 +163,7 @@ function BPars:statement()
 		local lbl = self:get_label()
 		self:add_instr("jump", lbl)
 		self:tk_match("{")
+		self:reset_reg_use()
 		self:stmnt_list()
 		self:tk_match("}")
 		self:add_label(lbl)
@@ -174,6 +177,7 @@ function BPars:statement()
 		self:tk_match(")")
 		self:add_instr("jump", lend)
 		self:tk_match("{")
+		self:reset_reg_use()
 		self:stmnt_list()
 		self:add_instr("jump", loop)
 		self:tk_match("}")

@@ -36,6 +36,28 @@ local function gen_comp_output(lCode, lData)
 	return table.concat(out, "\n")
 end
 
+local function get_glob_variables(prs, symbols)
+	local out = {}
+	for ident,addr in pairs(symbols or {}) do
+		if prs:is_global_var(ident) then
+			out[ident] = addr
+		end
+	end
+	return out
+end
+
+local function lineno_to_Function(prs, lToken)
+	local out = {}
+	local fname = ""
+	for _, tok in ipairs(lToken) do
+		if tok.lineno and tok.address then
+			fname = prs.tLineno2Func[tok.lineno] or fname
+			out[tok.lineno] = fname
+		end
+	end
+	return out
+end
+
 local function gen_asm_token_list(lCode, lData)
 	local out = {}
 
@@ -64,7 +86,7 @@ local function format_asm_output(lToken)
 				out[#out + 1] = tok
 				tok = nil
 			end
-			local lineno = tonumber(item[vm16.Asm.TXTLINE]:sub(12))
+			local lineno = tonumber(item[vm16.Asm.TXTLINE]:sub(2,5))
 			tok = {lineno = lineno}
 		else
 			if tok and tok.address then
@@ -103,11 +125,13 @@ function vm16.BCompiler(code, gen_asmcode, break_ident)
 			local globals
 			lToken, err = asm:assembler(lToken)
 			if lToken then
+				local output = format_asm_output(lToken)
 				return {
 					asm_code = asm_code, 
-					output = format_asm_output(lToken),
 					locals = prs.all_locals,
-					globals = asm.symbols}
+					output = output,
+					globals = get_glob_variables(prs, asm.symbols),
+					functions = lineno_to_Function(prs, output)}
 			else
 				return {
 					asm_code = asm_code, 

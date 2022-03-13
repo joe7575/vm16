@@ -193,32 +193,25 @@ function vm16.prog.formspec(pos, mem)
 		stop_bttn_text = "Stop"
 		color = "#AAA"
 		status = "Edit"
-		code = 		"box[0.2,0.6;8.5,9.6;#000]" ..
-			"style_type[textarea;font=mono;textcolor=#FFF;border=false;font_size="  .. textsize .. "]" ..
-			"textarea[0.2,0.6;8.5,9.6;code;Code;" ..
-			minetest.formspec_escape(M(pos):get_string("code")) .. "]"
+		local text = M(pos):get_string("code")
+		code = vm16.edit.fs_window(pos, mem,0.2, 0.6, 11.4, 9.6, textsize, "main.c", text) ..
+			vm16.files.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize, {"main.c", "test1.c"})
 	else
 		-- Run code
 		asm_edit_bttn = "button[5.5,10.4;2,0.8;edit;Edit]"
-		save_breakpoint_bttn = "field[0.2,10.45;2.8,0.7;address;;]button[3.1,10.4;2,0.8;breakpoint;Breakp.]"
+		save_breakpoint_bttn = ""
 		stop_bttn_text = mem.running and "Stop" or "Reset"
 		color = mem.running and "#AAA" or "#FFF"
 		status = mem.running and "Running..." or minetest.formspec_escape("Debug  |  Out[0]: " .. (mem.output or ""))
-		local win_debug = vm16.dbg.fs_window(mem, 0.2, 0.6, 8.5, 9.6, textsize, strsplit(M(pos):get_string("code")))
-		code  = "label[0.2,0.4;Code]" ..
---			"style_type[table;font=mono;textcolor=#AAA;font_size="  .. textsize .. "]" ..
---			"table[0.2,0.8;7,9;command;"..fs_code(pos, mem)..";1]"..
-			win_debug
---			"image_button[7.9,0.6;0.5,0.6;vm16_arrow.png;up;]" ..
---			"image_button[7.9,9.6;0.5,0.6;vm16_arrow.png^[transformR180;down;]"
+		code  = vm16.debug.fs_window(pos, mem, 0.2, 0.6, 11.4, 9.6, textsize, strsplit(M(pos):get_string("code"))) ..
+			vm16.watch.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize)
 	end
 
 	return "formspec_version[4]" ..
 		"size[18,12]" ..
 		"style_type[textarea;font=mono;textcolor=" .. color .. ";border=false;font_size="  .. textsize .. "]" ..
-		reg_dump(pos, 8.8, 0.6) ..
-		mem_dump(pos, 8.8, 1.7) ..
-		stack_dump(pos, 8.8, 9.8) ..
+		--reg_dump(pos, 8.8, 0.6) ..
+		--stack_dump(pos, 8.8, 9.8) ..
 		code ..
 		"button[16.6,0;0.6,0.6;larger;+]" ..
 		"button[17.2,0;0.6,0.6;smaller;-]" ..

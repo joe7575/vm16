@@ -37,7 +37,7 @@ LUALIB_API int luaopen_vm16(lua_State *L);
 
 #define IDENT           (0x36314D56)
 #define VERSION         (2)    // VM compatibility
-#define SVERSION        "2.6.4"
+#define SVERSION        "2.6.5"
 #define VM16_WORD_SIZE  (16)
 
 /*
@@ -65,7 +65,7 @@ typedef struct {
     uint16_t pcnt;      // program counter
     uint16_t sptr;      // stack pointer
     uint16_t bptr;      // stack base pointer
-    uint16_t res1;      // reserved
+    uint16_t tptr;      // Top of stack
     uint16_t l_addr;        // latched address (I/O, examine)
     uint16_t l_data;        // latched data (I/O, examine)
     uint16_t mem_size;      // RAM size in words

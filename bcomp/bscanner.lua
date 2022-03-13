@@ -94,11 +94,7 @@ function BScan:line_produce()
 	for lineno, line in ipairs(split_into_lines(self.text)) do
 		self.lineno = lineno
 		if line:trim() ~= "" then
-			if self.add_sourcecode then
-				self:add_line(string.format("; %2d: %s", lineno, line))
-			else
-				self:add_line("; lineno = " .. lineno)
-			end
+			self:add_line(string.format(";%4d: %s", lineno, line))
 			self:scanner(line)
 			coroutine.yield(true)
 		end

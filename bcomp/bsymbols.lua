@@ -60,11 +60,25 @@ function BSym:func_return(ident)
 		end
 		self:add_instr("ret")
 	end
+	
+	-- Generate a table with BS relative addresses of function local variables
+	local base
 	for k,v in pairs(self.locals) do
-		if k ~= "func" then
-			self.all_locals[ident .. "." .. k] = v - 1
+		if k == "func" then
+			base = v
+			break
 		end
 	end
+	
+	local num_stack_var = 0
+	self.all_locals[ident] = {}
+	for k,v in pairs(self.locals) do
+		if k ~= "func" then
+			self.all_locals[ident][k] = base - v
+			num_stack_var = math.min(num_stack_var, base - v)
+		end
+	end
+	self.all_locals[ident]["@nsv@"] = -num_stack_var
 end
 
 -------------------------------------------------------------------------------

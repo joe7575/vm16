@@ -65,7 +65,7 @@ end
 
 local function on_update(pos, resp)
 	local mem = get_mem(pos)
-	vm16.dbg.on_update(pos, mem)
+	vm16.debug.on_update(pos, mem)
 	M(pos):set_string("formspec", vm16.prog.formspec(pos, mem))
 end
 
@@ -92,7 +92,7 @@ local function compile(code)
 		print("compile2 " .. result.errors)
 		return nil, result.errors
 	end
-	return result.output
+	return result
 end
 
 local function init_cpu(pos, lToken)
@@ -129,13 +129,21 @@ local function on_receive_fields(pos, formname, fields, player)
 			if mem.error then
 				mem.error = nil
 			elseif not vm16.is_loaded(pos) then
-				mem.lToken, mem.error = compile(M(pos):get_string("code"))
-				if mem.lToken then
+				local result
+				result, mem.error = compile(M(pos):get_string("code"))
+				if result then
+					mem.lToken = result.output
+					mem.tGlobals = result.globals
+					mem.tLocals = result.locals
+					mem.tFunctions = result.functions
 					init_cpu(pos, mem.lToken)
 					mem.output = ""
 					mem.scroll_lineno = nil
 					mem.start_idx = 1
-					vm16.dbg.init(pos, mem)
+					vm16.debug.init(pos, mem)
+					vm16.watch.init(pos, mem)
+					vm16.edit.init(pos, mem)
+					vm16.files.init(pos, mem)
 				end
 			end
 		elseif fields.edit then
@@ -145,13 +153,9 @@ local function on_receive_fields(pos, formname, fields, player)
 			end
 			mem.error = nil
 		else
-			vm16.dbg.on_receive_fields(pos, mem, fields, clbks)
 		end
 	end
-	if mem.running and fields.stop then
-		minetest.get_node_timer(pos):stop()
-		mem.running = false
-	end
+	vm16.debug.on_receive_fields(pos, mem, fields, clbks)
 	meta:set_string("formspec", vm16.prog.formspec(pos, mem))
 end
 

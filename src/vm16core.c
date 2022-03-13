@@ -273,6 +273,7 @@ bool vm16_init(vm16_t *C, uint32_t vm_size) {
         C->mem_size = MEM_SIZE(vm_size);
         C->mem_mask = C->mem_size - 1;
         C->p_in_dest = &C->areg;
+        C->tptr = 0xFFFF;
         return true;
     }
     return false;
@@ -464,6 +465,7 @@ int vm16_run(vm16_t *C, uint32_t num_cycles, uint32_t *ran) {
                 *ADDR_DST(C, C->sptr) = C->pcnt;
                 C->pcnt = addr;
                 C->bptr = C->sptr;
+                C->tptr = MIN(C->tptr, C->sptr);
                 break;
             }
             case RETN: {
@@ -599,6 +601,7 @@ int vm16_run(vm16_t *C, uint32_t num_cycles, uint32_t *ran) {
             case PUSH: {
                 uint16_t opd1 = getoprnd(C, addr_mode1);
                 C->sptr = C->sptr - 1;
+                C->tptr = MIN(C->tptr, C->sptr);
                 *ADDR_DST(C, C->sptr) = opd1;
                 break;
             }

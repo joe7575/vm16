@@ -47,7 +47,10 @@ if minetest.settings:get_bool("vm16_testblocks_enabled") == true and
 	dofile(MP.."/bcomp/bexpression.lua")
 	dofile(MP.."/bcomp/bparser.lua")
 	dofile(MP.."/bcomp/bcompiler.lua")
+	dofile(MP.."/debugger/win_edit.lua")
+	dofile(MP.."/debugger/win_files.lua")
 	dofile(MP.."/debugger/win_debug.lua")
+	dofile(MP.."/debugger/win_watch.lua")
 	dofile(MP.."/debugger/formspec.lua")
 	dofile(MP.."/debugger/cpu.lua")
 end
