@@ -12,7 +12,7 @@
 
 ]]--
 
-local REGS     = {A=1, B=1, C=1, D=1, X=1, Y=1, SP=1, PC=1, ["#0"]=1, ["#1"]=1}
+local REGS     = {A=1, B=1, C=1, D=1, X=1, Y=1, SP=1, PC=1}  -- real registers
 local REGLIST  = {"A", "B", "C", "D"}
 -- Need NO special handling of operand1
 local ASSIGNMENT_INSTR = {move=1, out=1} 
@@ -75,9 +75,13 @@ function BGen:add_instr(instr, opnd1, opnd2)
 		self.lCode[#self.lCode + 1] = "  " .. instr .. " " .. opnd1 .. ", " .. opnd2
 		self.free_last_operand_reg(instr, opnd2)
 	elseif opnd1 then
-		--opnd1 = self:next_free_reg(instr, opnd1)
-		self.lCode[#self.lCode + 1] = "  " .. instr .. " " .. opnd1
-		self:free_last_operand_reg(instr, opnd1)
+		if instr == "not" then
+			opnd1 = self:next_free_reg(instr, opnd1)
+			self.lCode[#self.lCode + 1] = "  " .. instr .. " " .. opnd1
+		else
+			self.lCode[#self.lCode + 1] = "  " .. instr .. " " .. opnd1
+			self:free_last_operand_reg(instr, opnd1)
+		end
 	else
 		self.lCode[#self.lCode + 1] = "  " .. instr
 	end
@@ -143,6 +147,13 @@ end
 
 function BGen:add_label(lbl)
 	self.lCode[#self.lCode + 1] = lbl .. ":"
+end
+
+function BGen:add_then_label()
+	if self.then_lbl then
+		self.lCode[#self.lCode + 1] = self.then_lbl .. ":"
+		self.then_lbl = nil
+	end
 end
 
 function BGen:add_line(line)

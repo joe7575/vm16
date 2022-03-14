@@ -27,10 +27,49 @@ end
 
 --[[
 expression:
-    = add_expr
+    = shift_expr
+    | shift_expr '&' expression
+    | shift_expr '|' expression
+    | shift_expr '^' expression
 ]]--
 function BExpr:expression()
-	return self:add_expr()
+	local opnd1 = self:shift_expr()
+	local val = self:tk_peek().val
+	if val == "&" then
+		self:tk_match()
+		local opnd2 = self:expression()
+		return self:add_instr("and", opnd1, opnd2)
+	elseif val == "|" then
+		self:tk_match()
+		local opnd2 = self:expression()
+		return self:add_instr("or", opnd1, opnd2)
+	elseif val == "^" then
+		self:tk_match()
+		local opnd2 = self:expression()
+		return self:add_instr("xor", opnd1, opnd2)
+	end
+	return opnd1
+end
+
+--[[
+shift_expr:
+    = add_expr
+    | add_expr '>>' shift_expr
+    | add_expr '<<' shift_expr
+]]--
+function BExpr:shift_expr()
+	local opnd1 = self:add_expr()
+	local val = self:tk_peek().val
+	if val == ">>" then
+		self:tk_match()
+		local opnd2 = self:shift_expr()
+		return self:add_instr("shr", opnd1, opnd2)
+	elseif val == "<<" then
+		self:tk_match()
+		local opnd2 = self:shift_expr()
+		return self:add_instr("shl", opnd1, opnd2)
+	end
+	return opnd1
 end
 
 --[[
@@ -41,11 +80,12 @@ add_expr:
 ]]--
 function BExpr:add_expr()
 	local opnd1 = self:term()
-	if self:tk_peek().val == "+" then
+	local val = self:tk_peek().val
+	if val == "+" then
 		self:tk_match()
 		local opnd2 = self:add_expr()
 		return self:add_instr("add", opnd1, opnd2)
-	elseif self:tk_peek().val == "-" then
+	elseif val == "-" then
 		self:tk_match()
 		local opnd2 = self:add_expr()
 		return self:add_instr("sub", opnd1, opnd2)
@@ -55,27 +95,51 @@ end
 
 --[[
 term:
-    = factor
-    | factor '*' term
-    | factor '/' term
-    | factor '%' term
+    = unary
+    | unary '*' term
+    | unary '/' term
+    | unary '%' term
+    | unary 'mod' term
 ]]--
 function BExpr:term()
-	local opnd1 = self:factor()
-	if self:tk_peek().val == "*" then
+	local opnd1 = self:unary()
+	local val = self:tk_peek().val
+	if val == "*" then
 		self:tk_match()
 		local opnd2 = self:term()
 		return self:add_instr("mul", opnd1, opnd2)
-	elseif self:tk_peek().val == "/" then
+	elseif val == "/" then
 		self:tk_match()
 		local opnd2 = self:term()
 		return self:add_instr("div", opnd1, opnd2)
-	elseif self:tk_peek().val == "%" then
+	elseif val == "%" or val == "mod" then
 		self:tk_match()
 		local opnd2 = self:term()
 		return self:add_instr("mod", opnd1, opnd2)
 	end
 	return opnd1
+end
+
+--[[
+unary:
+    = factor
+    = '-' factor
+    = '~' factor
+    = 'not' factor
+]]--
+function BExpr:unary()
+	local val = self:tk_peek().val
+	if val == "-" then
+		self:tk_match()
+		local opnd = self:factor()
+		opnd = self:add_instr("not", opnd)
+		return self:add_instr("add", opnd, "#1")
+	elseif val == "~" or val == "not" then
+		self:tk_match()
+		local opnd = self:factor()
+		return self:add_instr("not", opnd)
+	end
+	return self:factor()
 end
 
 --[[

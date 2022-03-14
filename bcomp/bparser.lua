@@ -196,6 +196,7 @@ function BPars:if_statement()
 	local lbl1 = self:get_label()
 	self:add_instr("jump", lbl1)
 	self:tk_match("{")
+	self:add_then_label()
 	self:stmnt_list()
 	self:tk_match("}")
 	if self:tk_peek().val == 'else' then
@@ -234,6 +235,7 @@ function BPars:for_statement()
 	self:reset_reg_use()
 	self:tk_match(")")
 	self:tk_match("{")
+	self:add_then_label()
 	self:stmnt_list()
 	local pos3 = self:get_instr_pos()
 	self:add_instr("jump", loop)
@@ -257,6 +259,7 @@ function BPars:while_statement()
 	self:tk_match(")")
 	self:add_instr("jump", lend)
 	self:tk_match("{")
+	self:add_then_label()
 	self:stmnt_list()
 	self:add_instr("jump", loop)
 	self:tk_match("}")
@@ -304,37 +307,35 @@ condition:
     | expression
 ]]--
 function BPars:condition()
-	if self:tk_peek().val == "true" then
-		return "#1"
-	elseif self:tk_peek().val == "false" then
-		return "#0"
+	local val = self:tk_peek().val
+	if val == "true" then
+		self:add_instr("move", "A", "#1")
+		return
+	elseif val == "false" then
+		self:add_instr("move", "A", "#0")
+		return
 	end
-	local nxt = self:tk_next().val
-	if nxt == "<" then
-		local left = self:expression()
+	local left = self:expression()
+	val = self:tk_peek().val
+	if val == "<" then
 		self:tk_match("<")
 		local right = self:expression()
 		self:add_instr("sklt", left, right)
-	elseif nxt == ">" then
-		local left = self:expression()
+	elseif val == ">" then
 		self:tk_match(">")
 		local right = self:expression()
 		self:add_instr("skgt", left, right)
-	elseif nxt == "==" then
-		local left = self:expression()
+	elseif val == "==" then
 		self:tk_match("==")
 		local right = self:expression()
 		self:add_instr("skeq", left, right)
-	elseif nxt == "!=" then
-		local left = self:expression()
+	elseif val == "!=" then
 		self:tk_match("!=")
 		local right = self:expression()
 		self:add_instr("skne", left, right)
 	else
-		local left = self:expression()
 		self:add_instr("skgt", left, "#00")
 	end
-	return "A"
 end
 
 function BPars:left_value()

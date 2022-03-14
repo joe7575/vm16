@@ -15,7 +15,8 @@
 local IDENT1   = "[A-Za-z_]+"
 local IDENT2   = "[A-Za-z_][A-Za-z_0-9]*"
 local NUMBER   = "[0-9]+"
-local OPERAND  = "[%+%-/%*%%=<>!;,]+"
+local HEXNUM   = "[0-9a-fA-F]+"
+local OPERAND  = "[%+%-/%*%%=<>!;,&|!~%^]+"
 local BRACE    = "[{}%(%)]"
 local SPACE    = "[%s]"
 
@@ -66,6 +67,11 @@ function BScan:scanner(text)
 			local ident = text:match(IDENT2, idx)
 			table.insert(self.ltok, {type = T_IDENT, val = ident})
 			idx = idx + #ident
+		elseif ch == "0" and text:sub(idx + 1, idx + 1) == "x" then
+			idx = idx + 2
+			local number = text:match(HEXNUM, idx)
+			table.insert(self.ltok, {type = T_NUMBER, val = tonumber(number, 16) or 0})
+			idx = idx + #number
 		elseif ch:match(NUMBER) then
 			local number = text:match(NUMBER, idx)
 			table.insert(self.ltok, {type = T_NUMBER, val = tonumber(number) or 0})
@@ -114,7 +120,8 @@ function BScan:tk_match(ttype)
 		self.tk_idx = self.tk_idx + 1
 		return tok
 	end
-	error(string.format("Syntax error at '%s', '%s' expected", tok.val or "", ttype or ""))
+	print(string.format("Syntax error at '%s', '%s' expected", tok.val or "", ttype or ""))
+	--error(string.format("Syntax error at '%s', '%s' expected", tok.val or "", ttype or ""))
 end
 
 function BScan:tk_peek()
