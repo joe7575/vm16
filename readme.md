@@ -1,8 +1,10 @@
 # VM16 - 16-bit VM for Minetest mods
 
 The VM16 is a 16-bit virtual machine implemented in C.
-It enables simulation of vintage computers in the game Minetest
+It enables simulation of computers in the game Minetest
 and is capable of executing real binary code at a remarkable speed.
+
+**The mod is currently under construction !!!**
 
 ![screenshot](https://github.com/joe7575/vm16/blob/master/screenshot.png)
 
@@ -71,7 +73,7 @@ to enable the CPU/demo blocks or check settingtypes.txt.
 
 ## Dependencies
 
-optional: default, basic_materials (for demo CPU and blocks)
+None
 
 
 
