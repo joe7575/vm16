@@ -92,15 +92,6 @@ local function on_system() end
 
 local clbks = vm16.generate_callback_table(on_input, on_output, on_system, on_update)
 
-local function compile(code)
-	local result = vm16.BCompiler(code, false)
-	if result.errors then
-		print("compile2 " .. result.errors)
-		return nil, result.errors
-	end
-	return result
-end
-
 local function init_cpu(pos, lToken)
 	local mem = get_mem(pos)
 	mem.breakpoints = {}
@@ -112,57 +103,6 @@ local function init_cpu(pos, lToken)
 		end
 	end
 	vm16.set_pc(pos, 0)
-end
-
-local function on_receive_fields(pos, formname, fields, player)
-	if player and minetest.is_protected(pos, player:get_player_name()) then
-		return
-	end
-
-	local mem = get_mem(pos)
-	local meta = minetest.get_meta(pos)
-	local lines = {"Error"}
-
-	if not mem.running then
-		if fields.code and (fields.save or fields.assemble) then
-			M(pos):set_string("code", fields.code)
-		end
-		if fields.larger then
-			M(pos):set_int("textsize", math.min(M(pos):get_int("textsize") + 1, 8))
-		elseif fields.smaller then
-			M(pos):set_int("textsize", math.max(M(pos):get_int("textsize") - 1, -8))
-		elseif fields.assemble then
-			if mem.error then
-				mem.error = nil
-			elseif not vm16.is_loaded(pos) then
-				local result
-				result, mem.error = compile(M(pos):get_string("code"))
-				if result then
-					mem.lToken = result.output
-					mem.tGlobals = result.globals
-					mem.tLocals = result.locals
-					mem.tFunctions = result.functions
-					init_cpu(pos, mem.lToken)
-					mem.output = ""
-					mem.scroll_lineno = nil
-					mem.start_idx = 1
-					vm16.debug.init(pos, mem)
-					vm16.watch.init(pos, mem)
-					vm16.edit.init(pos, mem)
-					vm16.files.init(pos, mem)
-				end
-			end
-		elseif fields.edit then
-			if vm16.is_loaded(pos) then
-				minetest.get_node_timer(pos):stop()
-				vm16.destroy(pos)
-			end
-			mem.error = nil
-		else
-		end
-	end
-	vm16.debug.on_receive_fields(pos, mem, fields, clbks)
-	meta:set_string("formspec", vm16.prog.formspec(pos, mem))
 end
 
 local function on_timer(pos, elapsed)
@@ -194,7 +134,7 @@ minetest.register_node("vm16:cpu2", {
 	end,
 	on_timer = on_timer,
 	on_rightclick = on_rightclick,
-	on_receive_fields = on_receive_fields,
+	on_receive_fields = vm16.prog.on_receive_fields,
 	after_dig_node = function(pos)
 		vm16.destroy(pos)
 	end,

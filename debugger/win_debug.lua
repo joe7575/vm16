@@ -108,47 +108,45 @@ function vm16.debug.fs_window(pos, mem, x, y, xsize, ysize, fontsize, lCode)
 end
 
 function vm16.debug.on_receive_fields(pos, mem, fields, clbks)
-	if not mem.running then
-		if fields.code then
-			local evt = minetest.explode_table_event(fields.code)
-			if evt.type == "DCL" then
-				set_breakpoint(pos, mem, tonumber(evt.row), mem.tAddress)
-				return true  -- repaint formspec
-			elseif evt.type == "CHG" then
-				set_cursor(mem, tonumber(evt.row), mem.tAddress)
-				return true  -- repaint formspec
-			end
-		elseif fields.step then
-			if vm16.is_loaded(pos) then
-				local lineno = get_next_lineno(pos, mem)
-				set_temp_breakpoint(pos, mem, lineno)
-				mem.running = true
-				minetest.get_node_timer(pos):start(0.1)
-				vm16.run(pos, nil, clbks, mem.breakpoints)
-			end
-		elseif fields.runto then
-			if vm16.is_loaded(pos) then
-				set_temp_breakpoint(pos, mem, mem.cursorline or 1)
-				mem.running = true
-				minetest.get_node_timer(pos):start(0.1)
-				vm16.run(pos, nil, clbks, mem.breakpoints)
-			end
-		elseif fields.run then
-			if vm16.is_loaded(pos) then
-				mem.running = true
-				minetest.get_node_timer(pos):start(0.1)
-				vm16.run(pos, nil, clbks, mem.breakpoints)
-			end
-		elseif fields.stop then  -- reset
-			if vm16.is_loaded(pos) then
-				vm16.set_cpu_reg(pos, {A=0, B=0, C=0, D=0, X=0, Y=0, SP=0, PC=0})
-				mem.output = ""
-				mem.cursorline = 1
-				mem.curr_lineno = 1
-			end
+	if fields.code then
+		local evt = minetest.explode_table_event(fields.code)
+		if evt.type == "DCL" then
+			set_breakpoint(pos, mem, tonumber(evt.row), mem.tAddress)
+			return true  -- repaint formspec
+		elseif evt.type == "CHG" then
+			set_cursor(mem, tonumber(evt.row), mem.tAddress)
+			return true  -- repaint formspec
 		end
-	else
-		if fields.stop then
+	elseif fields.step then
+		if vm16.is_loaded(pos) then
+			local lineno = get_next_lineno(pos, mem)
+			set_temp_breakpoint(pos, mem, lineno)
+			mem.running = true
+			minetest.get_node_timer(pos):start(0.1)
+			vm16.run(pos, nil, clbks, mem.breakpoints)
+		end
+	elseif fields.runto then
+		if vm16.is_loaded(pos) then
+			set_temp_breakpoint(pos, mem, mem.cursorline or 1)
+			mem.running = true
+			minetest.get_node_timer(pos):start(0.1)
+			vm16.run(pos, nil, clbks, mem.breakpoints)
+		end
+	elseif fields.run then
+		if vm16.is_loaded(pos) then
+			mem.running = true
+			minetest.get_node_timer(pos):start(0.1)
+			vm16.run(pos, nil, clbks, mem.breakpoints)
+		end
+	elseif fields.reset then
+		if vm16.is_loaded(pos) then
+			vm16.set_cpu_reg(pos, {A=0, B=0, C=0, D=0, X=0, Y=0, SP=0, PC=0})
+			mem.output = ""
+			mem.cursorline = 1
+			mem.curr_lineno = 1
+		end
+	elseif fields.stop then
+		if mem.running then
 			minetest.get_node_timer(pos):stop()
 			mem.running = false
 		end

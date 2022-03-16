@@ -35,12 +35,7 @@ if minetest.settings:get_bool("vm16_testblocks_enabled") == true and
 		minetest.global_exists("default") and
                 minetest.global_exists("basic_materials") then
 	vm16.cpu = {}
-	dofile(MP.."/mod/asm.lua")
-	dofile(MP.."/mod/io.lua")
-	dofile(MP.."/mod/formspec.lua")
-	dofile(MP.."/mod/cpu.lua")
-	dofile(MP.."/mod/switch.lua")
-	dofile(MP.."/mod/lamp.lua")
+	dofile(MP.."/asm/asm.lua")
 	dofile(MP.."/bcomp/bgenerator.lua")
 	dofile(MP.."/bcomp/bscanner.lua")
 	dofile(MP.."/bcomp/bsymbols.lua")
@@ -51,6 +46,12 @@ if minetest.settings:get_bool("vm16_testblocks_enabled") == true and
 	dofile(MP.."/debugger/win_files.lua")
 	dofile(MP.."/debugger/win_debug.lua")
 	dofile(MP.."/debugger/win_watch.lua")
+	dofile(MP.."/debugger/buttons.lua")
 	dofile(MP.."/debugger/formspec.lua")
-	dofile(MP.."/debugger/cpu.lua")
+	dofile(MP.."/debugger/programmer.lua")
+	dofile(MP.."/mod/io.lua")
+	dofile(MP.."/mod/formspec.lua")
+	dofile(MP.."/mod/cpu.lua")
+	dofile(MP.."/mod/switch.lua")
+	dofile(MP.."/mod/lamp.lua")
 end

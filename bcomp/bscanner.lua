@@ -120,8 +120,8 @@ function BScan:tk_match(ttype)
 		self.tk_idx = self.tk_idx + 1
 		return tok
 	end
-	print(string.format("Syntax error at '%s', '%s' expected", tok.val or "", ttype or ""))
-	--error(string.format("Syntax error at '%s', '%s' expected", tok.val or "", ttype or ""))
+	--print(string.format("Syntax error at '%s', '%s' expected", tok.val or "", ttype or ""))
+	error(string.format("Syntax error at '%s', '%s' expected", tok.val or "", ttype or ""))
 end
 
 function BScan:tk_peek()

@@ -15,13 +15,6 @@ local M = minetest.get_meta
 
 vm16.prog = {}
 
-local function new_table(size)
-	local out = {}
-	for i = 1, size do
-		out[i] = 0
-	end
-	return out
-end
 
 local function get_linenum(lToken, addr)
 	for idx = #lToken, 1, -1 do
@@ -99,75 +92,8 @@ local function fs_code(pos, mem)
 	return ""
 end
 
-local function fs_listing(pos, err)
-	local out = {}
-	if err then
-		out[#out + 1] = err
-		out[#out + 1] = ""
-	end
-	for i, line in ipairs(strsplit(M(pos):get_string("code"))) do
-		local lineno = string.format("%3d: ", i)
-		out[#out + 1] = lineno .. line
-	end
-	return table.concat(out, "\n")
-end
-
-local function mem_dump(pos, x, y)
-	local addr = M(pos):get_int("startaddr")
-	local mem = vm16.read_mem(pos, addr, 128) or new_table(128)
-	local lines = {"container[" .. x .. "," .. y .. "]" ..
-		"label[0,0.5;Memory]" ..
-		"button[2,0.1;1,0.6;dec;" .. minetest.formspec_escape("<") .. "]" ..
-		"button[3,0.1;1,0.6;inc;" .. minetest.formspec_escape(">") .. "]" ..
-		"box[0,0.7;9,6.6;#006]" ..
-		"textarea[0,0.7;9.6,7;;;"}
-
-	if mem then
-		for i = 0,15 do
-			local offs = i * 8
-			table.insert(lines, string.format("%04X: %04X %04X %04X %04X %04X %04X %04X %04X\n",
-				addr+offs, mem[1+offs], mem[2+offs], mem[3+offs], mem[4+offs],
-				mem[5+offs], mem[6+offs], mem[7+offs], mem[8+offs]))
-		end
-	else
-		table.insert(lines, "Error")
-	end
-	table.insert(lines, "]")
-	table.insert(lines, "container_end[]")
-	return table.concat(lines, "")
-end
-
-local function stack_dump(pos, x, y)
-	local mem = vm16.read_mem(pos, 0x1F8, 8) or new_table(8)
-	local lines = {"container[" .. x .. "," .. y .. "]" ..
-		"box[0,0;9,0.4;#606]" ..
-		"textarea[0,0;9.6,1;;Stack Area;"}
-
-	if mem then
-		table.insert(lines, string.format("%04X: %04X %04X %04X %04X %04X %04X %04X %04X\n",
-			0x1F8, mem[1], mem[2], mem[3], mem[4], mem[5], mem[6], mem[7], mem[8]))
-	else
-		table.insert(lines, "Error")
-	end
-	table.insert(lines, "]")
-	table.insert(lines, "container_end[]")
-	return table.concat(lines, "")
-end
-
-local function reg_dump(pos, x, y)
-	local lines = {"container[" .. x .. "," .. y .. "]"}
-	local cpu = vm16.get_cpu_reg(pos) or {A=0, B=0, C=0, D=0, X=0, Y=0, SP=0, PC=0, BP=0}
-	table.insert(lines, "box[0,0;9,0.8;#060]")
-	table.insert(lines, "textarea[0,0;9.6,0.8;;Registers;")
-	table.insert(lines, " A    B    C    D     X    Y    PC   SP   BP\n")
-	table.insert(lines, string.format("%04X %04X %04X %04X", cpu.A, cpu.B, cpu.C, cpu.D) .. "  " ..
-		string.format("%04X %04X %04X %04X %04X", cpu.X, cpu.Y, cpu.PC, cpu.SP, cpu.BP))
-	table.insert(lines, "]")
-	table.insert(lines, "container_end[]")
-	return table.concat(lines, "")
-end
-
 function vm16.prog.formspec(pos, mem)
+	local windows, buttons, status
 	local textsize = M(pos):get_int("textsize")
 	if textsize >= 0 then
 		textsize = "+" .. textsize
@@ -175,53 +101,109 @@ function vm16.prog.formspec(pos, mem)
 		textsize = tostring(textsize)
 	end
 
-	local code, save_breakpoint_bttn, asm_edit_bttn, stop_bttn_text, color, status
+	vm16.button.init(0.2, 10.4, 2.5)
 	if mem.error then
 		-- Output listing + error
-		asm_edit_bttn = "button[5.5,10.4;2,0.8;edit;Edit]"
-		save_breakpoint_bttn = ""
-		stop_bttn_text = "Stop"
-		color = "#AAA"
+		vm16.button.add("edit", "Edit")
 		status = "Error !!!"
-		code = "style_type[textarea;font=mono;textcolor=#FFF;border=false;font_size="  .. textsize .. "]" ..
-			"textarea[0.2,0.6;8.5,9.6;;Code;" ..
-			minetest.formspec_escape(fs_listing(pos, mem.error)) .. "]"
+		local lText =  strsplit(M(pos):get_string("code"))
+		windows = vm16.edit.fs_listing(pos, mem, 0.2, 0.6, 11.4, 9.6, textsize, "main.c", lText, mem.error) ..
+			vm16.files.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize, {"main.c", "test1.c"})
 	elseif not vm16.is_loaded(pos) then
 		-- Edit code
-		asm_edit_bttn = "button[4.5,10.4;3,0.8;assemble;Assemble]"
-		save_breakpoint_bttn = "button[1.3,10.4;3,0.8;save;Save]"
-		stop_bttn_text = "Stop"
-		color = "#AAA"
+		vm16.button.add("save", "Save")
+		vm16.button.add("compile", "Compile")
+		vm16.button.add("debug", "Debug")
 		status = "Edit"
-		local text = M(pos):get_string("code")
-		code = vm16.edit.fs_window(pos, mem,0.2, 0.6, 11.4, 9.6, textsize, "main.c", text) ..
+		local text =  M(pos):get_string("code")
+		windows = vm16.edit.fs_editor(pos, mem, 0.2, 0.6, 11.4, 9.6, textsize, "main.c", text) ..
 			vm16.files.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize, {"main.c", "test1.c"})
 	else
 		-- Run code
-		asm_edit_bttn = "button[5.5,10.4;2,0.8;edit;Edit]"
-		save_breakpoint_bttn = ""
-		stop_bttn_text = mem.running and "Stop" or "Reset"
-		color = mem.running and "#AAA" or "#FFF"
+		if mem.running then
+			vm16.button.add("stop", "Stop", vm16.debug.on_receive_fields)
+		else
+			vm16.button.add("step", "Step", vm16.debug.on_receive_fields)
+			vm16.button.add("runto", "Run to C", vm16.debug.on_receive_fields)
+			vm16.button.add("run", "Run", vm16.debug.on_receive_fields)
+			vm16.button.add("reset", "Reset", vm16.debug.on_receive_fields)
+		end
 		status = mem.running and "Running..." or minetest.formspec_escape("Debug  |  Out[0]: " .. (mem.output or ""))
-		code  = vm16.debug.fs_window(pos, mem, 0.2, 0.6, 11.4, 9.6, textsize, strsplit(M(pos):get_string("code"))) ..
+		local lText =  strsplit(M(pos):get_string("code"))
+		windows  = vm16.debug.fs_window(pos, mem, 0.2, 0.6, 11.4, 9.6, textsize, lText) ..
 			vm16.watch.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize)
 	end
 
 	return "formspec_version[4]" ..
 		"size[18,12]" ..
-		"style_type[textarea;font=mono;textcolor=" .. color .. ";border=false;font_size="  .. textsize .. "]" ..
-		--reg_dump(pos, 8.8, 0.6) ..
-		--stack_dump(pos, 8.8, 9.8) ..
-		code ..
+		windows ..
+		vm16.button.fs_buttons() ..
 		"button[16.6,0;0.6,0.6;larger;+]" ..
 		"button[17.2,0;0.6,0.6;smaller;-]" ..
-		save_breakpoint_bttn ..
-		asm_edit_bttn ..
-		"button[8.8,10.4;2,0.8;step;Step]" ..
-		"button[11.1,10.4;2,0.8;runto;Run to C]" ..
-		"button[13.4,10.4;2,0.8;run;Run]" ..
-		"button[15.7,10.4;2,0.8;stop;" .. stop_bttn_text .. "]" ..
 		"box[0.2,11.3;17.6,0.05;#FFF]" ..
 		"style_type[label;font=normal;textcolor=#FFF;font_size=+0]" ..
 		"label[0.3,11.7;Mode: " .. status .. "]"
+end
+
+local function on_receive_fields(pos, formname, fields, player)
+	if player and minetest.is_protected(pos, player:get_player_name()) then
+		return
+	end
+
+	local mem = get_mem(pos)
+	local meta = minetest.get_meta(pos)
+	local lines = {"Error"}
+
+	if not mem.running then
+		if fields.code and (fields.save or fields.assemble or fields.compile  or fields.debug) then
+			M(pos):set_string("code", fields.code)
+		elseif fields.larger then
+			M(pos):set_int("textsize", math.min(M(pos):get_int("textsize") + 1, 8))
+		elseif fields.smaller then
+			M(pos):set_int("textsize", math.max(M(pos):get_int("textsize") - 1, -8))
+		elseif fields.compile then
+			if mem.error then
+				mem.error = nil
+			elseif not vm16.is_loaded(pos) then
+				local result, err = vm16.comp.compile(mem, M(pos):get_string("code"))
+				if not err then
+					init_cpu(pos, mem.lToken)
+					mem.output = ""
+					mem.scroll_lineno = nil
+					mem.start_idx = 1
+					vm16.debug.init(pos, mem)
+					vm16.watch.init(pos, mem)
+					vm16.edit.init(pos, mem)
+					vm16.files.init(pos, mem)
+				end
+			end
+		elseif fields.debug then
+			if mem.error then
+				mem.error = nil
+			elseif not vm16.is_loaded(pos) then
+				local result, err = vm16.comp.compile(mem, M(pos):get_string("code"))
+				if not err then
+					init_cpu(pos, mem.lToken)
+					mem.output = ""
+					mem.scroll_lineno = nil
+					mem.start_idx = 1
+					vm16.debug.init(pos, mem)
+					vm16.watch.init(pos, mem)
+					vm16.edit.init(pos, mem)
+					vm16.files.init(pos, mem)
+				end
+			end
+		elseif fields.edit then
+			if vm16.is_loaded(pos) then
+				minetest.get_node_timer(pos):stop()
+				vm16.destroy(pos)
+			end
+			mem.error = nil
+		else
+		end
+	end
+	if not vm16.button.on_receive_fields(pos, mem, fields, clbks) then
+		vm16.debug.on_receive_fields(pos, mem, fields, clbks)
+	end
+	meta:set_string("formspec", vm16.prog.formspec(pos, mem))
 end

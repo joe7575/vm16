@@ -143,6 +143,9 @@ function vm16.BCompiler(code, gen_asmcode, break_ident)
 				errors = err}
 		end
 	else
-		return {errors = err}
+		local _, err_str1, err_str2 = unpack(string.split(err, ":", true, 2))
+		local fname = prs.filename or "main.c"
+		local lineno = prs.lineno or "0"
+		return {errors = string.format("%s(%d): %s", fname, lineno, (err_str2 or err_str1))}
 	end
 end
