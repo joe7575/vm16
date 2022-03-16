@@ -102,50 +102,48 @@ local function format_asm_output(lToken)
 	return out
 end
 
-function vm16.BCompiler(code, gen_asmcode, break_ident)
+function vm16.gen_obj_code(code)
 	local out = {}
-	local prs =  vm16.BPars:new({text = code, add_sourcecode = gen_asmcode})
+	local prs =  vm16.BPars:new({text = code})
 	prs:bpars_init()
-	prs.break_ident = break_ident
 	local status, err = pcall(prs.main, prs)
-	
 	if not err then
 		local asm = vm16.Asm:new({})
-		local asm_code, lToken, err
-		
-		if gen_asmcode then
-			asm_code = gen_comp_output(prs.lCode, prs.lData)
-			lToken, err = asm:scanner(asm_code)
-		else
-			asm_code = "disabled"
-			lToken = gen_asm_token_list(prs.lCode, prs.lData)
-		end
-		
+		local lToken = gen_asm_token_list(prs.lCode, prs.lData)
+		lToken, err = asm:assembler(lToken)
 		if lToken then
-			local globals
-			lToken, err = asm:assembler(lToken)
-			if lToken then
-				local output = format_asm_output(lToken)
-				return {
-					asm_code = asm_code, 
-					locals = prs.all_locals,
-					output = output,
-					globals = get_glob_variables(prs, asm.symbols),
-					functions = lineno_to_Function(prs, output)}
-			else
-				return {
-					asm_code = asm_code, 
-					errors = err}
-			end
-		else
+			local output = format_asm_output(lToken)
 			return {
-				asm_code = asm_code, 
-				errors = err}
+				locals = prs.all_locals,
+				output = output,
+				globals = get_glob_variables(prs, asm.symbols),
+				functions = lineno_to_Function(prs, output)}
 		end
+		return {
+			locals = {},
+			output = {},
+			globals = {},
+			functions = {},
+			errors = err}
+	end
+	return {
+		locals = {},
+		output = {},
+		globals = {},
+		functions = {},
+		errors = err}
+end
+
+function vm16.gen_asm_code(code)
+	local out = {}
+	local prs =  vm16.BPars:new({text = code, add_sourcecode = true})
+	prs:bpars_init()
+	local status, err = pcall(prs.main, prs)
+	if not err then
+		return gen_comp_output(prs.lCode, prs.lData)
 	else
-		local _, err_str1, err_str2 = unpack(string.split(err, ":", true, 2))
-		local fname = prs.filename or "main.c"
+		local fname = prs.filename or "main.asm"
 		local lineno = prs.lineno or "0"
-		return {errors = string.format("%s(%d): %s", fname, lineno, (err_str2 or err_str1))}
+		return string.format("%s(%d): %s", fname, lineno, err)
 	end
 end

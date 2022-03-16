@@ -93,8 +93,6 @@ function BPars:lvar_def_list()
 	while val == "var" do
 		self:tk_match("var")
 		local ident = self:ident()
-		self:local_add(ident)
-		self.num_auto = self.num_auto + 1
 		if self:tk_peek().val == "=" then
 			self:tk_match("=")
 			local right = self:expression()
@@ -102,6 +100,8 @@ function BPars:lvar_def_list()
 		else
 			self:add_instr("push", "#0")
 		end
+		self:local_add(ident)
+		self.num_auto = self.num_auto + 1
 		self:reset_reg_use()
 		self:tk_match(";")
 		val = self:tk_peek().val

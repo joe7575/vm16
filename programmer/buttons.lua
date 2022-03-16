@@ -10,8 +10,9 @@
 	Button row for the debugger
 ]]--
 
+vm16.button = {}
+
 local t = {}
-vm16.button = t
 
 function vm16.button.init(x, y, size)
 	t.x = x
@@ -21,19 +22,9 @@ function vm16.button.init(x, y, size)
 	t.on_button = {}
 end
 
-function vm16.button.on_receive_fields(pos, mem, fields, clbks)
-	for k,v in pairs(fields) do
-		if t.on_button[k] then
-			t.on_button[k](pos, mem, fields, clbks)
-			return true
-		end
-	end
-end
-
-function vm16.button.add(name, label, on_button)
+function vm16.button.add(name, label)
 	table.insert(t.out, "button[" .. t.x .. "," .. t.y .. ";" .. t.size .. ",0.8;" .. name .. ";" .. label .. "]")
 	t.x = t.x + t.size + 0.2
-	t.on_button[name] = on_button
 end
 
 function vm16.button.fs_buttons()

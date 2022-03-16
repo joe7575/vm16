@@ -2,7 +2,7 @@
 	vm16
 	====
 
-	Copyright (C) 2019-2020 Joachim Stolberg
+	Copyright (C) 2019-2022 Joachim Stolberg
 
 	GPL v3
 	See LICENSE.txt for more information
@@ -30,28 +30,24 @@ dofile(MP.."/lib.lua")
 IE = nil
 vm16lib = nil
 
--- for testing purposes
-if minetest.settings:get_bool("vm16_testblocks_enabled") == true and
-		minetest.global_exists("default") and
-                minetest.global_exists("basic_materials") then
-	vm16.cpu = {}
-	dofile(MP.."/asm/asm.lua")
-	dofile(MP.."/bcomp/bgenerator.lua")
-	dofile(MP.."/bcomp/bscanner.lua")
-	dofile(MP.."/bcomp/bsymbols.lua")
-	dofile(MP.."/bcomp/bexpression.lua")
-	dofile(MP.."/bcomp/bparser.lua")
-	dofile(MP.."/bcomp/bcompiler.lua")
-	dofile(MP.."/debugger/win_edit.lua")
-	dofile(MP.."/debugger/win_files.lua")
-	dofile(MP.."/debugger/win_debug.lua")
-	dofile(MP.."/debugger/win_watch.lua")
-	dofile(MP.."/debugger/buttons.lua")
-	dofile(MP.."/debugger/formspec.lua")
-	dofile(MP.."/debugger/programmer.lua")
-	dofile(MP.."/mod/io.lua")
-	dofile(MP.."/mod/formspec.lua")
-	dofile(MP.."/mod/cpu.lua")
-	dofile(MP.."/mod/switch.lua")
-	dofile(MP.."/mod/lamp.lua")
-end
+vm16.cpu = {}
+dofile(MP.."/asm/asm.lua")
+dofile(MP.."/bcomp/bgenerator.lua")
+dofile(MP.."/bcomp/bscanner.lua")
+dofile(MP.."/bcomp/bsymbols.lua")
+dofile(MP.."/bcomp/bexpression.lua")
+dofile(MP.."/bcomp/bparser.lua")
+dofile(MP.."/bcomp/bcompiler.lua")
+dofile(MP.."/programmer/lib.lua")
+dofile(MP.."/programmer/buttons.lua")
+dofile(MP.."/programmer/win_edit.lua")
+dofile(MP.."/programmer/win_files.lua")
+dofile(MP.."/programmer/win_debug.lua")
+dofile(MP.."/programmer/win_watch.lua")
+dofile(MP.."/programmer/formspec.lua")
+dofile(MP.."/programmer/programmer.lua")
+--dofile(MP.."/mod/io.lua")
+--dofile(MP.."/mod/formspec.lua")
+--dofile(MP.."/mod/cpu.lua")
+--dofile(MP.."/mod/switch.lua")
+--dofile(MP.."/mod/lamp.lua")

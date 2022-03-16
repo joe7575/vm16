@@ -55,14 +55,19 @@ local function memory_bar(pos, mem, x, y, xsize, ysize)
 	local x1 = x + xsize * (mem.last_used_mem_addr / mem_size)
 	local x2 = x + xsize * ((cpu.TOS % mem_size) / mem_size)
 	local x3 = x + xsize * 1.0
+	print(mem_size, mem.last_used_mem_addr)
 	return "label[" .. x .. "," .. (y + 0.4) .. ";Memory (" .. mem_size .. ")]" ..
 		"box[" .. x  .. "," .. (y + 0.6) .. ";" .. (x1 - x)  .. "," .. 0.4 .. ";#00B]" ..
 		"box[" .. x1 .. "," .. (y + 0.6) .. ";" .. (x2 - x1) .. "," .. 0.4 .. ";#AAA]" ..
 		"box[" .. x2 .. "," .. (y + 0.6) .. ";" .. (x3 - x2) .. "," .. 0.4 .. ";#0B0]"
 end
 
-function vm16.watch.init(pos, mem)
-	local last_used_mem_addr = 0
+function vm16.watch.init(pos, mem, result)
+	mem.tGlobals = result.globals
+	mem.tLocals = result.locals
+	mem.tFunctions = result.functions
+	
+	local last_used_mem_addr = mem.last_code_addr
 	mem.lVars = {}
 	for k,v in pairs(mem.tGlobals or {}) do
 		mem.lVars[#mem.lVars + 1] = k
