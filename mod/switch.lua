@@ -116,7 +116,6 @@ minetest.register_node("vm16:switch_off", {
 	paramtype2 = "facedir",
 	groups = {choppy=2, cracky=2, crumbly=2},
 	is_ground_content = false,
-	sounds = default.node_sound_defaults(),
 })
 
 
@@ -141,17 +140,8 @@ minetest.register_node("vm16:switch_on", {
 	paramtype2 = "facedir",
 	groups = {choppy=2, cracky=2, crumbly=2, not_in_creative_inventory=1},
 	is_ground_content = false,
-	sounds = default.node_sound_defaults(),
 	drop = "vm16:switch_off",
 })
 
 vm16.register_io_nodes({"vm16:switch_on", "vm16:switch_off"})
 
-minetest.register_craft({
-	output = "vm16:switch_off",
-	recipe = {
-		{"", "group:wood", ""},
-		{"", "default:obsidian_glass", ""},
-		{"", "basic_materials:ic", ""},
-	},
-})

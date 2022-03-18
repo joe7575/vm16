@@ -23,7 +23,7 @@ end
 
 local function format_watch(pos, mem)
 	local lines = {}
-	local cpu = vm16.get_cpu_reg(pos)
+	local cpu = vm16.get_cpu_reg(mem.cpu_pos)
 
 --	lines[#lines + 1] = string.format("%-16s: %04X", "PC", cpu.PC)
 --	lines[#lines + 1] = string.format("%-16s: %04X", "SP", cpu.SP)
@@ -31,7 +31,7 @@ local function format_watch(pos, mem)
 
 	-- Globals
 	for _, var in ipairs(mem.lVars or {}) do
-		local s = string.format("%-16s: %d", var, vm16.peek(pos, mem.tGlobals[var] or 0))
+		local s = string.format("%-16s: %d", var, vm16.peek(mem.cpu_pos, mem.tGlobals[var] or 0))
 		lines[#lines + 1] = s
 	end
 	lines[#lines + 1] = "----------------:------"
@@ -50,8 +50,8 @@ local function format_watch(pos, mem)
 end
 
 local function memory_bar(pos, mem, x, y, xsize, ysize)
-	local mem_size = vm16.mem_size(pos)
-	local cpu = vm16.get_cpu_reg(pos)
+	local mem_size = vm16.mem_size(mem.cpu_pos)
+	local cpu = vm16.get_cpu_reg(mem.cpu_pos)
 	local x1 = x + xsize * (mem.last_used_mem_addr / mem_size)
 	local x2 = x + xsize * ((cpu.TOS % mem_size) / mem_size)
 	local x3 = x + xsize * 1.0
@@ -63,9 +63,9 @@ local function memory_bar(pos, mem, x, y, xsize, ysize)
 end
 
 function vm16.watch.init(pos, mem, result)
-	mem.tGlobals = result.globals
-	mem.tLocals = result.locals
-	mem.tFunctions = result.functions
+	mem.tGlobals = result.globals or {}
+	mem.tLocals = result.locals or {}
+	mem.tFunctions = result.functions or {}
 	
 	local last_used_mem_addr = mem.last_code_addr
 	mem.lVars = {}

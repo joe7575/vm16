@@ -94,7 +94,6 @@ minetest.register_node("vm16:lamp_off", {
 	drop = "vm16:lamp_off",
 	groups = {choppy=2, cracky=2, crumbly=2},
 	is_ground_content = false,
-	sounds = default.node_sound_defaults(),
 })
 
 
@@ -113,7 +112,6 @@ minetest.register_node("vm16:lamp_on", {
 	light_source = 10,
 	groups = {choppy=2, cracky=2, crumbly=2, not_in_creative_inventory=1},
 	is_ground_content = false,
-	sounds = default.node_sound_defaults(),
 	drop = "vm16:lamp_off",
 })
 

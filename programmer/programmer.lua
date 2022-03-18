@@ -16,95 +16,169 @@ local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
 local S2P = function(s) return minetest.string_to_pos(s) end
 local prog = vm16.prog
 
--- Start example
-local Code = [[
-var var1;
-var var2 = 2;
+local function cpu_server_pos(pos, mem)
+	mem.cpu_pos = mem.cpu_pos or S2P(M(pos):get_string("cpu_pos"))
+	mem.server_pos = mem.server_pos or S2P(M(pos):get_string("server_pos"))
+	return mem.cpu_pos and mem.server_pos
+end
 
-func get_five() {
-  return 5;
-}
+local function preserve_cpu_server_pos(pos, itemstack)
+	local imeta = itemstack:get_meta()
+	if imeta then
+		local meta = M(pos)
+		meta:set_string("cpu_pos", imeta:get_string("cpu_pos"))
+		meta:set_string("server_pos", imeta:get_string("server_pos"))
+	end
+end
 
-func foo(a,b) {
-  var c = a;
-  var d = b;
-  return c * d;
-}
-
-func main() {
-  var c = var1 + 1;
-  var res;
-
-  res = (c + var2) * 2;
-  output(1, get_five(b));
-  output(2, foo(var2, c));  
-}
-]]
-
-local function on_update(pos, resp)
-	print("on_update", vm16.CallResults[resp])
+local function get_start_code(pos)
 	local mem = prog.get_mem(pos)
-	vm16.debug.on_update(pos, mem)
-	M(pos):set_string("formspec", prog.formspec(pos, mem))
-end
-
-local function on_input(pos, address) 
-	print("on_input", address); 
-	return address
-end
-
-local function on_output(pos, address, val1, val2)
-	if address == 0 then
-		local mem = prog.get_mem(pos)
-		if val1 == 0 then
-			mem.output = ""
-		elseif mem.output and #mem.output < 80 then
-			mem.output = mem.output .. prog.to_string(val1)
-		end
-	else
-		print("output", address, val1, val2)
-	end
-end
-
-local function on_system() end
-
-local clbks = vm16.generate_callback_table(on_input, on_output, on_system, on_update)
-
-local function on_timer(pos, elapsed)
-	if vm16.is_loaded(pos) then
-		local mem = prog.get_mem(pos)
-		print("on_timer", P2S(pos), mem.running)
-		if mem.running then
-			return vm16.run(pos, nil, clbks, mem.breakpoints) < vm16.HALT
+	if cpu_server_pos(pos, mem) then
+		local def = prog.get_cpu_def(mem.cpu_pos)
+		if def then
+			return def.start_code or ""
 		end
 	end
 end
 
-local function on_rightclick(pos)
-	M(pos):set_string("formspec", vm16.prog.formspec(pos, prog.get_mem(pos)))
-end
-
-minetest.register_node("vm16:cpu2", {
-	description = "VM16 Computer2",
+minetest.register_node("vm16:programmer", {
+	description = "VM16 Programmer",
+	drawtype = "nodebox",
+	paramtype2 = "facedir",
+	paramtype = "light",
+	sunlight_propagates = true,
+	light_source = 5,
+	glow = 12,
+	use_texture_alpha = "clip",
+	node_box = {
+		type = "fixed",
+		fixed = {
+			{-12/32, -16/32,  -8/32,  12/32, -14/32, 12/32},
+			{-12/32, -14/32,  12/32,  12/32,   6/32, 14/32},
+		},
+	},
 	tiles = {
-		"vm16_cpu_top.png",
-		"vm16_cpu_top.png",
-		"vm16_cpu.png",
+		-- up, down, right, left, back, front
+		'vm16_programmer_top.png',
+		'vm16_programmer_bottom.png',
+		'vm16_programmer_side.png',
+		'vm16_programmer_side.png',
+		'vm16_programmer_bottom.png^vm16_logo.png',
+		"vm16_programmer_front.png",
+	},
+	after_place_node = function(pos, placer, itemstack, pointed_thing)
+		local mem = prog.get_mem(pos)
+		preserve_cpu_server_pos(pos, itemstack)
+		cpu_server_pos(pos, mem)
+		local meta = M(pos)
+		meta:set_string("formspec", prog.fs_connect(mem))
+		meta:set_string("code", get_start_code(pos))
+		meta:set_string("infotext", "VM16 Programmer")
+	end,
+	on_rightclick = function(pos)
+		local mem = prog.get_mem(pos)
+		if cpu_server_pos(pos, mem) and mem.running then
+			M(pos):set_string("formspec", vm16.prog.formspec(pos, mem))
+		end
+	end,
+	on_receive_fields = function(pos, formname, fields, player)
+		local mem = prog.get_mem(pos)
+		if cpu_server_pos(pos, mem) then
+			local def = prog.get_cpu_def(mem.cpu_pos)
+			vm16.prog.on_receive_fields(pos, formname, fields, player, def.callbacks)
+		end
+	end,
+	after_dig_node = function(pos)
+		local mem = prog.get_mem(pos)
+		if cpu_server_pos(pos, mem) then
+			vm16.destroy(mem.cpu_pos)
+		end
+	end,
+	on_use = function(itemstack, user, pointed_thing)
+		if pointed_thing.type == "node" then
+			local pos = pointed_thing.under
+			local node = minetest.get_node(pos)
+			local name = user:get_player_name()
+			if prog.get_cpu_def(pos) then
+				local meta = itemstack:get_meta()
+				meta:set_string("cpu_pos", P2S(pos))
+				minetest.chat_send_player(name, "[vm16] Connected to CPU")
+			elseif node.name == "vm16:server" then
+				local meta = itemstack:get_meta()
+				meta:set_string("server_pos", P2S(pos))
+				minetest.chat_send_player(name, "[vm16] Connected to Server")
+			end
+		end
+		return itemstack
+	end,
+	preserve_metadata = function(pos, oldnode, oldmetadata, drops)
+		local meta = drops[1]:get_meta()
+		meta:set_string("cpu_pos", oldmetadata.cpu_pos)
+		meta:set_string("server_pos", oldmetadata.server_pos)
+	end,
+	stack_max = 1,
+	groups = {cracky=2, crumbly=2, choppy=2},
+	is_ground_content = false,
+})
+
+minetest.register_node("vm16:server", {
+	description = "VM16 Server",
+	drawtype = "nodebox",
+	node_box = {
+		type = "fixed",
+		fixed = {
+			{ -4/16, -8/16, -6/16, 4/16, 2/16, 6/16},
+		},
+	},
+	tiles = {
+		-- up, down, right, left, back, front
+		"vm16_server_top.png",
+		"vm16_server_top.png",
+		"vm16_server_side.png^vm16_logo.png",
+		"vm16_server_side.png^vm16_logo.png",
+		"vm16_server_back.png",
+		"vm16_server_front.png",
 	},
 	after_place_node = function(pos, placer, itemstack, pointed_thing)
 		local meta = M(pos)
-		meta:set_string("formspec", vm16.prog.formspec(pos, prog.get_mem(pos)))
-		meta:set_string("infotext", "VM16 Computer2")
-		meta:set_string("code", Code)
+		meta:set_string("owner", placer:get_player_name())
+		meta:set_string("formspec", "formspec_version[4]size[6,3]button[0.8,0.8;4.4,1.4;destroy;Destroy Server\n  with all files?]")
+		meta:set_string("files", minetest.serialize({dir = {}}))
+		meta:mark_as_private("files")
 	end,
-	on_timer = on_timer,
-	on_rightclick = on_rightclick,
 	on_receive_fields = function(pos, formname, fields, player)
-		vm16.prog.on_receive_fields(pos, formname, fields, player, clbks)
+		if player and player:get_player_name() == M(pos):get_string("owner") then
+			if fields.destroy then
+				minetest.remove_node(pos)
+				minetest.add_item(pos, {name = "vm16:server"})
+			end
+		end
 	end,
-	after_dig_node = function(pos)
-		vm16.destroy(pos)
-	end,
-	groups = {cracky=2, crumbly=2, choppy=2},
+	paramtype2 = "facedir",
+	paramtype = "light",
+	sunlight_propagates = true,
+	light_source = 5,
+	glow = 12,
+	use_texture_alpha = "clip",
 	is_ground_content = false,
+	on_blast = function() end,
+	on_destruct = function () end,
+	can_dig = function() return false end,
+	diggable = false,
+	drop = "",
+	stack_max = 1,
+	groups = {cracky=2, crumbly=2, choppy=2},
+})
+
+minetest.register_lbm({
+	label = "vm16 Programmer",
+	name = "vm16:programmer",
+	nodenames = {"vm16:programmer"},
+	run_at_every_load = true,
+	action = function(pos, node)
+		local mem = prog.get_mem(pos)
+		if cpu_server_pos(pos, mem) then
+			M(pos):set_string("formspec", vm16.prog.formspec(pos, mem))
+		end
+	end
 })

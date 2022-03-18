@@ -16,37 +16,37 @@ local prog = vm16.prog
 
 vm16.debug = {}
 
-local function format_asm_code(mem, lCode)
-	local addr = vm16.get_pc(pos)
-	local code = {}
-	for i, line in ipairs(strsplit(M(pos):get_string("code"))) do
-		code[#code + 1] = line
-	end
-	if mem.lToken and addr then
-		local lineno = not mem.running and get_linenum(mem.lToken, addr) or 0
-		local start, stop = get_window(mem, lineno, #mem.lToken)
-		local lines = {}
-		for idx = start, stop do
-			local tok = mem.lToken[idx]
-			if tok and tok.address and tok.lineno then
-				local tag = "  "
-				if tok.breakpoint then
-					tag = "* "
-				end
-				if idx == lineno and not mem.scroll_lineno then
-					lines[#lines + 1] = minetest.formspec_escape(">>" .. code[tok.lineno] or "oops")
-				else
-					lines[#lines + 1] = minetest.formspec_escape(tag .. (code[tok.lineno] or "oops"))
-				end
-			elseif tok and tok.lineno then
-				lines[#lines + 1] = minetest.formspec_escape("  " .. (code[tok.lineno] or "oops"))
-			end
-		end
-		--return table.concat(lines, "\n")
-		return table.concat(lines, ",")
-	end
-	return ""
-end
+--local function format_asm_code(mem, lCode)
+--	local addr = vm16.get_pc(pos)
+--	local code = {}
+--	for i, line in ipairs(strsplit(M(pos):get_string("code"))) do
+--		code[#code + 1] = line
+--	end
+--	if mem.lToken and addr then
+--		local lineno = not mem.running and get_linenum(mem.lToken, addr) or 0
+--		local start, stop = get_window(mem, lineno, #mem.lToken)
+--		local lines = {}
+--		for idx = start, stop do
+--			local tok = mem.lToken[idx]
+--			if tok and tok.address and tok.lineno then
+--				local tag = "  "
+--				if tok.breakpoint then
+--					tag = "* "
+--				end
+--				if idx == lineno and not mem.scroll_lineno then
+--					lines[#lines + 1] = minetest.formspec_escape(">>" .. code[tok.lineno] or "oops")
+--				else
+--					lines[#lines + 1] = minetest.formspec_escape(tag .. (code[tok.lineno] or "oops"))
+--				end
+--			elseif tok and tok.lineno then
+--				lines[#lines + 1] = minetest.formspec_escape("  " .. (code[tok.lineno] or "oops"))
+--			end
+--		end
+--		--return table.concat(lines, "\n")
+--		return table.concat(lines, ",")
+--	end
+--	return ""
+--end
 
 local function format_src_code(mem, text)
 	local lines = {}
@@ -70,11 +70,11 @@ local function set_breakpoint(pos, mem, lineno, tAddress)
 	local addr = tAddress[lineno] or 0
 
 	if mem.breakpoint_lines[lineno] then
-		vm16.reset_breakpoint(pos, addr, mem.breakpoints)
+		vm16.reset_breakpoint(mem.cpu_pos, addr, mem.breakpoints)
 		mem.breakpoint_lines[lineno] = nil
 	else
 		mem.breakpoint_lines[lineno] = true
-		vm16.set_breakpoint(pos, addr, mem.breakpoints)
+		vm16.set_breakpoint(mem.cpu_pos, addr, mem.breakpoints)
 	end
 end
 
@@ -83,7 +83,7 @@ local function set_cursor(mem, lineno)
 end
 
 local function get_next_lineno(pos, mem)
-	local addr = vm16.get_pc(pos)
+	local addr = vm16.get_pc(mem.cpu_pos)
 	local lineno = mem.tLineno[addr] or 1
 	for no = lineno + 1, mem.last_lineno do
 		if mem.tAddress[no] then
@@ -96,14 +96,14 @@ end
 local function set_temp_breakpoint(pos, mem, lineno)
 	local addr = mem.tAddress[lineno]
 	if addr and not mem.breakpoint_lines[lineno] then
-		vm16.set_breakpoint(pos, addr, mem.breakpoints)
+		vm16.set_breakpoint(mem.cpu_pos, addr, mem.breakpoints)
 		mem.temp_breakpoint = addr
 	end
 end
 
 local function reset_temp_breakpoint(pos, mem)
 	if mem.temp_breakpoint then
-		vm16.reset_breakpoint(pos, mem.temp_breakpoint, mem.breakpoints)
+		vm16.reset_breakpoint(mem.cpu_pos, mem.temp_breakpoint, mem.breakpoints)
 		mem.temp_breakpoint = nil
 	end
 end
@@ -127,20 +127,19 @@ function vm16.debug.init(pos, mem, result)
 		end
 	end
 
-	--vm16.find_io_nodes(pos)
-	vm16.create(pos, 3)
+	vm16.create(mem.cpu_pos, 3)  -- TODO
 	for _,tok in ipairs(result.output) do
 		for i, opc in pairs(tok.opcodes or {}) do
-			vm16.poke(pos, tok.address + i - 1, opc)
+			vm16.poke(mem.cpu_pos, tok.address + i - 1, opc)
 			mem.last_code_addr = math.max(mem.last_code_addr, tok.address + i - 1)
 		end
 	end
-	vm16.set_pc(pos, 0)
+	vm16.set_pc(mem.cpu_pos, 0)
 end
 
 function vm16.debug.on_update(pos, mem)
 	mem.running = false
-	local addr = vm16.get_pc(pos)
+	local addr = vm16.get_pc(mem.cpu_pos)
 	mem.cursorline = mem.tLineno[addr] or 1
 	mem.curr_lineno = mem.cursorline
 	reset_temp_breakpoint(pos, mem)
@@ -157,13 +156,13 @@ end
 
 function vm16.debug.formspec(pos, mem, textsize)
 		if mem.running then
-			vm16.button.add("stop", "Stop")
+			vm16.menubar.add_button("stop", "Stop")
 		else
-			vm16.button.add("edit", "Edit")
-			vm16.button.add("step", "Step")
-			vm16.button.add("runto", "Run to C")
-			vm16.button.add("run", "Run")
-			vm16.button.add("reset", "Reset")
+			vm16.menubar.add_button("edit", "Edit")
+			vm16.menubar.add_button("step", "Step")
+			vm16.menubar.add_button("runto", "Run to C")
+			vm16.menubar.add_button("run", "Run")
+			vm16.menubar.add_button("reset", "Reset")
 		end
 		mem.status = mem.running and "Running..." or minetest.formspec_escape("Debug  |  Out[0]: " .. (mem.output or ""))
 		local text =  M(pos):get_string("code")
@@ -173,8 +172,8 @@ end
 
 function vm16.debug.on_receive_fields(pos, fields, mem, clbks)
 	if fields.edit then
-		minetest.get_node_timer(pos):stop()
-		vm16.destroy(pos)
+		minetest.get_node_timer(mem.cpu_pos):stop()
+		vm16.destroy(mem.cpu_pos)
 		mem.error = nil
 		mem.asm_code = nil
 	elseif fields.code then
@@ -187,37 +186,48 @@ function vm16.debug.on_receive_fields(pos, fields, mem, clbks)
 			return true  -- repaint formspec
 		end
 	elseif fields.step then
-		if vm16.is_loaded(pos) then
+		if vm16.is_loaded(mem.cpu_pos) then
 			local lineno = get_next_lineno(pos, mem)
 			set_temp_breakpoint(pos, mem, lineno)
 			mem.running = true
-			minetest.get_node_timer(pos):start(0.1)
-			vm16.run(pos, nil, clbks, mem.breakpoints)
+			minetest.get_node_timer(mem.cpu_pos):start(0.1)
+			vm16.run(mem.cpu_pos, mem.cycles, clbks, mem.breakpoints)
 		end
 	elseif fields.runto then
-		if vm16.is_loaded(pos) then
+		if vm16.is_loaded(mem.cpu_pos) then
 			set_temp_breakpoint(pos, mem, mem.cursorline or 1)
 			mem.running = true
-			minetest.get_node_timer(pos):start(0.1)
-			vm16.run(pos, nil, clbks, mem.breakpoints)
+			minetest.get_node_timer(mem.cpu_pos):start(0.1)
+			vm16.run(mem.cpu_pos, mem.cycles, clbks, mem.breakpoints)
 		end
 	elseif fields.run then
-		if vm16.is_loaded(pos) then
+		if vm16.is_loaded(mem.cpu_pos) then
 			mem.running = true
-			minetest.get_node_timer(pos):start(0.1)
-			vm16.run(pos, nil, clbks, mem.breakpoints)
+			minetest.get_node_timer(mem.cpu_pos):start(0.1)
+			vm16.run(mem.cpu_pos, mem.cycles, clbks, mem.breakpoints)
 		end
 	elseif fields.reset then
-		if vm16.is_loaded(pos) then
-			vm16.set_cpu_reg(pos, {A=0, B=0, C=0, D=0, X=0, Y=0, SP=0, PC=0})
+		if vm16.is_loaded(mem.cpu_pos) then
+			vm16.set_cpu_reg(mem.cpu_pos, {A=0, B=0, C=0, D=0, X=0, Y=0, SP=0, PC=0})
 			mem.output = ""
 			mem.cursorline = 1
 			mem.curr_lineno = 1
 		end
 	elseif fields.stop then
 		if mem.running then
-			minetest.get_node_timer(pos):stop()
+			minetest.get_node_timer(mem.cpu_pos):stop()
 			mem.running = false
+		end
+	end
+end
+
+function vm16.prog.run(cpu_pos, prog_pos, cycles, callbacks)
+	if vm16.is_loaded(cpu_pos) then
+		local mem = prog.get_mem(prog_pos)
+		print("on_timer", P2S(cpu_pos), mem.running)
+		if mem.running then
+			mem.cycles = cycles
+			return vm16.run(cpu_pos, cycles, callbacks, mem.breakpoints) < vm16.HALT
 		end
 	end
 end

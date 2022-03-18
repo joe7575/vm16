@@ -55,35 +55,47 @@ end
 function vm16.edit.formspec(pos, mem, textsize)
 	if mem.error then
 		-- Output listing + error
-		vm16.button.add("edit", "Edit")
+		vm16.menubar.add_button("edit", "Edit")
 		mem.status = "Error !!!"
-		local text = M(pos):get_string("code")
-		return fs_listing(pos, mem, textsize, "main.c", text, mem.error) ..
-			vm16.files.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize, {"main.c", "test1.c"})
+		mem.text = mem.text or ""
+		return fs_listing(pos, mem, textsize, "out.lst", mem.text, mem.error) ..
+			vm16.files.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize)
 	elseif mem.asm_code then
 		-- Edit asm code
-		vm16.button.add("edit", "Edit")
+		vm16.menubar.add_button("edit", "Edit")
 		--vm16.button.add("assemble", "Assemble")
-		vm16.button.add("debug", "Debug")
+		vm16.menubar.add_button("debug", "Debug")
 		mem.status = "Edit"
 		mem.asm_code = mem.asm_code or ""
-		return fs_asm_code(pos, mem, textsize, "main.asm", mem.asm_code) ..
-			vm16.files.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize, {"main.asm", "test1.c"})
+		return fs_asm_code(pos, mem, textsize, "out.asm", mem.asm_code) ..
+			vm16.files.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize)
 	else
 		-- Edit source code
-		vm16.button.add("save", "Save")
-		vm16.button.add("compile", "Compile")
-		vm16.button.add("debug", "Debug")
+		vm16.menubar.add_button("save", "Save")
+		vm16.menubar.add_button("compile", "Compile")
+		vm16.menubar.add_button("debug", "Debug")
 		mem.status = "Edit"
-		local text = M(pos):get_string("code")
-		return fs_editor(pos, mem, textsize, "main.c", text) ..
-			vm16.files.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize, {"main.c", "test1.c"})
+		if not mem.filename or not mem.text then
+			mem.filename, mem.text = vm16.files.get_current_file(mem)
+		end
+		return fs_editor(pos, mem, textsize, mem.filename, mem.text) ..
+			vm16.files.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize)
 	end
+end
+
+function vm16.edit.on_load_file(mem, name, text)
+	mem.filename = name
+	mem.text = text
+	mem.error = nil
+	mem.asm_code = nil
 end
 
 function vm16.edit.on_receive_fields(pos, fields, mem)
 	if fields.code and (fields.save or fields.compile or fields.assemble or fields.debug) then
-		M(pos):set_string("code", fields.code)
+		if mem.filename then
+			mem.text = fields.code
+			vm16.files.store_file(mem, mem.filename, mem.text)
+		end
 	end
 	if fields.edit then
 		mem.error = nil
@@ -102,5 +114,7 @@ function vm16.edit.on_receive_fields(pos, fields, mem)
 		else
 			mem.error = result.errors
 		end
+	else
+		vm16.files.on_receive_fields(pos, fields, mem)
 	end
 end

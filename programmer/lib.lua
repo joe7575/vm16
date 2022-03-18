@@ -68,15 +68,24 @@ function vm16.prog.to_string(val)
 	end
 end
 
-local function get_window(mem, lineno, size)
-	if mem.scroll_lineno then
-		return mem.scroll_lineno, mem.scroll_lineno + 16
+--local function get_window(mem, lineno, size)
+--	if mem.scroll_lineno then
+--		return mem.scroll_lineno, mem.scroll_lineno + 16
+--	end
+--	mem.start_idx = mem.start_idx or 1
+--	if lineno > mem.start_idx + 12 then
+--		mem.start_idx = lineno - 12
+--	elseif lineno > 3 and lineno < mem.start_idx + 3 then
+--		mem.start_idx = lineno - 3
+--	end
+--	return mem.start_idx, math.min(mem.start_idx + 16, size)
+--end
+
+function vm16.prog.get_cpu_def(cpu_pos)
+	local node = minetest.get_node(cpu_pos)
+	local ndef = minetest.registered_nodes[node.name]
+	if ndef and ndef.vm16_cpu then
+		return ndef.vm16_cpu
 	end
-	mem.start_idx = mem.start_idx or 1
-	if lineno > mem.start_idx + 12 then
-		mem.start_idx = lineno - 12
-	elseif lineno > 3 and lineno < mem.start_idx + 3 then
-		mem.start_idx = lineno - 3
-	end
-	return mem.start_idx, math.min(mem.start_idx + 16, size)
 end
+
