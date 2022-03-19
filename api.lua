@@ -312,13 +312,13 @@ function vm16.run(pos, cycles, callbacks, breakpoints)
 			local io = vm16lib.get_io_reg(vm)
 			io.data = callbacks.on_input(pos, io.addr) or 0xFFFF
 			vm16lib.set_io_reg(vm, io)
-			-- max. 20 inputs per run
-			cycles = cycles - CYCLES/20
+			-- max. 10 inputs per run (100/s)
+			cycles = cycles - CYCLES/10
 		elseif resp == VM16_OUT then
 			local io = vm16lib.get_io_reg(vm)
 			if callbacks.on_output(pos, io.addr, io.data, io.B) then return resp end
-			-- max. 10 outputs per run
-			cycles = cycles - CYCLES/10
+			-- max. 2 outputs per run (20/s)
+			cycles = cycles - CYCLES/2
 		elseif resp == VM16_SYS then
 			local io = vm16lib.get_io_reg(vm)
 			io.data = callbacks.on_system(pos, io.addr, io.A, io.B) or 0xFFFF

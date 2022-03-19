@@ -114,14 +114,20 @@ function vm16.edit.on_receive_fields(pos, fields, mem)
 		mem.asm_code, mem.error = vm16.gen_asm_code(mem.filename or "", mem.text or "")
 		vm16.files.init(pos, mem)
 	elseif fields.debug then
-		mem.error = nil
-		mem.asm_code = nil
-		local result = vm16.gen_obj_code(mem.filename or "", mem.text or "")
-		if not result.errors then
-			vm16.debug.init(pos, mem, result)
-			vm16.watch.init(pos, mem, result)
-		else
-			mem.error = result.errors
+		local def = prog.get_cpu_def(mem.cpu_pos)
+		if def then
+			local prog_pos = def.on_check_connection(mem.cpu_pos)
+			if vector.equals(pos, prog_pos) then 
+				mem.error = nil
+				mem.asm_code = nil
+				local result = vm16.gen_obj_code(mem.filename or "", mem.text or "")
+				if not result.errors then
+					vm16.debug.init(pos, mem, result)
+					vm16.watch.init(pos, mem, result)
+				else
+					mem.error = result.errors
+				end
+			end
 		end
 	else
 		vm16.files.on_receive_fields(pos, fields, mem)

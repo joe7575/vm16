@@ -145,3 +145,11 @@ minetest.register_node("vm16:switch_on", {
 
 vm16.register_io_nodes({"vm16:switch_on", "vm16:switch_off"})
 
+minetest.register_craft({
+	output = "vm16:switch_off",
+	recipe = {
+		{"", "group:wood", ""},
+		{"", "default:obsidian_glass", ""},
+		{"", "basic_materials:ic", ""},
+	},
+})

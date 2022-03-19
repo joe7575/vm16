@@ -129,7 +129,9 @@ function vm16.debug.init(pos, mem, result)
 		end
 	end
 
-	vm16.create(mem.cpu_pos, 3)  -- TODO
+	local def = prog.get_cpu_def(mem.cpu_pos)
+	local mem_size = def and def.on_mem_size(mem.cpu_pos) or 3
+	vm16.create(mem.cpu_pos, mem_size)
 	for _,tok in ipairs(result.output) do
 		for i, opc in pairs(tok.opcodes or {}) do
 			vm16.poke(mem.cpu_pos, tok.address + i - 1, opc)
@@ -218,17 +220,6 @@ function vm16.debug.on_receive_fields(pos, fields, mem, clbks)
 		if mem.running then
 			minetest.get_node_timer(mem.cpu_pos):stop()
 			mem.running = false
-		end
-	end
-end
-
-function vm16.prog.run(cpu_pos, prog_pos, cycles, callbacks)
-	if vm16.is_loaded(cpu_pos) then
-		local mem = prog.get_mem(prog_pos)
-		print("on_timer", P2S(cpu_pos), mem.running)
-		if mem.running then
-			mem.cycles = cycles
-			return vm16.run(cpu_pos, cycles, callbacks, mem.breakpoints) < vm16.HALT
 		end
 	end
 end

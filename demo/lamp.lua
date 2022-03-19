@@ -46,7 +46,11 @@ local function on_vm16_start_cpu(pos, cpu_pos)
 	vm16.register_output_address(pos, cpu_pos, M(pos):get_int("address"),
 		function(pos, address, value)
 			local node = minetest.get_node(pos)
-			switch_on(pos, node, nil, value)
+			if value > 0 then
+				switch_on(pos, node, nil, value)
+			else
+				switch_off(pos, node, nil)
+			end
 		end
 	)
 end

@@ -49,6 +49,11 @@ dofile(MP.."/programmer/win_watch.lua")
 dofile(MP.."/programmer/formspec.lua")
 dofile(MP.."/programmer/programmer.lua")
 
-dofile(MP.."/demo/cpu.lua")
-dofile(MP.."/demo/switch.lua")
-dofile(MP.."/demo/lamp.lua")
+-- for testing purposes
+if minetest.settings:get_bool("vm16_testblocks_enabled") == true and
+		minetest.global_exists("default") and
+		minetest.global_exists("basic_materials") then
+	dofile(MP.."/demo/cpu.lua")
+	dofile(MP.."/demo/switch.lua")
+	dofile(MP.."/demo/lamp.lua")
+end

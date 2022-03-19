@@ -144,8 +144,16 @@ function vm16.add_ro_file(pos, filename, text)
 	end
 end
 
+function vm16.keep_running(cpu_pos, prog_pos, cycles, callbacks)
+	if vm16.is_loaded(cpu_pos) then
+		local mem = prog.get_mem(prog_pos)
+		mem.running = true
+		mem.cycles = cycles
+		return vm16.run(cpu_pos, cycles, callbacks, mem.breakpoints) < vm16.HALT
+	end
+end
+
 function vm16.update_programmer(cpu_pos, pos, resp)
-	print("on_update", vm16.CallResults[resp])
 	local mem = prog.get_mem(pos)
 	vm16.debug.on_update(pos, mem)
 	M(pos):set_string("formspec", prog.formspec(pos, mem))

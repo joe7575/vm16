@@ -15,7 +15,6 @@ local M = minetest.get_meta
 local H = minetest.hash_node_position
 local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
 local S2P = function(s) return minetest.string_to_pos(s) end
-local prog = vm16.prog
 
 local RADIUS = 3
 
@@ -24,26 +23,38 @@ local Outputs = {}  -- [hash] = {addr = pos}
 local IONodes = {}  -- Known I/O nodes
 
 local Example1 = [[
-var var1;
-var var2 = 2;
+// Read button on input #1 and
+// control demo lamp on output #1.
 
-func get_five() {
-  return 5;
+func main() {
+  var idx = 0;
+
+  while(1){
+    if(input(1) == 1) {
+      output(1, idx);
+      idx = (idx + 1) % 64;
+      sleep(2);
+    }
+  }
 }
+]]
 
-func foo(a,b) {
-  var c = a;
-  var d = b;
-  return c * d;
+local Example2 = [[
+// Output some characters on the
+// programmer status line (output #0).
+
+var max = 32;
+
+func get_char(i) {
+  return 0x40 + i;
 }
 
 func main() {
-  var c = var1 + 1;
-  var res;
+  var i;
 
-  res = (c + var2) * 2;
-  output(1, get_five(b));
-  output(2, foo(var2, c));  
+  for(i = 0; i < max; i++) {
+    output(0, get_char(i));
+  }
 }
 ]]
 
@@ -105,7 +116,7 @@ minetest.register_node("vm16:cpu", {
 	},
 	on_timer = function(pos, elapsed)
 		local prog_pos = S2P(M(pos):get_string("prog_pos"))
-		return vm16.prog.run(pos, prog_pos, 10000, callbacks)
+		return vm16.keep_running(pos, prog_pos, 10000, callbacks)
 	end,
 	after_dig_node = function(pos)
 		vm16.destroy(pos)
@@ -114,13 +125,19 @@ minetest.register_node("vm16:cpu", {
 	is_ground_content = false,
 
 	vm16_cpu = {
-		mem_size = 4,  -- 1024 bytes
 		callbacks = callbacks,
 		on_init = function(pos, prog_pos)
 			M(pos):set_string("prog_pos", P2S(prog_pos))
 			find_io_nodes(pos)
 			vm16.add_ro_file(prog_pos, "example1.c", Example1)
+			vm16.add_ro_file(prog_pos, "example2.c", Example2)
 			vm16.add_ro_file(prog_pos, "info.txt", Info)
+		end,
+		on_mem_size = function(pos) 
+			return 4  -- 1024 bytes
+		end,
+		on_check_connection = function(pos)
+			return S2P(M(pos):get_string("prog_pos"))
 		end,
 		on_infotext = function(pos)
 			return Info
@@ -128,16 +145,25 @@ minetest.register_node("vm16:cpu", {
 	}
 })
 
---minetest.register_lbm({
---	label = "vm16 Load CPU",
---	name = "vm16:load_cpu",
---	nodenames = {"vm16:cpu"},
---	run_at_every_load = true,
---	action = function(pos, node)
---		find_io_nodes(pos)
---		vm16.on_load(pos)
---	end
---})
+minetest.register_lbm({
+	label = "vm16 Load CPU",
+	name = "vm16:load_cpu",
+	nodenames = {"vm16:cpu"},
+	run_at_every_load = true,
+	action = function(pos, node)
+		find_io_nodes(pos)
+		vm16.on_load(pos)
+	end
+})
+
+minetest.register_craft({
+	output = "vm16:cpu",
+	recipe = {
+		{"", "default:obsidian_glass", ""},
+		{"default:steelblock", "basic_materials:gold_wire", "default:steelblock"},
+		{"basic_materials:ic", "basic_materials:ic", "basic_materials:ic"},
+	},
+})
 
 -------------------------------------------------------------------------------
 -- API for I/O nodes
