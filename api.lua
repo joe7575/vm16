@@ -20,9 +20,8 @@ local VMList = {}
 local storage = minetest.get_mod_storage()
 
 -------------------------------------------------------------------------------
-local VERSION     = 3.1  -- See readme.md
+local VERSION     = 3.2  -- See readme.md
 -------------------------------------------------------------------------------
-local CYCLES = 10000  -- max CPU cycles / 100 ms
 local VM16_OK     = 0  -- run to the end
 local VM16_NOP    = 1  -- nop command
 local VM16_IN     = 2  -- input command
@@ -285,14 +284,13 @@ function vm16.read_h16(pos, start_addr, size)
 	return vm and vm16lib.read_h16(vm, start_addr, size)
 end
 
-function vm16.run(pos, cycles, callbacks, breakpoints)
+function vm16.run(pos, cpu_def, breakpoints)
 	local hash = minetest.hash_node_position(pos)
 	local vm = VMList[hash]
 	local resp = VM16_ERROR
 	local ran
 
-	callbacks = callbacks or Callbacks
-	cycles = math.min(cycles or CYCLES, CYCLES)
+	local cycles = cpu_def.instr_per_cycle
 	if skip_break_instr(pos, vm, breakpoints) then
 		return VM16_OK
 	end
@@ -306,32 +304,29 @@ function vm16.run(pos, cycles, callbacks, breakpoints)
 		elseif resp == VM16_BREAK then
 			store_breakpoint_addr(pos, vm, breakpoints)
 			local cpu = vm16lib.get_cpu_reg(vm)
-			callbacks.on_update(pos, resp, cpu)
+			cpu_def.on_update(pos, resp, cpu)
 			return VM16_BREAK
 		elseif resp == VM16_IN then
 			local io = vm16lib.get_io_reg(vm)
-			io.data = callbacks.on_input(pos, io.addr) or 0xFFFF
+			io.data = cpu_def.on_input(pos, io.addr) or 0xFFFF
 			vm16lib.set_io_reg(vm, io)
-			-- max. 10 inputs per run (100/s)
-			cycles = cycles - CYCLES/10
+			cycles = cycles - cpu_def.input_costs
 		elseif resp == VM16_OUT then
 			local io = vm16lib.get_io_reg(vm)
-			if callbacks.on_output(pos, io.addr, io.data, io.B) then return resp end
-			-- max. 2 outputs per run (20/s)
-			cycles = cycles - CYCLES/2
+			if cpu_def.on_output(pos, io.addr, io.data, io.B) then return resp end
+			cycles = cycles - cpu_def.output_costs
 		elseif resp == VM16_SYS then
 			local io = vm16lib.get_io_reg(vm)
-			io.data = callbacks.on_system(pos, io.addr, io.A, io.B) or 0xFFFF
+			io.data = cpu_def.on_system(pos, io.addr, io.A, io.B) or 0xFFFF
 			vm16lib.set_io_reg(vm, io)
-			-- max. 10 sys-calls per run
-			cycles = cycles - (SpecialCycles[io.addr] or CYCLES/10)
+			cycles = cycles - cpu_def.system_costs
 		elseif resp == VM16_HALT then
 			local cpu = vm16lib.get_cpu_reg(vm)
-			callbacks.on_update(pos, resp, cpu)
+			cpu_def.on_update(pos, resp, cpu)
 			return VM16_HALT
 		elseif resp == VM16_ERROR then
 			local cpu = vm16lib.get_cpu_reg(vm)
-			callbacks.on_update(pos, resp, cpu)
+			cpu_def.on_update(pos, resp, cpu)
 			return VM16_ERROR
 		end
 	end

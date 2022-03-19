@@ -63,7 +63,7 @@ function prog.formspec(pos, mem)
 		"label[0.3,11.7;Mode: " .. mem.status .. "]"
 end
 
-function prog.on_receive_fields(pos, formname, fields, player, clbks)
+function prog.on_receive_fields(pos, formname, fields, player)
 	if player and minetest.is_protected(pos, player:get_player_name()) then
 		return
 	end
@@ -74,7 +74,7 @@ function prog.on_receive_fields(pos, formname, fields, player, clbks)
 	elseif fields.smaller then
 		M(pos):set_int("textsize", math.max(M(pos):get_int("textsize") - 1, -8))
 	elseif mem.cpu_pos and vm16.is_loaded(mem.cpu_pos) then
-		vm16.debug.on_receive_fields(pos, fields, mem, clbks)
+		vm16.debug.on_receive_fields(pos, fields, mem)
 	else
 		mem.running = nil
 		vm16.edit.on_receive_fields(pos, fields, mem)

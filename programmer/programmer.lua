@@ -82,8 +82,8 @@ minetest.register_node("vm16:programmer", {
 	on_receive_fields = function(pos, formname, fields, player)
 		local mem = prog.get_mem(pos)
 		if cpu_server_pos(pos, mem) then
-			local def = prog.get_cpu_def(mem.cpu_pos)
-			vm16.prog.on_receive_fields(pos, formname, fields, player, def.callbacks)
+			mem.cpu_def = mem.cpu_def or prog.get_cpu_def(mem.cpu_pos).cpu_def
+			vm16.prog.on_receive_fields(pos, formname, fields, player)
 		end
 	end,
 	after_dig_node = function(pos)
@@ -137,6 +137,15 @@ minetest.register_lbm({
 	end
 })
 
+-------------------------------------------------------------------------------
+-- CPU API
+-------------------------------------------------------------------------------
+function vm16.load_cpu(cpu_pos, prog_pos, cpu_def)
+	local mem = prog.get_mem(prog_pos)
+	mem.cpu_def = cpu_def
+	vm16.on_load(cpu_pos)
+end
+
 function vm16.add_ro_file(pos, filename, text)
 	local mem = prog.get_mem(pos)
 	if cpu_server_pos(pos, mem) then
@@ -144,26 +153,31 @@ function vm16.add_ro_file(pos, filename, text)
 	end
 end
 
-function vm16.keep_running(cpu_pos, prog_pos, cycles, callbacks)
+function vm16.keep_running(cpu_pos, prog_pos, cpu_def)
+	local mem = prog.get_mem(prog_pos)
+	mem.cpu_def = cpu_def
+
 	if vm16.is_loaded(cpu_pos) then
-		local mem = prog.get_mem(prog_pos)
 		mem.running = true
-		mem.cycles = cycles
-		return vm16.run(cpu_pos, cycles, callbacks, mem.breakpoints) < vm16.HALT
+		return vm16.run(cpu_pos, cpu_def, mem.breakpoints) < vm16.HALT
 	end
 end
 
-function vm16.update_programmer(cpu_pos, pos, resp)
-	local mem = prog.get_mem(pos)
-	vm16.debug.on_update(pos, mem)
-	M(pos):set_string("formspec", prog.formspec(pos, mem))
+function vm16.update_programmer(cpu_pos, prog_pos, resp)
+	local mem = prog.get_mem(prog_pos)
+	vm16.debug.on_update(prog_pos, mem)
+	M(pos):set_string("formspec", prog.formspec(prog_pos, mem))
 end
 
-function vm16.putchar(pos, val)
-	local mem = prog.get_mem(pos)
-	if val1 == 0 then
+function vm16.putchar(prog_pos, val)
+	local mem = prog.get_mem(prog_pos)
+	if val == 0 then
 		mem.output = ""
 	elseif mem.output and #mem.output < 80 then
 		mem.output = mem.output .. prog.to_string(val)
 	end
+end
+
+function vm16.unload_cpu(cpu_pos, prog_pos)
+	vm16.destroy(cpu_pos)
 end

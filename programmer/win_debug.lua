@@ -130,6 +130,7 @@ function vm16.debug.init(pos, mem, result)
 	end
 
 	local def = prog.get_cpu_def(mem.cpu_pos)
+	mem.cpu_def = def.cpu_def
 	local mem_size = def and def.on_mem_size(mem.cpu_pos) or 3
 	vm16.create(mem.cpu_pos, mem_size)
 	for _,tok in ipairs(result.output) do
@@ -173,7 +174,7 @@ function vm16.debug.formspec(pos, mem, textsize)
 			vm16.watch.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize)
 end
 
-function vm16.debug.on_receive_fields(pos, fields, mem, clbks)
+function vm16.debug.on_receive_fields(pos, fields, mem)
 	if fields.edit then
 		minetest.get_node_timer(mem.cpu_pos):stop()
 		vm16.destroy(mem.cpu_pos)
@@ -193,21 +194,21 @@ function vm16.debug.on_receive_fields(pos, fields, mem, clbks)
 			local lineno = get_next_lineno(pos, mem)
 			set_temp_breakpoint(pos, mem, lineno)
 			mem.running = true
-			minetest.get_node_timer(mem.cpu_pos):start(0.1)
-			vm16.run(mem.cpu_pos, mem.cycles, clbks, mem.breakpoints)
+			minetest.get_node_timer(mem.cpu_pos):start(mem.cpu_def.cycle_time)
+			vm16.run(mem.cpu_pos, mem.cpu_def, mem.breakpoints)
 		end
 	elseif fields.runto then
 		if vm16.is_loaded(mem.cpu_pos) then
 			set_temp_breakpoint(pos, mem, mem.cursorline or 1)
 			mem.running = true
-			minetest.get_node_timer(mem.cpu_pos):start(0.1)
-			vm16.run(mem.cpu_pos, mem.cycles, clbks, mem.breakpoints)
+			minetest.get_node_timer(mem.cpu_pos):start(mem.cpu_def.cycle_time)
+			vm16.run(mem.cpu_pos, mem.cpu_def, mem.breakpoints)
 		end
 	elseif fields.run then
 		if vm16.is_loaded(mem.cpu_pos) then
 			mem.running = true
-			minetest.get_node_timer(mem.cpu_pos):start(0.1)
-			vm16.run(mem.cpu_pos, mem.cycles, clbks, mem.breakpoints)
+			minetest.get_node_timer(mem.cpu_pos):start(mem.cpu_def.cycle_time)
+			vm16.run(mem.cpu_pos, mem.cpu_def, mem.breakpoints)
 		end
 	elseif fields.reset then
 		if vm16.is_loaded(mem.cpu_pos) then

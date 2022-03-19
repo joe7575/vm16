@@ -7,7 +7,7 @@
 	GPL v3
 	See LICENSE.txt for more information
 
-	Simple CPU for testing purposes
+	Simple CPU for demo purposes
 ]]--
 
 -- for lazy programmers
@@ -16,12 +16,13 @@ local H = minetest.hash_node_position
 local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
 local S2P = function(s) return minetest.string_to_pos(s) end
 
-local RADIUS = 3
+local RADIUS = 3    -- for I/O nodes
 
 local Inputs = {}   -- [hash] = {addr = value}
 local Outputs = {}  -- [hash] = {addr = pos}
 local IONodes = {}  -- Known I/O nodes
 
+-- Will be added to the programmer file system as read-only C-file.
 local Example1 = [[
 // Read button on input #1 and
 // control demo lamp on output #1.
@@ -39,6 +40,7 @@ func main() {
 }
 ]]
 
+-- Will be added to the programmer file system as read-only C-file.
 local Example2 = [[
 // Output some characters on the
 // programmer status line (output #0).
@@ -58,6 +60,8 @@ func main() {
 }
 ]]
 
+-- Will be added to the programmer file system as read-only TXT-file.
+-- Can be used as CPU description.
 local Info = [[
 This is a demo CPU
 ]]
@@ -75,6 +79,7 @@ local function find_io_nodes(cpu_pos)
 	end
 end
 
+-- Called for each 'output' instruction.
 local function on_output(pos, address, val1, val2)
 	if address == 0 then
 		local prog_pos = S2P(M(pos):get_string("prog_pos"))
@@ -88,6 +93,7 @@ local function on_output(pos, address, val1, val2)
 	end
 end
 
+-- Called for each 'input' instruction.
 local function on_input(pos, address)
 	local hash = H(pos)
 	local item = Inputs[hash] and Inputs[hash][address]
@@ -96,16 +102,29 @@ local function on_input(pos, address)
 	end
 end
 
+-- Called when CPU stops.
 local function on_update(pos, resp)
 	local prog_pos = S2P(M(pos):get_string("prog_pos"))
 	vm16.update_programmer(pos, prog_pos, resp)
 end
 
+-- Called for each 'system' instruction.
 local function on_system(pos, address, val1, val2)
 	print("on_system")
 end
 
-local callbacks = vm16.generate_callback_table(on_input, on_output, on_system, on_update)
+-- CPU definition
+local cpu_def = {
+	cycle_time = 0.1, -- timer cycle time
+	instr_per_cycle = 10000,
+	input_costs = 1000,  -- number of instructions
+	output_costs = 5000, -- number of instructions
+	system_costs = 2000, -- number of instructions
+	on_input = on_input,
+	on_output = on_output,
+	on_system = on_system,
+	on_update = on_update,
+}
 
 minetest.register_node("vm16:cpu", {
 	description = "VM16 Computer",
@@ -116,16 +135,17 @@ minetest.register_node("vm16:cpu", {
 	},
 	on_timer = function(pos, elapsed)
 		local prog_pos = S2P(M(pos):get_string("prog_pos"))
-		return vm16.keep_running(pos, prog_pos, 10000, callbacks)
+		return vm16.keep_running(pos, prog_pos, cpu_def)
 	end,
 	after_dig_node = function(pos)
-		vm16.destroy(pos)
+		local prog_pos = S2P(M(pos):get_string("prog_pos"))
+		vm16.unload_cpu(pos, prog_pos)
 	end,
 	groups = {cracky=2, crumbly=2, choppy=2},
 	is_ground_content = false,
 
 	vm16_cpu = {
-		callbacks = callbacks,
+		cpu_def = cpu_def,
 		on_init = function(pos, prog_pos)
 			M(pos):set_string("prog_pos", P2S(prog_pos))
 			find_io_nodes(pos)
@@ -152,7 +172,8 @@ minetest.register_lbm({
 	run_at_every_load = true,
 	action = function(pos, node)
 		find_io_nodes(pos)
-		vm16.on_load(pos)
+		local prog_pos = S2P(M(pos):get_string("prog_pos"))
+		vm16.load_cpu(pos, prog_pos, cpu_def)
 	end
 })
 
