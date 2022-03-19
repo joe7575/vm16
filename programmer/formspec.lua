@@ -14,13 +14,13 @@
 local M = minetest.get_meta
 local prog = vm16.prog
 
-
 function prog.fs_connect(mem)
 	local info = "Error: No CPU connection!"
-	if mem.cpu_pos then
+	if mem.cpu_pos and mem.server_pos then
 		local def = prog.get_cpu_def(mem.cpu_pos)
 		if def then
-			info = def.on_infotext(mem.cpu_pos) or "nix"
+			info = def.on_infotext(mem.cpu_pos) or ""
+			vm16.server.add_ro_file(mem.server_pos, "info.txt", info)
 			info = minetest.formspec_escape(info)
 		end
 	end
@@ -80,11 +80,4 @@ function prog.on_receive_fields(pos, formname, fields, player, clbks)
 		vm16.edit.on_receive_fields(pos, fields, mem)
 	end
 	M(pos):set_string("formspec", vm16.prog.formspec(pos, mem))
-end
-
-function prog.on_update(pos, resp)
-	print("on_update", vm16.CallResults[resp])
-	local mem = prog.get_mem(pos)
-	vm16.debug.on_update(pos, mem)
-	M(pos):set_string("formspec", prog.formspec(pos, mem))
 end

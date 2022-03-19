@@ -13,55 +13,18 @@
 -- for lazy programmers
 local M = minetest.get_meta
 local prog = vm16.prog
+local server = vm16.server
 
 vm16.files = {}
 
--------------------------------------------------------------------------------
--- Primitives
--------------------------------------------------------------------------------
-local function get_file_list(mem)
-	if mem.server_pos then
-		local meta = M(mem.server_pos)
-		local s = M(mem.server_pos):get_string("files")
-		local files = minetest.deserialize(s) or {}
-		local t = {}
-		for name, text in pairs(files) do
-			t[#t + 1] = name
-		end
-		table.sort(t)
-		return files, t
-	end
-	return {}, {}
-end
-
-local function write_file(mem, files, name, text)
-	local meta = M(mem.server_pos)
-	print(dump(text))
-	if text ~= "" then
-		files[name] = text
-	else
-		files[name] = nil
-	end
-	local s = minetest.serialize(files)
-	meta:set_string("files", s)
-end
-
-local function rename_file(mem, files, old_name, new_name)
-	local meta = M(mem.server_pos)
-	files[new_name] = files[old_name]
-	files[old_name] = nil
-	local s = minetest.serialize(files)
-	meta:set_string("files", s)
-end
-
--------------------------------------------------------------------------------
--- Helper functions
--------------------------------------------------------------------------------
 local function open_file(mem, index)
-	mem.file_cursor = index
-	local files, names = get_file_list(mem)
-	local name = names[index] or names[1]
-	vm16.edit.on_load_file(mem, name, files[name] or "")
+	if mem.server_pos then
+		mem.file_cursor = index
+		local names = server.get_filelist(mem.server_pos)
+		local item = names[index] or names[1]
+		local text = server.read_file(mem.server_pos, item.name)
+		vm16.edit.on_load_file(mem, item.name, text)
+	end
 end
 
 local function set_cursor(mem, index)
@@ -69,38 +32,26 @@ local function set_cursor(mem, index)
 end
 
 local function new_file(mem, name)
-	local files, names = get_file_list(mem)
-	print("new_file", dump(files), dump(names))
-	write_file(mem, files, name, "<new>")
+	if mem.server_pos then
+		server.write_file(mem.server_pos, name, "<new>")
+	end
 end
 
 local function format_files(pos, mem)
-	local _, names = get_file_list(mem)
-	print("format_files", dump(names))
-	local lines = {}
-	for _, name in ipairs(names or {}) do
-		local s = string.format("%-16s rw", name)
-		lines[#lines + 1] = s
+	if mem.server_pos then
+		local names = server.get_filelist(mem.server_pos)
+		local out = {}
+		for _, item in ipairs(names or {}) do
+			local s = string.format("%-16s %s", item.name, item.attr)
+			out[#out + 1] = s
+		end
+		return table.concat(out, ",")
 	end
-	return table.concat(lines, ",")
 end
 
 -------------------------------------------------------------------------------
 -- API
 -------------------------------------------------------------------------------
-function vm16.files.store_file(mem, name, text)
-	if name and text then
-		local files, _ = get_file_list(mem)
-		write_file(mem, files, name, text)
-	end
-end
-
-function vm16.files.get_current_file(mem)
-	local files, names = get_file_list(mem)
-	local name = names[mem.file_cursor] or names[1] or ""
-	return name, files[name] or ""
-end
-
 function vm16.files.init(pos, mem)
 end
 
@@ -119,7 +70,6 @@ function vm16.files.fs_window(pos, mem, x, y, xsize, ysize, fontsize)
 end
 
 function vm16.files.on_receive_fields(pos, fields, mem)
-	print(dump(fields))
 	if fields.files then
 		local evt = minetest.explode_table_event(fields.files)
 		if evt.type == "DCL" then

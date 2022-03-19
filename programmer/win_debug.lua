@@ -12,6 +12,8 @@
 
 -- for lazy programmers
 local M = minetest.get_meta
+local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
+local S2P = function(s) return minetest.string_to_pos(s) end
 local prog = vm16.prog
 
 vm16.debug = {}
@@ -165,8 +167,7 @@ function vm16.debug.formspec(pos, mem, textsize)
 			vm16.menubar.add_button("reset", "Reset")
 		end
 		mem.status = mem.running and "Running..." or minetest.formspec_escape("Debug  |  Out[0]: " .. (mem.output or ""))
-		local text =  M(pos):get_string("code")
-		return fs_window(pos, mem, 0.2, 0.6, 11.4, 9.6, textsize, text) ..
+		return fs_window(pos, mem, 0.2, 0.6, 11.4, 9.6, textsize, mem.text or "") ..
 			vm16.watch.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize)
 end
 

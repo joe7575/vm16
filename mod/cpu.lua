@@ -23,8 +23,7 @@ local Inputs = {}   -- [hash] = {addr = value}
 local Outputs = {}  -- [hash] = {addr = pos}
 local IONodes = {}  -- Known I/O nodes
 
--- Start example
-local StartCode = [[
+local Example1 = [[
 var var1;
 var var2 = 2;
 
@@ -48,6 +47,9 @@ func main() {
 }
 ]]
 
+local Info = [[
+This is a demo CPU
+]]
 
 local function find_io_nodes(cpu_pos)
 	local pos1 = {x = cpu_pos.x - RADIUS, y = cpu_pos.y - RADIUS, z = cpu_pos.z - RADIUS}
@@ -63,10 +65,15 @@ local function find_io_nodes(cpu_pos)
 end
 
 local function on_output(pos, address, val1, val2)
-	local hash = H(pos)
-	local item = Outputs[hash] and Outputs[hash][address]
-	if item then
-		item.output(item.pos, address, val1, val2)
+	if address == 0 then
+		local prog_pos = S2P(M(pos):get_string("prog_pos"))
+		vm16.putchar(prog_pos, val1)
+	else
+		local hash = H(pos)
+		local item = Outputs[hash] and Outputs[hash][address]
+		if item then
+			item.output(item.pos, address, val1, val2)
+		end
 	end
 end
 
@@ -80,7 +87,7 @@ end
 
 local function on_update(pos, resp)
 	local prog_pos = S2P(M(pos):get_string("prog_pos"))
-	vm16.prog.on_update(pos, prog_pos, resp)
+	vm16.update_programmer(pos, prog_pos, resp)
 end
 
 local function on_system(pos, address, val1, val2)
@@ -108,28 +115,29 @@ minetest.register_node("vm16:cpu", {
 
 	vm16_cpu = {
 		mem_size = 4,  -- 1024 bytes
-		start_code = StartCode,
 		callbacks = callbacks,
-		on_start = function(pos, prog_pos)
+		on_init = function(pos, prog_pos)
 			M(pos):set_string("prog_pos", P2S(prog_pos))
 			find_io_nodes(pos)
+			vm16.add_ro_file(prog_pos, "example1.c", Example1)
+			vm16.add_ro_file(prog_pos, "info.txt", Info)
 		end,
 		on_infotext = function(pos)
-			return "No info"
+			return Info
 		end,
 	}
 })
 
-minetest.register_lbm({
-	label = "vm16 Load CPU",
-	name = "vm16:load_cpu",
-	nodenames = {"vm16:cpu"},
-	run_at_every_load = true,
-	action = function(pos, node)
-		find_io_nodes(pos)
-		vm16.on_load(pos)
-	end
-})
+--minetest.register_lbm({
+--	label = "vm16 Load CPU",
+--	name = "vm16:load_cpu",
+--	nodenames = {"vm16:cpu"},
+--	run_at_every_load = true,
+--	action = function(pos, node)
+--		find_io_nodes(pos)
+--		vm16.on_load(pos)
+--	end
+--})
 
 -------------------------------------------------------------------------------
 -- API for I/O nodes

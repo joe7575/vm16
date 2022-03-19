@@ -77,6 +77,14 @@ local function gen_asm_token_list(lCode, lData)
 	return out
 end
 
+local function error_msg(err)
+	local t = string.split(err, ":")
+	if t and #t > 1 then 
+		return t[#t]
+	end
+	return err
+end
+
 local function format_asm_output(lToken)
 	local out = {}
 	local tok
@@ -102,9 +110,10 @@ local function format_asm_output(lToken)
 	return out
 end
 
-function vm16.gen_obj_code(code)
+function vm16.gen_obj_code(filename, code)
 	local out = {}
 	local prs =  vm16.BPars:new({text = code})
+	prs.filename = filename
 	prs:bpars_init()
 	local status, err = pcall(prs.main, prs)
 	if not err then
@@ -131,19 +140,20 @@ function vm16.gen_obj_code(code)
 		output = {},
 		globals = {},
 		functions = {},
-		errors = err}
+		errors = error_msg(err)}
 end
 
-function vm16.gen_asm_code(code)
+function vm16.gen_asm_code(filename, code)
 	local out = {}
 	local prs =  vm16.BPars:new({text = code, add_sourcecode = true})
+	prs.filename = filename
 	prs:bpars_init()
 	local status, err = pcall(prs.main, prs)
 	if not err then
 		return gen_comp_output(prs.lCode, prs.lData)
 	else
-		local fname = prs.filename or "main.asm"
+		local fname = prs.filename or ""
 		local lineno = prs.lineno or "0"
-		return string.format("%s(%d): %s", fname, lineno, err)
+		return nil, string.format("%s(%d): %s", fname, lineno, error_msg(err))
 	end
 end

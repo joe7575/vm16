@@ -13,6 +13,7 @@
 -- for lazy programmers
 local M = minetest.get_meta
 local prog = vm16.prog
+local server = vm16.server
 
 local EDIT_SIZE = "0.2,0.6;11.4, 9.6"
 
@@ -29,6 +30,11 @@ local function add_lineno(pos, text, err)
 		out[#out + 1] = lineno .. line
 	end
 	return table.concat(out, "\n")
+end
+
+local function file_ext(filename)
+	local _, ext = unpack(string.split(filename, ".", true, 1))
+	return ext
 end
 
 local function fs_editor(pos, mem, fontsize, file, text)
@@ -71,12 +77,15 @@ function vm16.edit.formspec(pos, mem, textsize)
 			vm16.files.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize)
 	else
 		-- Edit source code
-		vm16.menubar.add_button("save", "Save")
-		vm16.menubar.add_button("compile", "Compile")
-		vm16.menubar.add_button("debug", "Debug")
 		mem.status = "Edit"
 		if not mem.filename or not mem.text then
-			mem.filename, mem.text = vm16.files.get_current_file(mem)
+			mem.filename = "-"
+			mem.text = ""
+		end
+		vm16.menubar.add_button("save", "Save")
+		if file_ext(mem.filename) == "c" then
+			vm16.menubar.add_button("compile", "Compile")
+			vm16.menubar.add_button("debug", "Debug")
 		end
 		return fs_editor(pos, mem, textsize, mem.filename, mem.text) ..
 			vm16.files.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize)
@@ -92,9 +101,9 @@ end
 
 function vm16.edit.on_receive_fields(pos, fields, mem)
 	if fields.code and (fields.save or fields.compile or fields.assemble or fields.debug) then
-		if mem.filename then
+		if mem.filename and mem.server_pos then
 			mem.text = fields.code
-			vm16.files.store_file(mem, mem.filename, mem.text)
+			server.write_file(mem.server_pos, mem.filename, mem.text)
 		end
 	end
 	if fields.edit then
@@ -102,12 +111,12 @@ function vm16.edit.on_receive_fields(pos, fields, mem)
 		mem.asm_code = nil
 	elseif fields.compile then
 		mem.error = nil
-		mem.asm_code = vm16.gen_asm_code(M(pos):get_string("code"))
+		mem.asm_code, mem.error = vm16.gen_asm_code(mem.filename or "", mem.text or "")
 		vm16.files.init(pos, mem)
 	elseif fields.debug then
 		mem.error = nil
 		mem.asm_code = nil
-		local result = vm16.gen_obj_code(M(pos):get_string("code"))
+		local result = vm16.gen_obj_code(mem.filename or "", mem.text or "")
 		if not result.errors then
 			vm16.debug.init(pos, mem, result)
 			vm16.watch.init(pos, mem, result)

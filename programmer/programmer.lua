@@ -31,14 +31,11 @@ local function preserve_cpu_server_pos(pos, itemstack)
 	end
 end
 
-local function get_start_code(pos)
-	local mem = prog.get_mem(pos)
-	if cpu_server_pos(pos, mem) then
-		local def = prog.get_cpu_def(mem.cpu_pos)
-		if def then
-			return def.start_code or ""
-		end
-	end
+local function init(pos, mem)
+	local def = prog.get_cpu_def(mem.cpu_pos)
+	vm16.server.init(mem.server_pos)
+	vm16.files.init(pos, mem)
+	def.on_init(mem.cpu_pos, pos)
 end
 
 minetest.register_node("vm16:programmer", {
@@ -69,11 +66,12 @@ minetest.register_node("vm16:programmer", {
 	after_place_node = function(pos, placer, itemstack, pointed_thing)
 		local mem = prog.get_mem(pos)
 		preserve_cpu_server_pos(pos, itemstack)
-		cpu_server_pos(pos, mem)
 		local meta = M(pos)
 		meta:set_string("formspec", prog.fs_connect(mem))
-		meta:set_string("code", get_start_code(pos))
 		meta:set_string("infotext", "VM16 Programmer")
+		if cpu_server_pos(pos, mem) then
+			init(pos, mem)
+		end
 	end,
 	on_rightclick = function(pos)
 		local mem = prog.get_mem(pos)
@@ -96,9 +94,13 @@ minetest.register_node("vm16:programmer", {
 	end,
 	on_use = function(itemstack, user, pointed_thing)
 		if pointed_thing.type == "node" then
+			local name = user and user:get_player_name()
 			local pos = pointed_thing.under
+			if not user or minetest.is_protected(pos, user:get_player_name()) then
+				minetest.chat_send_player(name, "[vm16] Error: Protected position!")
+				return
+			end
 			local node = minetest.get_node(pos)
-			local name = user:get_player_name()
 			if prog.get_cpu_def(pos) then
 				local meta = itemstack:get_meta()
 				meta:set_string("cpu_pos", P2S(pos))
@@ -121,55 +123,6 @@ minetest.register_node("vm16:programmer", {
 	is_ground_content = false,
 })
 
-minetest.register_node("vm16:server", {
-	description = "VM16 Server",
-	drawtype = "nodebox",
-	node_box = {
-		type = "fixed",
-		fixed = {
-			{ -4/16, -8/16, -6/16, 4/16, 2/16, 6/16},
-		},
-	},
-	tiles = {
-		-- up, down, right, left, back, front
-		"vm16_server_top.png",
-		"vm16_server_top.png",
-		"vm16_server_side.png^vm16_logo.png",
-		"vm16_server_side.png^vm16_logo.png",
-		"vm16_server_back.png",
-		"vm16_server_front.png",
-	},
-	after_place_node = function(pos, placer, itemstack, pointed_thing)
-		local meta = M(pos)
-		meta:set_string("owner", placer:get_player_name())
-		meta:set_string("formspec", "formspec_version[4]size[6,3]button[0.8,0.8;4.4,1.4;destroy;Destroy Server\n  with all files?]")
-		meta:set_string("files", minetest.serialize({dir = {}}))
-		meta:mark_as_private("files")
-	end,
-	on_receive_fields = function(pos, formname, fields, player)
-		if player and player:get_player_name() == M(pos):get_string("owner") then
-			if fields.destroy then
-				minetest.remove_node(pos)
-				minetest.add_item(pos, {name = "vm16:server"})
-			end
-		end
-	end,
-	paramtype2 = "facedir",
-	paramtype = "light",
-	sunlight_propagates = true,
-	light_source = 5,
-	glow = 12,
-	use_texture_alpha = "clip",
-	is_ground_content = false,
-	on_blast = function() end,
-	on_destruct = function () end,
-	can_dig = function() return false end,
-	diggable = false,
-	drop = "",
-	stack_max = 1,
-	groups = {cracky=2, crumbly=2, choppy=2},
-})
-
 minetest.register_lbm({
 	label = "vm16 Programmer",
 	name = "vm16:programmer",
@@ -178,7 +131,31 @@ minetest.register_lbm({
 	action = function(pos, node)
 		local mem = prog.get_mem(pos)
 		if cpu_server_pos(pos, mem) then
+			init(pos, mem)
 			M(pos):set_string("formspec", vm16.prog.formspec(pos, mem))
 		end
 	end
 })
+
+function vm16.add_ro_file(pos, filename, text)
+	local mem = prog.get_mem(pos)
+	if cpu_server_pos(pos, mem) then
+		vm16.server.add_ro_file(mem.server_pos, filename, text)
+	end
+end
+
+function vm16.update_programmer(cpu_pos, pos, resp)
+	print("on_update", vm16.CallResults[resp])
+	local mem = prog.get_mem(pos)
+	vm16.debug.on_update(pos, mem)
+	M(pos):set_string("formspec", prog.formspec(pos, mem))
+end
+
+function vm16.putchar(pos, val)
+	local mem = prog.get_mem(pos)
+	if val1 == 0 then
+		mem.output = ""
+	elseif mem.output and #mem.output < 80 then
+		mem.output = mem.output .. prog.to_string(val)
+	end
+end

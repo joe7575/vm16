@@ -42,7 +42,7 @@ local function format_watch(pos, mem)
 	for var, offs in pairs(t) do
 		if var ~= "@nsv@" then
 			local addr = var_address(cpu, offs, t["@nsv@"])
-			local s = string.format("%-16s: %d", var, vm16.peek(pos, addr))
+			local s = string.format("%-16s: %d", var, vm16.peek(mem.cpu_pos, addr))
 			lines[#lines + 1] = s
 		end
 	end
