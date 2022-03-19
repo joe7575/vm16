@@ -1,27 +1,31 @@
 # VM16 Computer
 
-The vm16 mod comes with a computer, a lamp, and a switch block for training purposes. It can be used to get familiar with the assembler syntax and the CPU instructions. The VM16 CPU is a 16-bit CPU with 512 words memory. This should be sufficient to learn the programming basics. To work with this CPU, the following knowledge is useful:
-
-- Calculating with HEX numbers (16 bit system)
-- Basic knowledge of the structure of a CPU (register, memory addressing) and assembler programming
-
-
+The vm16 mod comes with a computer, a lamp, and a switch block for training purposes. It can be used to get familiar with the programming environment. The VM16 CPU is a 16-bit CPU with 1024 words memory. This should be sufficient to learn the programming basics. 
 
 
 ## Manual
 
-- Craft the 3 blocks "VM16 Computer", "VM16 On/Off Switch" and "VM16 Color Lamp".
-- Place all 3 blocks next to each other. The computer searches for I/O blocks in an area with a radius of 3 blocks.
+- Craft the 5 blocks "VM16 Programmer", "VM16 File Server", "VM16 Demo Computer", VM16 On/Off Switch" and "VM16 Color Lamp".
+- Place "VM16 Demo Computer", VM16 On/Off Switch" and "VM16 Color Lamp" next to each other. The computer searches for I/O blocks in an area with a radius of 3 blocks. 
 - The switch is used as input block for the computer, the lamp as output block.
-- Give lamp and switch an I/O address. For the following assembler examples, address '1' is used for both blocks.
+- Give lamp and switch an I/O address. For the provided example, address '1' is used for both blocks.
 - You can add further I/O blocks for you own programs with other addresses.
+- Place the server anywhere.
+- Connect the programmer with server and CPU by left-clicking with the wielded programmer on server and CPU block.
+- Place the programmer anywhere.
+
+
+
+## VM16 Programmer (C)
+
+tbd.
 
 
 
 
-## VM16 Computer
+## VM16 Programmer (ASM)
 
-The computer block is the core of the system. The block has a menu that shows the assembler code and the CPU internal registers and memory.
+The programmer block is the core of the system. The block has a menu that shows the assembler code and the CPU internal registers and memory.
 
 - Enter the edit mode with the "Edit" button. You can add you own code on the left side.
 - Your code can be stored in the computer block with the "Save" button. If you remove the block, the program is lost.
@@ -47,18 +51,9 @@ loop:
 
 This program outputs characters ("ABCDE...") as a text message in the computer menu. Execute this program step by step to see the output results and the changing register values.  The output address '0' is used internally for text output within the computer menu and cannot be used for external I/O blocks. 
 
-### Performance
-
-The CPU is able to execute up to 100,000 commands per second (0.1 MIPS). This applies as long as only internal CPU commands are executed. There are the following exceptions:
-
-- The `sys`, the `in` and the `out` command interrupts the execution for 100 ms.
-- The `nop` command, which can be used for pauses, also interrupts execution for 100 ms.
-
-Otherwise the CPU runs "full speed", but only as long as the area of the world is loaded.
 
 
-
-## VM16 On/Off Switch
+### VM16 On/Off Switch
 
 The switch sends a '1' to the computer when it is turned on and a '0' when it is turned off. 
 
@@ -72,7 +67,7 @@ loop:
 
 
 
-## VM16 Color Lamp
+### VM16 Color Lamp
 
 This lamp block can light up in different colors. To do this, values from 1-64 must be sent to the block using the `out` instruction. The value 0 switches the lamp off.
 

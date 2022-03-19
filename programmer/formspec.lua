@@ -7,7 +7,7 @@
 	GPL v3
 	See LICENSE.txt for more information
 
-	Simple CPU for testing purposes
+	Programmer main formspec
 ]]--
 
 -- for lazy programmers
@@ -15,12 +15,14 @@ local M = minetest.get_meta
 local prog = vm16.prog
 
 function prog.fs_connect(mem)
-	local info = "Error: No CPU connection!"
+	local info = "Error: CPU or Server connection missing!"
+	print(1)
 	if mem.cpu_pos and mem.server_pos then
+	print(2)
 		local def = prog.get_cpu_def(mem.cpu_pos)
 		if def then
+	print(3)
 			info = def.on_infotext(mem.cpu_pos) or ""
-			vm16.server.add_ro_file(mem.server_pos, "info.txt", info)
 			info = minetest.formspec_escape(info)
 		end
 	end
@@ -50,7 +52,7 @@ function prog.formspec(pos, mem)
 		mem.status = "Edit"
 		windows = vm16.edit.formspec(pos, mem, textsize)
 	end
-	
+
 	return "formspec_version[4]" ..
 		"size[18,12]" ..
 		"button[16.6,0;0.6,0.6;larger;+]" ..

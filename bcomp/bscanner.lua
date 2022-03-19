@@ -7,9 +7,9 @@
 
   AGPL v3
   See LICENSE.txt for more information
-  
+
   Scanner/Tokenizer
-  
+
 ]]--
 
 local IDENT1   = "[A-Za-z_]+"

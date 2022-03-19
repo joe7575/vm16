@@ -32,10 +32,14 @@ local function preserve_cpu_server_pos(pos, itemstack)
 end
 
 local function init(pos, mem)
-	local def = prog.get_cpu_def(mem.cpu_pos)
-	vm16.server.init(mem.server_pos)
-	vm16.files.init(pos, mem)
-	def.on_init(mem.cpu_pos, pos)
+	if mem.cpu_pos then
+		local def = prog.get_cpu_def(mem.cpu_pos)
+		if def then
+			vm16.server.init(mem.server_pos)
+			vm16.files.init(pos, mem)
+			def.on_init(mem.cpu_pos, pos)
+		end
+	end
 end
 
 minetest.register_node("vm16:programmer", {
@@ -67,11 +71,11 @@ minetest.register_node("vm16:programmer", {
 		local mem = prog.get_mem(pos)
 		preserve_cpu_server_pos(pos, itemstack)
 		local meta = M(pos)
-		meta:set_string("formspec", prog.fs_connect(mem))
 		meta:set_string("infotext", "VM16 Programmer")
 		if cpu_server_pos(pos, mem) then
 			init(pos, mem)
 		end
+		meta:set_string("formspec", prog.fs_connect(mem))
 	end,
 	on_rightclick = function(pos)
 		local mem = prog.get_mem(pos)
@@ -82,15 +86,12 @@ minetest.register_node("vm16:programmer", {
 	on_receive_fields = function(pos, formname, fields, player)
 		local mem = prog.get_mem(pos)
 		if cpu_server_pos(pos, mem) then
-			mem.cpu_def = mem.cpu_def or prog.get_cpu_def(mem.cpu_pos).cpu_def
+			mem.cpu_def = mem.cpu_def or prog.get_cpu_def(mem.cpu_pos)
 			vm16.prog.on_receive_fields(pos, formname, fields, player)
 		end
 	end,
 	after_dig_node = function(pos)
-		local mem = prog.get_mem(pos)
-		if cpu_server_pos(pos, mem) then
-			vm16.destroy(mem.cpu_pos)
-		end
+		prog.del_mem(pos)
 	end,
 	on_use = function(itemstack, user, pointed_thing)
 		if pointed_thing.type == "node" then
@@ -141,9 +142,11 @@ minetest.register_lbm({
 -- CPU API
 -------------------------------------------------------------------------------
 function vm16.load_cpu(cpu_pos, prog_pos, cpu_def)
-	local mem = prog.get_mem(prog_pos)
-	mem.cpu_def = cpu_def
-	vm16.on_load(cpu_pos)
+	if cpu_pos and prog_pos then
+		local mem = prog.get_mem(prog_pos)
+		mem.cpu_def = cpu_def
+		vm16.on_load(cpu_pos)
+	end
 end
 
 function vm16.add_ro_file(pos, filename, text)
@@ -164,9 +167,11 @@ function vm16.keep_running(cpu_pos, prog_pos, cpu_def)
 end
 
 function vm16.update_programmer(cpu_pos, prog_pos, resp)
-	local mem = prog.get_mem(prog_pos)
-	vm16.debug.on_update(prog_pos, mem)
-	M(pos):set_string("formspec", prog.formspec(prog_pos, mem))
+	if cpu_pos and prog_pos then
+		local mem = prog.get_mem(prog_pos)
+		vm16.debug.on_update(prog_pos, mem)
+		M(prog_pos):set_string("formspec", prog.formspec(prog_pos, mem))
+	end
 end
 
 function vm16.putchar(prog_pos, val)
@@ -179,5 +184,7 @@ function vm16.putchar(prog_pos, val)
 end
 
 function vm16.unload_cpu(cpu_pos, prog_pos)
-	vm16.destroy(cpu_pos)
+	if cpu_pos then
+		vm16.destroy(cpu_pos)
+	end
 end

@@ -12,7 +12,7 @@
 
 ]]--
 
-local KEYWORDS = {var=1, func=1, ["while"]=1, ["return"]=1, input=1, output=1, 
+local KEYWORDS = {var=1, func=1, ["while"]=1, ["return"]=1, input=1, output=1,
                   putchar=1, system=1, sleep=1, ["if"]=1, ["else"]=1,
                   ["for"]=1, ["switch"]=1, ["case"]=1, ["break"]=1, ["continue"]=1, ["goto"]=1,
                   ["and"]=1, ["or"]=1, ["not"]=1, ["xor"]=1, ["mod"]=1}
@@ -62,7 +62,7 @@ function BSym:func_return(ident)
 		end
 		self:add_instr("ret")
 	end
-	
+
 	-- Generate a table with BS relative addresses of function local variables
 	local base
 	for k,v in pairs(self.locals) do
@@ -71,7 +71,7 @@ function BSym:func_return(ident)
 			break
 		end
 	end
-	
+
 	local num_stack_var = 0
 	self.all_locals[ident] = {}
 	for k,v in pairs(self.locals) do

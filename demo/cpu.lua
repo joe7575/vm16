@@ -34,8 +34,10 @@ func main() {
     if(input(1) == 1) {
       output(1, idx);
       idx = (idx + 1) % 64;
-      sleep(2);
+    } else {
+      output(1, 0);
     }
+    sleep(2);
   }
 }
 ]]
@@ -63,7 +65,7 @@ func main() {
 -- Will be added to the programmer file system as read-only TXT-file.
 -- Can be used as CPU description.
 local Info = [[
-This is a demo CPU
+This is a demo CPU with 1024 words RAM.
 ]]
 
 local function find_io_nodes(cpu_pos)
@@ -79,40 +81,6 @@ local function find_io_nodes(cpu_pos)
 	end
 end
 
--- Called for each 'output' instruction.
-local function on_output(pos, address, val1, val2)
-	if address == 0 then
-		local prog_pos = S2P(M(pos):get_string("prog_pos"))
-		vm16.putchar(prog_pos, val1)
-	else
-		local hash = H(pos)
-		local item = Outputs[hash] and Outputs[hash][address]
-		if item then
-			item.output(item.pos, address, val1, val2)
-		end
-	end
-end
-
--- Called for each 'input' instruction.
-local function on_input(pos, address)
-	local hash = H(pos)
-	local item = Inputs[hash] and Inputs[hash][address]
-	if item then
-		return item.input(item.pos, address) or 0
-	end
-end
-
--- Called when CPU stops.
-local function on_update(pos, resp)
-	local prog_pos = S2P(M(pos):get_string("prog_pos"))
-	vm16.update_programmer(pos, prog_pos, resp)
-end
-
--- Called for each 'system' instruction.
-local function on_system(pos, address, val1, val2)
-	print("on_system")
-end
-
 -- CPU definition
 local cpu_def = {
 	cycle_time = 0.1, -- timer cycle time
@@ -120,19 +88,71 @@ local cpu_def = {
 	input_costs = 1000,  -- number of instructions
 	output_costs = 5000, -- number of instructions
 	system_costs = 2000, -- number of instructions
-	on_input = on_input,
-	on_output = on_output,
-	on_system = on_system,
-	on_update = on_update,
+	-- Called for each 'input' instruction.
+	on_input = function(pos, address)
+		local hash = H(pos)
+		local item = Inputs[hash] and Inputs[hash][address]
+		if item then
+			return item.input(item.pos, address) or 0
+		end
+	end,
+	-- Called for each 'output' instruction.
+	on_output = function(pos, address, val1, val2)
+		if address == 0 then
+			local prog_pos = S2P(M(pos):get_string("prog_pos"))
+			vm16.putchar(prog_pos, val1)
+		else
+			local hash = H(pos)
+			local item = Outputs[hash] and Outputs[hash][address]
+			if item then
+				item.output(item.pos, address, val1, val2)
+			end
+		end
+	end,
+	-- Called for each 'system' instruction.
+	on_system = function(pos, address, val1, val2)
+		print("on_system")
+	end,
+	-- Called when CPU stops.
+	on_update = function(pos, resp)
+		local prog_pos = S2P(M(pos):get_string("prog_pos"))
+		vm16.update_programmer(pos, prog_pos, resp)
+	end,
+	on_init = function(pos, prog_pos)
+		M(pos):set_string("prog_pos", P2S(prog_pos))
+		find_io_nodes(pos)
+		vm16.add_ro_file(prog_pos, "example1.c", Example1)
+		vm16.add_ro_file(prog_pos, "example2.c", Example2)
+		vm16.add_ro_file(prog_pos, "info.txt", Info)
+	end,
+	on_mem_size = function(pos)
+		return 4  -- 1024 words
+	end,
+	on_start = function(pos)
+		M(pos):set_string("infotext", "VM16 Demo Computer (running)")
+	end,
+	on_stop = function(pos)
+		M(pos):set_string("infotext", "VM16 Demo Computer (stopped)")
+	end,
+	on_check_connection = function(pos)
+		return S2P(M(pos):get_string("prog_pos"))
+	end,
+	on_infotext = function(pos)
+		return Info
+	end,
 }
 
 minetest.register_node("vm16:cpu", {
-	description = "VM16 Computer",
+	description = "VM16 Demo Computer",
 	tiles = {
 		"vm16_cpu_top.png",
 		"vm16_cpu_top.png",
 		"vm16_cpu.png",
 	},
+	vm16_cpu = cpu_def,
+	after_place_node = function(pos, placer)
+		M(pos):set_string("infotext", "VM16 Demo Computer")
+	end,
 	on_timer = function(pos, elapsed)
 		local prog_pos = S2P(M(pos):get_string("prog_pos"))
 		return vm16.keep_running(pos, prog_pos, cpu_def)
@@ -143,26 +163,6 @@ minetest.register_node("vm16:cpu", {
 	end,
 	groups = {cracky=2, crumbly=2, choppy=2},
 	is_ground_content = false,
-
-	vm16_cpu = {
-		cpu_def = cpu_def,
-		on_init = function(pos, prog_pos)
-			M(pos):set_string("prog_pos", P2S(prog_pos))
-			find_io_nodes(pos)
-			vm16.add_ro_file(prog_pos, "example1.c", Example1)
-			vm16.add_ro_file(prog_pos, "example2.c", Example2)
-			vm16.add_ro_file(prog_pos, "info.txt", Info)
-		end,
-		on_mem_size = function(pos) 
-			return 4  -- 1024 bytes
-		end,
-		on_check_connection = function(pos)
-			return S2P(M(pos):get_string("prog_pos"))
-		end,
-		on_infotext = function(pos)
-			return Info
-		end,
-	}
 })
 
 minetest.register_lbm({
@@ -180,7 +180,7 @@ minetest.register_lbm({
 minetest.register_craft({
 	output = "vm16:cpu",
 	recipe = {
-		{"", "default:obsidian_glass", ""},
+		{"", "", ""},
 		{"default:steelblock", "basic_materials:gold_wire", "default:steelblock"},
 		{"basic_materials:ic", "basic_materials:ic", "basic_materials:ic"},
 	},

@@ -95,6 +95,16 @@ local function get_next_lineno(pos, mem)
 	return lineno
 end
 
+local function start_cpu(mem)
+	local def = prog.get_cpu_def(mem.cpu_pos)
+	def.on_start(mem.cpu_pos)
+end
+
+local function stop_cpu(mem)
+	local def = prog.get_cpu_def(mem.cpu_pos)
+	def.on_stop(mem.cpu_pos)
+end
+
 local function set_temp_breakpoint(pos, mem, lineno)
 	local addr = mem.tAddress[lineno]
 	if addr and not mem.breakpoint_lines[lineno] then
@@ -120,7 +130,7 @@ function vm16.debug.init(pos, mem, result)
 	mem.curr_lineno = 1  -- PC position
 	mem.last_code_addr = 0
 	mem.output = ""
-	
+
 	for _, tok in ipairs(result.output) do
 		if tok.lineno and tok.address then
 			mem.tAddress[tok.lineno] = tok.address
@@ -129,8 +139,7 @@ function vm16.debug.init(pos, mem, result)
 		end
 	end
 
-	local def = prog.get_cpu_def(mem.cpu_pos)
-	mem.cpu_def = def.cpu_def
+	mem.cpu_def = prog.get_cpu_def(mem.cpu_pos)
 	local mem_size = def and def.on_mem_size(mem.cpu_pos) or 3
 	vm16.create(mem.cpu_pos, mem_size)
 	for _,tok in ipairs(result.output) do
@@ -143,11 +152,14 @@ function vm16.debug.init(pos, mem, result)
 end
 
 function vm16.debug.on_update(pos, mem)
-	mem.running = false
-	local addr = vm16.get_pc(mem.cpu_pos)
-	mem.cursorline = mem.tLineno[addr] or 1
-	mem.curr_lineno = mem.cursorline
-	reset_temp_breakpoint(pos, mem)
+	if mem.cpu_pos and mem.tLineno then
+		mem.running = false
+		stop_cpu(mem)
+		local addr = vm16.get_pc(mem.cpu_pos)
+		mem.cursorline = mem.tLineno[addr] or 1
+		mem.curr_lineno = mem.cursorline
+		reset_temp_breakpoint(pos, mem)
+	end
 end
 
 local function fs_window(pos, mem, x, y, xsize, ysize, fontsize, lCode)
@@ -155,7 +167,7 @@ local function fs_window(pos, mem, x, y, xsize, ysize, fontsize, lCode)
 	return "label[" .. x .. "," .. (y - 0.2) .. ";Code]" ..
 		"style_type[table;font=mono;font_size="  .. fontsize .. "]" ..
 		"tableoptions[color=" ..color .. ";highlight_text=" ..color .. ";highlight=#000589]" ..
-		"table[" .. x .. "," .. y .. ";" .. xsize .. "," .. ysize .. ";code;" .. 
+		"table[" .. x .. "," .. y .. ";" .. xsize .. "," .. ysize .. ";code;" ..
 		format_src_code(mem, lCode) .. ";" .. (mem.cursorline or 1) .. "]"
 end
 
@@ -194,6 +206,7 @@ function vm16.debug.on_receive_fields(pos, fields, mem)
 			local lineno = get_next_lineno(pos, mem)
 			set_temp_breakpoint(pos, mem, lineno)
 			mem.running = true
+			start_cpu(mem)
 			minetest.get_node_timer(mem.cpu_pos):start(mem.cpu_def.cycle_time)
 			vm16.run(mem.cpu_pos, mem.cpu_def, mem.breakpoints)
 		end
@@ -201,12 +214,14 @@ function vm16.debug.on_receive_fields(pos, fields, mem)
 		if vm16.is_loaded(mem.cpu_pos) then
 			set_temp_breakpoint(pos, mem, mem.cursorline or 1)
 			mem.running = true
+			start_cpu(mem)
 			minetest.get_node_timer(mem.cpu_pos):start(mem.cpu_def.cycle_time)
 			vm16.run(mem.cpu_pos, mem.cpu_def, mem.breakpoints)
 		end
 	elseif fields.run then
 		if vm16.is_loaded(mem.cpu_pos) then
 			mem.running = true
+			start_cpu(mem)
 			minetest.get_node_timer(mem.cpu_pos):start(mem.cpu_def.cycle_time)
 			vm16.run(mem.cpu_pos, mem.cpu_def, mem.breakpoints)
 		end
@@ -221,6 +236,7 @@ function vm16.debug.on_receive_fields(pos, fields, mem)
 		if mem.running then
 			minetest.get_node_timer(mem.cpu_pos):stop()
 			mem.running = false
+			stop_cpu(mem)
 		end
 	end
 end

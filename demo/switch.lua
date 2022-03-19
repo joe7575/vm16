@@ -62,7 +62,7 @@ local function switch_off(pos, node, player)
 end
 
 local function on_vm16_start_cpu(pos, cpu_pos)
-	vm16.register_input_address(pos, cpu_pos, M(pos):get_int("address"), 
+	vm16.register_input_address(pos, cpu_pos, M(pos):get_int("address"),
 		function(pos, address)
 			local hash = H(pos)
 			if not Cache[hash] or not Cache[hash][address] then

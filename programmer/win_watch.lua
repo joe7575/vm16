@@ -64,7 +64,7 @@ function vm16.watch.init(pos, mem, result)
 	mem.tGlobals = result.globals or {}
 	mem.tLocals = result.locals or {}
 	mem.tFunctions = result.functions or {}
-	
+
 	local last_used_mem_addr = mem.last_code_addr
 	mem.lVars = {}
 	for k,v in pairs(mem.tGlobals or {}) do
@@ -80,7 +80,7 @@ function vm16.watch.fs_window(pos, mem, x, y, xsize, ysize, fontsize)
 	return "label[" .. x .. "," .. (y - 0.2) .. ";Variables]" ..
 		"style_type[table;font=mono;font_size="  .. fontsize .. "]" ..
 		"tableoptions[color=" ..color .. ";highlight_text=" ..color .. ";highlight=#036707]" ..
-		"table[" .. x .. "," .. y .. ";" .. xsize .. "," .. (ysize - 1) .. ";watch;" .. 
+		"table[" .. x .. "," .. y .. ";" .. xsize .. "," .. (ysize - 1) .. ";watch;" ..
 		format_watch(pos, mem) .. ";]" ..
 		memory_bar(pos, mem, x, y + ysize - 1, xsize, 1)
 end

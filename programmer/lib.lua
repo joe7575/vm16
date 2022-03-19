@@ -26,6 +26,11 @@ function vm16.prog.get_mem(pos)
 	return Cache[hash]
 end
 
+function vm16.prog.del_mem(pos)
+	local hash = minetest.hash_node_position(pos)
+	Cache[hash] = nil
+end
+
 function vm16.prog.get_linenum(lToken, addr)
 	for idx = #lToken, 1, -1 do
 		local tok = lToken[idx]

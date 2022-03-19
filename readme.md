@@ -4,7 +4,7 @@ The VM16 is a 16-bit virtual machine implemented in C.
 It enables simulation of computers in the game Minetest
 and is capable of executing real binary code at a remarkable speed.
 
-**The mod is currently under construction !!!**
+**The mod is currently under construction. Not all files and documents are updated !!!**
 
 ![screenshot](https://github.com/joe7575/vm16/blob/master/screenshot.png)
 
@@ -14,16 +14,16 @@ Download: [GitHub](https://github.com/joe7575/vm16/archive/master.zip)
 
 Documentation: [GitHub](https://github.com/joe7575/vm16/wiki)
 
+This mod is not very useful on its own, but it can be used as learning system for VM16 assembler.
 
-This mod is not very useful on its own, but it can be used as
-learning system for VM16 assembler.
+The real purpose for VM16 is to provide a VM with programming environment to be easily integrated into other mods.
 
-See also [PDP-13](https://github.com/joe7575/pdp13).
+This mod has several parts:
 
-This mod has two parts:
-
-- C files to be compiled and installed as LuaRocks package
-- Lua files to be used as Minetest mod containing the VM16 computer blocks
+- C files to be compiled and installed as LuaRocks package (the core VM)
+- Lua files as API to the VM (low level interface)
+- Programmer and server blocks as develoment environment to be used to be used by other Minetest mods (high level interface)
+- Some demo blocks showing the usage of programmer and server. These blocks have to be enabled via `vm16_testblocks_enabled` (see `settingtypes.txt`)
 
 
 ## Installation
@@ -84,15 +84,26 @@ Licensed under the GNU GPLv3 (See LICENSE.txt)
 
 
 
+## ToDo
+
+- Improve compiler (more data types, functional blocks, ...)
+- Reactivate assembler mode for the programmer
+- Bug fixes
+- Adapt manuals
+- Add compiler manual
+- ...
+
+
+
 ## History
 
-### API v3.2/Core v2.6.5/asm v2.2 (2022-03-13)
+### API v3.3/Core v2.6.5/asm v2.2 (2022-03-19)
 
 **Work in progress!**
 
 - Core: Add TOS register for the debugger
-- Add test block "VM16 Computer2" with compiler, debugger, and
-  variable watch window
+- Add VM16 Programmer and VM16 File Server
+- Programmer provides compiler, debugger, and variable watch window
 
 ### API v3.2/Core v2.6.4/asm v2.2 (2022-03-09)
 

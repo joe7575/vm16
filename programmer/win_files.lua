@@ -7,7 +7,7 @@
 	GPL v3
 	See LICENSE.txt for more information
 
-	Variables watch window for the debugger
+	File list window for the debugger
 ]]--
 
 -- for lazy programmers
@@ -65,7 +65,7 @@ function vm16.files.fs_window(pos, mem, x, y, xsize, ysize, fontsize)
 	return "label[" .. x .. "," .. (y - 0.2) .. ";Files]" ..
 		"style_type[table;font=mono;font_size="  .. fontsize .. "]" ..
 		"tableoptions[color=" ..color .. ";highlight_text=" ..color .. ";highlight=#63007E]" ..
-		"table[" .. x .. "," .. y .. ";" .. xsize .. "," .. ysize .. ";files;" .. 
+		"table[" .. x .. "," .. y .. ";" .. xsize .. "," .. ysize .. ";files;" ..
 		format_files(pos, mem) .. ";]"
 end
 

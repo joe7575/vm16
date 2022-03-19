@@ -232,11 +232,11 @@ Function returns true/false
 ## run
 
 ```lua
-resp, ran = vm16.run(pos, cycles, callbacks, breakpoints)
+resp, ran = vm16.run(pos, cpu_def, breakpoints)
 ```
 
-Call the VM to execute the given number of `cycles`. If `cycles` is nil, the default value 10000 is used.
-`callbacks` is a table, generated via `vm16.generate_callback_table()`.
+Call the VM to execute the loaded program.
+`cpu_def` is a table with CPU specific parameters and functions.
 `breakpoints` is a table, maintained by `set_breakpoint` and `reset_breakpoint`.
 
 The response value is one of:
@@ -245,21 +245,6 @@ The response value is one of:
 - `VM16_BREAK` - the VM terminated with a `brk` instruction
 - `vm16.HALT` - the VM terminated with a `halt` instruction
 - `vm16.ERROR` - the VM terminated because of an internal error
-
-## generate_callback_table
-
-```lua
-callbacks = vm16.generate_callback_table(on_inp, on_outp, on_sys, on_upd)
-```
-
-Funktion to setup the `callbacks` table with the following callback function:
-
-```lua
-value = on_input(pos, address)                -- called for each `in <reg>, #<address>`
-on_output(pos, address, val1, val2)           -- called for each `out #<address>, <reg>`
-result = on_system(pos, address, val1, val2)  -- called for each `sys #<number>`
-on_update(pos, resp, regs)                    -- called for each CPU interruption
-```
 
 ## set_breakpoint
 
@@ -277,66 +262,31 @@ vm16.reset_breakpoint(pos, addr, breakpoints)
 
 Reset a breakpoint on the given `address`. The table `breakpoints` is used to store the breakpoint data for the call of `vm16.run`.
 
-
-
-# API for I/O Nodes
-
-The `io.lua` file provides the following API for I/O nodes.
-
-
-
-## register_io_nodes
+## Table `cpu_def`
 
 ```lua
-vm16.register_io_nodes(names)
+local cpu_def = {
+	cycle_time = 0.1, -- timer cycle time
+	instr_per_cycle = 10000,
+	input_costs = 1000,  -- number of instructions for an input call
+	output_costs = 5000, -- number of instructions for an output call
+	system_costs = 2000, -- number of instructions for a system call
+	-- Called for each 'input' instruction. Function returns the input value.
+	on_input = function(pos, address) ... end,
+	-- Called for each 'output' instruction.
+	on_output = function(pos, address, val1, val2) ... end,
+	-- Called for each 'system' instruction.
+	on_system = function(pos, address, val1, val2) ... end,
+	-- Called when CPU stops (halt, breakpoint, ...)
+	on_update = function(pos, resp) ... end,
+    
+    -- The following functions are only needed by the programmer (see demo implementation)
+	on_init = function(pos, prog_pos) ... end,
+	on_mem_size = function(pos) ... end,
+	on_start = function(pos) ... end,
+	on_stop = function(pos) ... end,
+	on_check_connection = function(pos) ... end,
+	on_infotext = function(pos) ... end,
+}
 ```
 
-Register a table of `names` of I/O nodes. When the CPU starts, it looks around for registered nodes to set up the input/output tables.
-
-## register_input_address
-
-```lua
-vm16.register_input_address(pos, cpu_pos, address, function(pos, address))
-```
-
-Function is used to register an input address and a callback function. This function is then called for each `in <reg>, #<address>` CPU instruction to read the input value.
-
-## register_output_address
-
-```lua
-vm16.register_output_address(pos, cpu_pos, address, function(pos, address, value))
-```
-
-Function is used to register an output address and a callback function. This function is then called for each `out #<address>, <reg>` CPU instruction to output the provided `value`.
-
-
-
-# CPU I/O API
-
-The `io.lua` file provides the following API for the CPU.
-
-
-
-## find_io_nodes
-
-```lua
-vm16.find_io_nodes(cpu_pos, radius)
-```
-
-Funktion is called, when the CPU is created, to collect all I/O nodes and setup the input/output tables.
-
-## on_output
-
-```lua
-vm16.on_output(pos, address, val1, val2)
-```
-
-Called by the CPU for each `out #<address>, <reg>` instruction.
-
-## on_input
-
-```lua
-vm16.on_input(pos, address)
-```
-
-Called by the CPU for each `in <reg>, #<address>` instruction.

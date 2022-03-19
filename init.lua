@@ -56,4 +56,5 @@ if minetest.settings:get_bool("vm16_testblocks_enabled") == true and
 	dofile(MP.."/demo/cpu.lua")
 	dofile(MP.."/demo/switch.lua")
 	dofile(MP.."/demo/lamp.lua")
+	dofile(MP.."/demo/recipes.lua")
 end

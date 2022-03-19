@@ -19,10 +19,12 @@ local prog = vm16.prog
 local function order(a, b)
 	local name1, ext1 = unpack(string.split(a.name, ".", true, 1))
 	local name2, ext2 = unpack(string.split(b.name, ".", true, 1))
-	if ext1 == ext2 then
-		return name1 < name2
-	else
-		return ext1 < ext2
+	if ext1 and ext2 then
+		if ext1 == ext2 then
+			return name1 < name2
+		else
+			return ext1 < ext2
+		end
 	end
 end
 
@@ -97,7 +99,7 @@ function vm16.server.rename_file(pos, files, old_name, new_name)
 		files[old_name] = nil
 		s = minetest.serialize(files)
 		M(pos):set_string("files", s)
-		 mem.filelist = get_filelist(pos)
+		mem.filelist = get_filelist(pos)
 	end
 end
 
@@ -131,7 +133,7 @@ minetest.register_node("vm16:server", {
 		local meta = M(pos)
 		meta:set_string("owner", placer:get_player_name())
 		meta:set_string("formspec", "formspec_version[4]size[6,3]button[0.8,0.8;4.4,1.4;destroy;Destroy Server\n  with all files?]")
-		meta:set_string("files", minetest.serialize({dir = {}}))
+		meta:set_string("files", minetest.serialize({}))
 		meta:mark_as_private("files")
 	end,
 	on_receive_fields = function(pos, formname, fields, player)
@@ -139,6 +141,7 @@ minetest.register_node("vm16:server", {
 			if fields.destroy then
 				minetest.remove_node(pos)
 				minetest.add_item(pos, {name = "vm16:server"})
+				prog.del_mem(pos)
 			end
 		end
 	end,

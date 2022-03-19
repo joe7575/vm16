@@ -7,9 +7,9 @@
 
   AGPL v3
   See LICENSE.txt for more information
-  
+
   Compiler API
-  
+
 ]]--
 
 local version = "1.0"
@@ -79,7 +79,7 @@ end
 
 local function error_msg(err)
 	local t = string.split(err, ":")
-	if t and #t > 1 then 
+	if t and #t > 1 then
 		return t[#t]
 	end
 	return err

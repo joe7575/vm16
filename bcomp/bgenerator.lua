@@ -15,9 +15,9 @@
 local REGS     = {A=1, B=1, C=1, D=1, X=1, Y=1, SP=1, PC=1}  -- real registers
 local REGLIST  = {"A", "B", "C", "D"}
 -- Need NO special handling of operand1
-local ASSIGNMENT_INSTR = {move=1, out=1} 
+local ASSIGNMENT_INSTR = {move=1, out=1}
 -- Last operand register can be reused
-local CLOSING_INSTR = {move=1, push=1, add=1, addc=1, mul=1, mulc=1, div=1, sub=1, 
+local CLOSING_INSTR = {move=1, push=1, add=1, addc=1, mul=1, mulc=1, div=1, sub=1,
                        mod=1, ["and"]=1, ["or"]=1, xor=1, ["not"]=1, ["in"]=1, out=1,
                        push=1, shl=1, shr=1}
 

@@ -20,7 +20,7 @@ local VMList = {}
 local storage = minetest.get_mod_storage()
 
 -------------------------------------------------------------------------------
-local VERSION     = 3.2  -- See readme.md
+local VERSION     = 3.3  -- See readme.md
 -------------------------------------------------------------------------------
 local VM16_OK     = 0  -- run to the end
 local VM16_NOP    = 1  -- nop command
@@ -45,14 +45,6 @@ vm16.is_ascii = vm16lib.is_ascii
 vm16.CallResults = {[0]="OK", "NOP", "IN", "OUT", "SYS", "HALT", "BREAK", "ERROR"}
 
 local SpecialCycles = {} -- for sys calls with reduced/increased cycles
-
--- default event callback handlers
-local Callbacks = {
-	on_input  = function(pos, address) print("on_input", address); return address end,
-	on_output = function(pos, address, val1, val2) print("output", address, val1, val2) end,
-	on_system = function(pos, address, val1, val2) print("on_system", address, val1, val2); return 1 end,
-	on_update = function(pos, resp, cpu) print("on_update", resp) end,
-}
 
 local function store_breakpoint_addr(pos, vm, breakpoints)
 	local addr = vm16lib.get_pc(vm)
@@ -319,7 +311,7 @@ function vm16.run(pos, cpu_def, breakpoints)
 			local io = vm16lib.get_io_reg(vm)
 			io.data = cpu_def.on_system(pos, io.addr, io.A, io.B) or 0xFFFF
 			vm16lib.set_io_reg(vm, io)
-			cycles = cycles - cpu_def.system_costs
+			cycles = cycles - (SpecialCycles[io.addr] or cpu_def.system_costs)
 		elseif resp == VM16_HALT then
 			local cpu = vm16lib.get_cpu_reg(vm)
 			cpu_def.on_update(pos, resp, cpu)
@@ -337,19 +329,6 @@ function vm16.register_sys_cycles(address, cycles)
 	SpecialCycles[address] = cycles
 end
 
--- result = on_input(pos, address)
---          on_output(pos, address, val1, val2)
--- result = on_system(pos, address, val1, val2)
---          on_update(pos, resp, cpu)
-function vm16.generate_callback_table(on_inp, on_outp, on_sys, on_upd)
-	return {
-		on_input  = on_inp,
-		on_output = on_outp,
-		on_system = on_sys,
-		on_update = on_upd,
-	}
-end
-
 minetest.register_on_shutdown(function()
 	print("register_on_shutdown2")
 	for hash, vm in pairs(VMList) do
@@ -359,7 +338,7 @@ minetest.register_on_shutdown(function()
 	print("done")
 end)
 
-local function remove_unloaded_vm()
+local function remove_unloaded_vms()
 	local tbl = table.copy(VMList)
 	local cnt = 0
 	VMList = {}
@@ -372,16 +351,7 @@ local function remove_unloaded_vm()
 			vm_store(pos, vm)
 		end
 	end
-	minetest.after(60, remove_unloaded_vm)
+	minetest.after(60, remove_unloaded_vms)
 end
 
-minetest.after(60, remove_unloaded_vm)
-
--- Deprecated! Use `generate_callback_table` instead.
-function vm16.register_callbacks(on_inp, on_outp, on_sys, on_upd)
-	Callbacks.on_input  = on_inp  or Callbacks.on_input
-	Callbacks.on_output = on_outp or Callbacks.on_output
-	Callbacks.on_system = on_sys  or Callbacks.on_system
-	Callbacks.on_update = on_upd  or Callbacks.on_update
-end
-
+minetest.after(60, remove_unloaded_vms)
