@@ -80,8 +80,9 @@ function vm16.edit.formspec(pos, mem, textsize)
 		mem.status = "Edit"
 		if not mem.filename or not mem.text then
 			mem.filename = "-"
-			mem.text = ""
+			mem.text = "<no file>"
 		end
+		vm16.menubar.add_button("cancel", "Cancel")
 		vm16.menubar.add_button("save", "Save")
 		if file_ext(mem.filename) == "c" then
 			vm16.menubar.add_button("compile", "Compile")
@@ -106,7 +107,12 @@ function vm16.edit.on_receive_fields(pos, fields, mem)
 			server.write_file(mem.server_pos, mem.filename, mem.text)
 		end
 	end
-	if fields.edit then
+	if fields.cancel then
+		mem.filename = nil
+		mem.text = nil
+		mem.error = nil
+		mem.asm_code = nil
+	elseif fields.edit then
 		mem.error = nil
 		mem.asm_code = nil
 	elseif fields.compile then

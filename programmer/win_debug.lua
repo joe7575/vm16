@@ -86,7 +86,7 @@ end
 
 local function get_next_lineno(pos, mem)
 	local addr = vm16.get_pc(mem.cpu_pos)
-	local lineno = mem.tLineno[addr] or 1
+	local lineno = math.max(mem.tLineno[addr] or 1, mem.curr_lineno)
 	for no = lineno + 1, mem.last_lineno do
 		if mem.tAddress[no] then
 			return no
