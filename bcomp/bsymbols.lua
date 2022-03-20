@@ -54,9 +54,7 @@ function BSym:local_get(ident)
 end
 
 function BSym:func_return(ident)
-	if ident == "main" then
-		self:add_instr("halt")
-	elseif self:get_last_instr() ~= "ret" then
+	if self:get_last_instr() ~= "ret" then
 		if self.num_auto > 0 then
 			self:add_instr("add", "SP", "#" .. self.num_auto)
 		end

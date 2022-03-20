@@ -72,13 +72,16 @@ local function find_io_nodes(cpu_pos)
 	local pos1 = {x = cpu_pos.x - RADIUS, y = cpu_pos.y - RADIUS, z = cpu_pos.z - RADIUS}
 	local pos2 = {x = cpu_pos.x + RADIUS, y = cpu_pos.y + RADIUS, z = cpu_pos.z + RADIUS}
 	local posses = minetest.find_nodes_in_area(pos1, pos2, IONodes)
+	local out = {}
 	for _,pos in ipairs(posses) do
 		local node = minetest.get_node(pos)
 		local ndef = minetest.registered_nodes[node.name]
 		if ndef and ndef.on_vm16_start_cpu then
 			ndef.on_vm16_start_cpu(pos, cpu_pos)
+			table.insert(out, string.format(" - %s at %s added", node.name, P2S(pos)))
 		end
 	end
+	return table.concat(out, "\n")
 end
 
 -- CPU definition
@@ -120,10 +123,10 @@ local cpu_def = {
 	end,
 	on_init = function(pos, prog_pos)
 		M(pos):set_string("prog_pos", P2S(prog_pos))
-		find_io_nodes(pos)
+		local s = find_io_nodes(pos)
 		vm16.add_ro_file(prog_pos, "example1.c", Example1)
 		vm16.add_ro_file(prog_pos, "example2.c", Example2)
-		vm16.add_ro_file(prog_pos, "info.txt", Info)
+		vm16.add_ro_file(prog_pos, "info.txt", Info .. s)
 	end,
 	on_mem_size = function(pos)
 		return 4  -- 1024 words

@@ -98,11 +98,16 @@ end
 local function start_cpu(mem)
 	local def = prog.get_cpu_def(mem.cpu_pos)
 	def.on_start(mem.cpu_pos)
+	mem.running = true
+	minetest.get_node_timer(mem.cpu_pos):start(mem.cpu_def.cycle_time)
+	vm16.run(mem.cpu_pos, mem.cpu_def, mem.breakpoints)
 end
 
 local function stop_cpu(mem)
 	local def = prog.get_cpu_def(mem.cpu_pos)
 	def.on_stop(mem.cpu_pos)
+	mem.running = false
+	minetest.get_node_timer(mem.cpu_pos):stop()
 end
 
 local function set_temp_breakpoint(pos, mem, lineno)
@@ -153,7 +158,6 @@ end
 
 function vm16.debug.on_update(pos, mem)
 	if mem.cpu_pos and mem.tLineno then
-		mem.running = false
 		stop_cpu(mem)
 		local addr = vm16.get_pc(mem.cpu_pos)
 		mem.cursorline = mem.tLineno[addr] or 1
@@ -166,7 +170,7 @@ local function fs_window(pos, mem, x, y, xsize, ysize, fontsize, lCode)
 	local color = mem.running and "#AAA" or "#FFF"
 	return "label[" .. x .. "," .. (y - 0.2) .. ";Code]" ..
 		"style_type[table;font=mono;font_size="  .. fontsize .. "]" ..
-		"tableoptions[color=" ..color .. ";highlight_text=" ..color .. ";highlight=#000589]" ..
+		"tableoptions[color=" ..color .. ";background=#030330;highlight_text=" ..color .. ";highlight=#000589]" ..
 		"table[" .. x .. "," .. y .. ";" .. xsize .. "," .. ysize .. ";code;" ..
 		format_src_code(mem, lCode) .. ";" .. (mem.cursorline or 1) .. "]"
 end
@@ -205,25 +209,16 @@ function vm16.debug.on_receive_fields(pos, fields, mem)
 		if vm16.is_loaded(mem.cpu_pos) then
 			local lineno = get_next_lineno(pos, mem)
 			set_temp_breakpoint(pos, mem, lineno)
-			mem.running = true
 			start_cpu(mem)
-			minetest.get_node_timer(mem.cpu_pos):start(mem.cpu_def.cycle_time)
-			vm16.run(mem.cpu_pos, mem.cpu_def, mem.breakpoints)
 		end
 	elseif fields.runto then
 		if vm16.is_loaded(mem.cpu_pos) then
 			set_temp_breakpoint(pos, mem, mem.cursorline or 1)
-			mem.running = true
 			start_cpu(mem)
-			minetest.get_node_timer(mem.cpu_pos):start(mem.cpu_def.cycle_time)
-			vm16.run(mem.cpu_pos, mem.cpu_def, mem.breakpoints)
 		end
 	elseif fields.run then
 		if vm16.is_loaded(mem.cpu_pos) then
-			mem.running = true
 			start_cpu(mem)
-			minetest.get_node_timer(mem.cpu_pos):start(mem.cpu_def.cycle_time)
-			vm16.run(mem.cpu_pos, mem.cpu_def, mem.breakpoints)
 		end
 	elseif fields.reset then
 		if vm16.is_loaded(mem.cpu_pos) then
@@ -234,8 +229,6 @@ function vm16.debug.on_receive_fields(pos, fields, mem)
 		end
 	elseif fields.stop then
 		if mem.running then
-			minetest.get_node_timer(mem.cpu_pos):stop()
-			mem.running = false
 			stop_cpu(mem)
 		end
 	end

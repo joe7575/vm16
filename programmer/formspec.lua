@@ -16,12 +16,9 @@ local prog = vm16.prog
 
 function prog.fs_connect(mem)
 	local info = "Error: CPU or Server connection missing!"
-	print(1)
 	if mem.cpu_pos and mem.server_pos then
-	print(2)
 		local def = prog.get_cpu_def(mem.cpu_pos)
 		if def then
-	print(3)
 			info = def.on_infotext(mem.cpu_pos) or ""
 			info = minetest.formspec_escape(info)
 		end

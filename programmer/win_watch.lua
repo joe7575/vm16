@@ -79,7 +79,7 @@ function vm16.watch.fs_window(pos, mem, x, y, xsize, ysize, fontsize)
 	local color = mem.running and "#AAA" or "#FFF"
 	return "label[" .. x .. "," .. (y - 0.2) .. ";Variables]" ..
 		"style_type[table;font=mono;font_size="  .. fontsize .. "]" ..
-		"tableoptions[color=" ..color .. ";highlight_text=" ..color .. ";highlight=#036707]" ..
+		"tableoptions[color=" ..color .. ";background=#033003;highlight_text=" ..color .. ";highlight=#036707]" ..
 		"table[" .. x .. "," .. y .. ";" .. xsize .. "," .. (ysize - 1) .. ";watch;" ..
 		format_watch(pos, mem) .. ";]" ..
 		memory_bar(pos, mem, x, y + ysize - 1, xsize, 1)

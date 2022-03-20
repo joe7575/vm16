@@ -29,7 +29,8 @@ program:
 ]]--
 function BPars:main()
 	self:var_def_list()
-	self:insert_instr("jump", "main", nil, -1)
+	self:insert_instr("call", "main", nil, -1)
+	self:insert_instr("halt", nil, nil, -1)
 	self:func_def_list()
 end
 

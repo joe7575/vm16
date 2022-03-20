@@ -135,6 +135,7 @@ minetest.register_node("vm16:server", {
 		meta:set_string("formspec", "formspec_version[4]size[6,3]button[0.8,0.8;4.4,1.4;destroy;Destroy Server\n  with all files?]")
 		meta:set_string("files", minetest.serialize({}))
 		meta:mark_as_private("files")
+		meta:set_string("infotext", placer:get_player_name() .. "'s VM16 File Server")
 	end,
 	on_receive_fields = function(pos, formname, fields, player)
 		if player and player:get_player_name() == M(pos):get_string("owner") then
