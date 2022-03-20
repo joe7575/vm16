@@ -85,7 +85,7 @@ local function error_msg(err)
 	return err
 end
 
-local function format_asm_output(lToken)
+local function format_output_for_sourcecode_debugging(lToken)
 	local out = {}
 	local tok
 	for _,item in ipairs(lToken) do
@@ -110,6 +110,20 @@ local function format_asm_output(lToken)
 	return out
 end
 
+local function format_output_for_assembler_debugging(lToken)
+	local out = {}
+	for _,item in ipairs(lToken) do
+		if item[vm16.Asm.SECTION] ~= vm16.Asm.COMMENT then
+			out[#out + 1] = {
+				lineno  = item[vm16.Asm.LINENO],
+				address = item[vm16.Asm.ADDRESS],
+				opcodes = item[vm16.Asm.OPCODES],
+			}
+		end
+	end
+	return out
+end
+
 function vm16.gen_obj_code(filename, code)
 	local out = {}
 	local prs =  vm16.BPars:new({text = code})
@@ -121,7 +135,7 @@ function vm16.gen_obj_code(filename, code)
 		local lToken = gen_asm_token_list(prs.lCode, prs.lData)
 		lToken, err = asm:assembler(lToken)
 		if lToken then
-			local output = format_asm_output(lToken)
+			local output = format_output_for_sourcecode_debugging(lToken)
 			return {
 				locals = prs.all_locals,
 				output = output,
@@ -156,4 +170,33 @@ function vm16.gen_asm_code(filename, code)
 		local lineno = prs.lineno or "0"
 		return nil, string.format("%s(%d): %s", fname, lineno, error_msg(err))
 	end
+end
+
+function vm16.assemble(filename, code)
+	local a = vm16.Asm:new({})
+	code = code:gsub("\t", "  ")
+	local lToken, err = a:scanner(code)
+	if lToken then
+		lToken, err = a:assembler(lToken)
+		if lToken then
+			local output = format_output_for_assembler_debugging(lToken)
+			return {
+				locals = {},
+				output = output,
+				globals = {},
+				functions = {}}
+		end
+		return {
+			locals = {},
+			output = {},
+			globals = {},
+			functions = {},
+			errors = err}
+	end
+	return {
+		locals = {},
+		output = {},
+		globals = {},
+		functions = {},
+		errors = err}
 end

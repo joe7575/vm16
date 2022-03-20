@@ -18,40 +18,34 @@ local prog = vm16.prog
 
 vm16.debug = {}
 
---local function format_asm_code(mem, lCode)
---	local addr = vm16.get_pc(pos)
---	local code = {}
---	for i, line in ipairs(strsplit(M(pos):get_string("code"))) do
---		code[#code + 1] = line
---	end
---	if mem.lToken and addr then
---		local lineno = not mem.running and get_linenum(mem.lToken, addr) or 0
---		local start, stop = get_window(mem, lineno, #mem.lToken)
---		local lines = {}
---		for idx = start, stop do
---			local tok = mem.lToken[idx]
---			if tok and tok.address and tok.lineno then
---				local tag = "  "
---				if tok.breakpoint then
---					tag = "* "
---				end
---				if idx == lineno and not mem.scroll_lineno then
---					lines[#lines + 1] = minetest.formspec_escape(">>" .. code[tok.lineno] or "oops")
---				else
---					lines[#lines + 1] = minetest.formspec_escape(tag .. (code[tok.lineno] or "oops"))
---				end
---			elseif tok and tok.lineno then
---				lines[#lines + 1] = minetest.formspec_escape("  " .. (code[tok.lineno] or "oops"))
---			end
---		end
---		--return table.concat(lines, "\n")
---		return table.concat(lines, ",")
---	end
---	return ""
---end
+local function format_asm_code(mem, text)
+	local out = {}
+	mem.breakpoint_lines = mem.breakpoint_lines or {}
+	local addr = vm16.get_pc(mem.cpu_pos)
+
+	for lineno, line in ipairs(prog.strsplit(text)) do
+		local tag = "  "
+		local saddr = ""
+		local is_curr_line = false
+		if mem.tAddress and mem.tAddress[lineno] then
+			saddr = string.format("%04X: ", mem.tAddress[lineno])
+			is_curr_line = mem.tAddress[lineno] == addr
+		end
+		
+		if is_curr_line and mem.breakpoint_lines[lineno] then
+			tag = "*>"
+		elseif is_curr_line then
+			tag = ">>"
+		elseif mem.breakpoint_lines[lineno] then
+			tag = "* "
+		end
+		out[#out + 1] = minetest.formspec_escape(saddr .. tag .. line)
+	end
+	return table.concat(out, ",")
+end
 
 local function format_src_code(mem, text)
-	local lines = {}
+	local out = {}
 	mem.breakpoint_lines = mem.breakpoint_lines or {}
 
 	for lineno, line in ipairs(prog.strsplit(text)) do
@@ -63,9 +57,9 @@ local function format_src_code(mem, text)
 		elseif mem.breakpoint_lines[lineno] then
 			tag = "* "
 		end
-		lines[#lines + 1] = minetest.formspec_escape(tag .. line)
+		out[#out + 1] = minetest.formspec_escape(tag .. line)
 	end
-	return table.concat(lines, ",")
+	return table.concat(out, ",")
 end
 
 local function set_breakpoint(pos, mem, lineno, tAddress)
@@ -136,13 +130,23 @@ function vm16.debug.init(pos, mem, result)
 	mem.last_code_addr = 0
 	mem.output = ""
 
-	for _, tok in ipairs(result.output) do
-		if tok.lineno and tok.address then
-			mem.tAddress[tok.lineno] = tok.address
-			mem.tLineno[tok.address] = tok.lineno
-			mem.last_lineno = tok.lineno
+--	if mem.asm_code then
+		for _, tok in ipairs(result.output) do
+			if tok.lineno and tok.address and tok.opcodes and #tok.opcodes > 0 then
+				mem.tAddress[tok.lineno] = tok.address
+				mem.tLineno[tok.address] = tok.lineno
+				mem.last_lineno = tok.lineno
+			end
 		end
-	end
+--	else
+--		for _, tok in ipairs(result.output) do
+--			if tok.lineno and tok.address then
+--				mem.tAddress[tok.lineno] = tok.address
+--				mem.tLineno[tok.address] = tok.lineno
+--				mem.last_lineno = tok.lineno
+--			end
+--		end
+--	end
 
 	mem.cpu_def = prog.get_cpu_def(mem.cpu_pos)
 	local mem_size = mem.cpu_def and mem.cpu_def.on_mem_size(mem.cpu_pos) or 3
@@ -154,6 +158,8 @@ function vm16.debug.init(pos, mem, result)
 		end
 	end
 	vm16.set_pc(mem.cpu_pos, 0)
+	mem.mem_size = vm16.mem_size(mem.cpu_pos)
+	mem.startaddr = 0
 end
 
 function vm16.debug.on_update(pos, mem)
@@ -166,13 +172,20 @@ function vm16.debug.on_update(pos, mem)
 	end
 end
 
-local function fs_window(pos, mem, x, y, xsize, ysize, fontsize, lCode)
+local function fs_window(pos, mem, x, y, xsize, ysize, fontsize, text)
 	local color = mem.running and "#AAA" or "#FFF"
+	local code
+	if mem.asm_code then
+		code = format_asm_code(mem, text) .. ";" .. (mem.cursorline or 1) .. "]"
+	else
+		code = format_src_code(mem, text) .. ";" .. (mem.cursorline or 1) .. "]"
+	end
+
 	return "label[" .. x .. "," .. (y - 0.2) .. ";Code]" ..
 		"style_type[table;font=mono;font_size="  .. fontsize .. "]" ..
 		"tableoptions[color=" ..color .. ";background=#030330;highlight_text=" ..color .. ";highlight=#000589]" ..
 		"table[" .. x .. "," .. y .. ";" .. xsize .. "," .. ysize .. ";code;" ..
-		format_src_code(mem, lCode) .. ";" .. (mem.cursorline or 1) .. "]"
+		code
 end
 
 function vm16.debug.formspec(pos, mem, textsize)
@@ -186,8 +199,13 @@ function vm16.debug.formspec(pos, mem, textsize)
 			vm16.menubar.add_button("reset", "Reset")
 		end
 		mem.status = mem.running and "Running..." or minetest.formspec_escape("Debug  |  Out[0]: " .. (mem.output or ""))
-		return fs_window(pos, mem, 0.2, 0.6, 11.4, 9.6, textsize, mem.text or "") ..
-			vm16.watch.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize)
+		if mem.asm_code then
+			return fs_window(pos, mem, 0.2, 0.6, 8.4, 9.6, textsize, mem.asm_code or "") ..
+				vm16.memory.fs_window(pos, mem, 8.8, 0.6, 6, 9.6, textsize)
+		else
+			return fs_window(pos, mem, 0.2, 0.6, 11.4, 9.6, textsize, mem.text or "") ..
+				vm16.watch.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize)
+		end
 end
 
 function vm16.debug.on_receive_fields(pos, fields, mem)
@@ -207,9 +225,16 @@ function vm16.debug.on_receive_fields(pos, fields, mem)
 		end
 	elseif fields.step then
 		if vm16.is_loaded(mem.cpu_pos) then
-			local lineno = get_next_lineno(pos, mem)
-			set_temp_breakpoint(pos, mem, lineno)
-			start_cpu(mem)
+			if mem.asm_code then
+				vm16.run(mem.cpu_pos, mem.cpu_def, mem.breakpoints, 1)
+				local addr = vm16.get_pc(mem.cpu_pos)
+				mem.cursorline = mem.tLineno[addr] or 1
+				mem.curr_lineno = mem.cursorline
+			else
+				local lineno = get_next_lineno(pos, mem)
+				set_temp_breakpoint(pos, mem, lineno)
+				start_cpu(mem)
+			end
 		end
 	elseif fields.runto then
 		if vm16.is_loaded(mem.cpu_pos) then
@@ -231,5 +256,9 @@ function vm16.debug.on_receive_fields(pos, fields, mem)
 		if mem.running then
 			stop_cpu(mem)
 		end
+	elseif fields.inc then
+		mem.startaddr = math.min(mem.startaddr + 64, (mem.mem_size or 64) - 64)
+	elseif fields.dec then
+		mem.startaddr = math.max(mem.startaddr - 64, 0)
 	end
 end

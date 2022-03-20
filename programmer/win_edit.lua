@@ -69,10 +69,9 @@ function vm16.edit.formspec(pos, mem, textsize)
 	elseif mem.asm_code then
 		-- Edit asm code
 		vm16.menubar.add_button("edit", "Edit")
-		--vm16.button.add("assemble", "Assemble")
-		vm16.menubar.add_button("debug", "Debug")
+		vm16.menubar.add_button("asmdbg", "Debug")
 		mem.status = "Edit"
-		mem.asm_code = mem.asm_code or ""
+		mem.text = nil
 		return fs_asm_code(pos, mem, textsize, "out.asm", mem.asm_code) ..
 			vm16.files.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize)
 	else
@@ -124,8 +123,6 @@ function vm16.edit.on_receive_fields(pos, fields, mem)
 		if def then
 			local prog_pos = def.on_check_connection(mem.cpu_pos)
 			if vector.equals(pos, prog_pos) then
-				mem.error = nil
-				mem.asm_code = nil
 				local result = vm16.gen_obj_code(mem.filename or "", mem.text or "")
 				if not result.errors then
 					vm16.debug.init(pos, mem, result)
@@ -133,6 +130,24 @@ function vm16.edit.on_receive_fields(pos, fields, mem)
 				else
 					mem.error = result.errors
 				end
+				mem.error = nil
+				mem.asm_code = nil
+			end
+		end
+	elseif fields.asmdbg and mem.asm_code then
+		local def = prog.get_cpu_def(mem.cpu_pos)
+		if def then
+			local prog_pos = def.on_check_connection(mem.cpu_pos)
+			if vector.equals(pos, prog_pos) then
+				local result = vm16.assemble(mem.filename or "out.asm", mem.asm_code)
+				if not result.errors then
+					vm16.debug.init(pos, mem, result)
+					vm16.memory.init(pos, mem, result)
+				else
+					mem.error = result.errors
+				end
+				mem.error = nil
+				mem.text = nil
 			end
 		end
 	else

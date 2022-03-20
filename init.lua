@@ -46,6 +46,7 @@ dofile(MP.."/programmer/win_edit.lua")
 dofile(MP.."/programmer/win_files.lua")
 dofile(MP.."/programmer/win_debug.lua")
 dofile(MP.."/programmer/win_watch.lua")
+dofile(MP.."/programmer/win_memory.lua")
 dofile(MP.."/programmer/formspec.lua")
 dofile(MP.."/programmer/programmer.lua")
 

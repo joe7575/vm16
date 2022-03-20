@@ -276,13 +276,13 @@ function vm16.read_h16(pos, start_addr, size)
 	return vm and vm16lib.read_h16(vm, start_addr, size)
 end
 
-function vm16.run(pos, cpu_def, breakpoints)
+function vm16.run(pos, cpu_def, breakpoints, steps)
 	local hash = minetest.hash_node_position(pos)
 	local vm = VMList[hash]
 	local resp = VM16_ERROR
 	local ran
 
-	local cycles = cpu_def.instr_per_cycle
+	local cycles = steps or cpu_def.instr_per_cycle
 	if skip_break_instr(pos, vm, breakpoints) then
 		return VM16_OK
 	end
