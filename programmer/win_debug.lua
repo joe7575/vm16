@@ -31,7 +31,7 @@ local function format_asm_code(mem, text)
 			saddr = string.format("%04X: ", mem.tAddress[lineno])
 			is_curr_line = mem.tAddress[lineno] == addr
 		end
-		
+
 		if is_curr_line and mem.breakpoint_lines[lineno] then
 			tag = "*>"
 		elseif is_curr_line then
@@ -125,28 +125,17 @@ function vm16.debug.init(pos, mem, result)
 	mem.tAddress = {}
 	mem.tLineno = {}
 	mem.last_lineno = 1  -- source file size in lines
-	mem.cursorline = 1   -- highlighted line
 	mem.curr_lineno = 1  -- PC position
 	mem.last_code_addr = 0
 	mem.output = ""
 
---	if mem.asm_code then
-		for _, tok in ipairs(result.output) do
-			if tok.lineno and tok.address and tok.opcodes and #tok.opcodes > 0 then
-				mem.tAddress[tok.lineno] = tok.address
-				mem.tLineno[tok.address] = tok.lineno
-				mem.last_lineno = tok.lineno
-			end
+	for _, tok in ipairs(result.output) do
+		if tok.lineno and tok.address and tok.opcodes and #tok.opcodes > 0 then
+			mem.tAddress[tok.lineno] = tok.address
+			mem.tLineno[tok.address] = tok.lineno
+			mem.last_lineno = tok.lineno
 		end
---	else
---		for _, tok in ipairs(result.output) do
---			if tok.lineno and tok.address then
---				mem.tAddress[tok.lineno] = tok.address
---				mem.tLineno[tok.address] = tok.lineno
---				mem.last_lineno = tok.lineno
---			end
---		end
---	end
+	end
 
 	mem.cpu_def = prog.get_cpu_def(mem.cpu_pos)
 	local mem_size = mem.cpu_def and mem.cpu_def.on_mem_size(mem.cpu_pos) or 3
@@ -160,6 +149,7 @@ function vm16.debug.init(pos, mem, result)
 	vm16.set_pc(mem.cpu_pos, 0)
 	mem.mem_size = vm16.mem_size(mem.cpu_pos)
 	mem.startaddr = 0
+	mem.cursorline = mem.tLineno[0] or 1
 end
 
 function vm16.debug.on_update(pos, mem)
@@ -213,7 +203,6 @@ function vm16.debug.on_receive_fields(pos, fields, mem)
 		minetest.get_node_timer(mem.cpu_pos):stop()
 		vm16.destroy(mem.cpu_pos)
 		mem.error = nil
-		mem.asm_code = nil
 	elseif fields.code then
 		local evt = minetest.explode_table_event(fields.code)
 		if evt.type == "DCL" then

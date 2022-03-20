@@ -72,7 +72,7 @@ function vm16.edit.formspec(pos, mem, textsize)
 		vm16.menubar.add_button("asmdbg", "Debug")
 		mem.status = "Edit"
 		mem.text = nil
-		return fs_asm_code(pos, mem, textsize, "out.asm", mem.asm_code) ..
+		return fs_asm_code(pos, mem, textsize, mem.filename, mem.asm_code) ..
 			vm16.files.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize)
 	else
 		-- Edit source code
@@ -83,12 +83,22 @@ function vm16.edit.formspec(pos, mem, textsize)
 		end
 		vm16.menubar.add_button("cancel", "Cancel")
 		vm16.menubar.add_button("save", "Save")
-		if file_ext(mem.filename) == "c" then
+		local ext = file_ext(mem.filename)
+		if ext == "c" then
 			vm16.menubar.add_button("compile", "Compile")
 			vm16.menubar.add_button("debug", "Debug")
+			return fs_editor(pos, mem, textsize, mem.filename, mem.text) ..
+				vm16.files.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize)
+		elseif ext == "asm" then
+			vm16.menubar.add_button("asmdbg", "Debug")
+			mem.asm_code = mem.text
+			mem.text = nil
+			return fs_editor(pos, mem, textsize, mem.filename, mem.asm_code) ..
+				vm16.files.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize)
+		else
+			return fs_editor(pos, mem, textsize, mem.filename, mem.text) ..
+				vm16.files.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize)
 		end
-		return fs_editor(pos, mem, textsize, mem.filename, mem.text) ..
-			vm16.files.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize)
 	end
 end
 
@@ -96,7 +106,7 @@ function vm16.edit.on_load_file(mem, name, text)
 	mem.filename = name
 	mem.text = text
 	mem.error = nil
-	mem.asm_code = nil
+	mem.asm_code = nil -- TODO hier gleich die ext checken
 end
 
 function vm16.edit.on_receive_fields(pos, fields, mem)
@@ -113,7 +123,6 @@ function vm16.edit.on_receive_fields(pos, fields, mem)
 		mem.asm_code = nil
 	elseif fields.edit then
 		mem.error = nil
-		mem.asm_code = nil
 	elseif fields.compile then
 		mem.error = nil
 		mem.asm_code, mem.error = vm16.gen_asm_code(mem.filename or "", mem.text or "")

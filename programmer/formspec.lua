@@ -44,10 +44,10 @@ function prog.formspec(pos, mem)
 	local windows
 	if mem.cpu_pos and vm16.is_loaded(mem.cpu_pos) then
 		mem.status = "Debug"
-		windows = vm16.debug.formspec(pos, mem, textsize)
+		windows = vm16.debug.formspec(pos, mem, textsize) or ""
 	else
 		mem.status = "Edit"
-		windows = vm16.edit.formspec(pos, mem, textsize)
+		windows = vm16.edit.formspec(pos, mem, textsize) or ""
 	end
 
 	return "formspec_version[4]" ..

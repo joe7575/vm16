@@ -62,6 +62,23 @@ func main() {
 }
 ]]
 
+local Example3 = [[
+; Read button on input #1 and
+; control demo lamp on output #1.
+
+  move A, #00  ; color value in A
+
+loop:
+  nop          ; 100 ms delay
+  nop          ; 100 ms delay
+  in   B, #1   ; read switch value
+  bze  B, loop
+  and  A, #$3F ; values from 1 to 64
+  add  A, #01
+  out  #01, A  ; output color value
+  jump loop
+]]
+
 -- Will be added to the programmer file system as read-only TXT-file.
 -- Can be used as CPU description.
 local Info = [[
@@ -123,9 +140,11 @@ local cpu_def = {
 	end,
 	on_init = function(pos, prog_pos)
 		M(pos):set_string("prog_pos", P2S(prog_pos))
+		M(pos):set_int("running", 0)
 		local s = find_io_nodes(pos)
 		vm16.add_ro_file(prog_pos, "example1.c", Example1)
 		vm16.add_ro_file(prog_pos, "example2.c", Example2)
+		vm16.add_ro_file(prog_pos, "example.asm", Example3)
 		vm16.add_ro_file(prog_pos, "info.txt", Info .. s)
 	end,
 	on_mem_size = function(pos)
@@ -133,9 +152,11 @@ local cpu_def = {
 	end,
 	on_start = function(pos)
 		M(pos):set_string("infotext", "VM16 Demo Computer (running)")
+		M(pos):set_int("running", 1)
 	end,
 	on_stop = function(pos)
 		M(pos):set_string("infotext", "VM16 Demo Computer (stopped)")
+		M(pos):set_int("running", 0)
 	end,
 	on_check_connection = function(pos)
 		return S2P(M(pos):get_string("prog_pos"))
@@ -176,7 +197,9 @@ minetest.register_lbm({
 	action = function(pos, node)
 		find_io_nodes(pos)
 		local prog_pos = S2P(M(pos):get_string("prog_pos"))
-		vm16.load_cpu(pos, prog_pos, cpu_def)
+		if M(pos):get_int("running") == 1 then
+			vm16.load_cpu(pos, prog_pos, cpu_def)
+		end
 	end
 })
 

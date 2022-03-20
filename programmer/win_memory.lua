@@ -77,7 +77,7 @@ local function reg_dump(pos, mem, x, y)
 end
 
 function vm16.memory.init(pos, mem)
-	
+
 end
 
 function vm16.memory.fs_window(pos, mem, x, y, xsize, ysize, fontsize)
