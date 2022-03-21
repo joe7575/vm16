@@ -31,7 +31,6 @@ local function format_asm_code(mem, text)
 			saddr = string.format("%04X: ", mem.tAddress[lineno])
 			is_curr_line = mem.tAddress[lineno] == addr
 		end
-
 		if is_curr_line and mem.breakpoint_lines[lineno] then
 			tag = "*>"
 		elseif is_curr_line then
@@ -165,9 +164,9 @@ end
 local function fs_window(pos, mem, x, y, xsize, ysize, fontsize, text)
 	local color = mem.running and "#AAA" or "#FFF"
 	local code
-	if mem.asm_code then
+	if mem.file_ext == "asm" then
 		code = format_asm_code(mem, text) .. ";" .. (mem.cursorline or 1) .. "]"
-	else
+	elseif mem.file_ext == "c" then
 		code = format_src_code(mem, text) .. ";" .. (mem.cursorline or 1) .. "]"
 	end
 
@@ -179,23 +178,25 @@ local function fs_window(pos, mem, x, y, xsize, ysize, fontsize, text)
 end
 
 function vm16.debug.formspec(pos, mem, textsize)
-		if mem.running then
-			vm16.menubar.add_button("stop", "Stop")
-		else
-			vm16.menubar.add_button("edit", "Edit")
-			vm16.menubar.add_button("step", "Step")
-			vm16.menubar.add_button("runto", "Run to C")
-			vm16.menubar.add_button("run", "Run")
-			vm16.menubar.add_button("reset", "Reset")
-		end
-		mem.status = mem.running and "Running..." or minetest.formspec_escape("Debug  |  Out[0]: " .. (mem.output or ""))
-		if mem.asm_code then
-			return fs_window(pos, mem, 0.2, 0.6, 8.4, 9.6, textsize, mem.asm_code or "") ..
+	if mem.running then
+		vm16.menubar.add_button("stop", "Stop")
+	else
+		vm16.menubar.add_button("edit", "Edit")
+		vm16.menubar.add_button("step", "Step")
+		vm16.menubar.add_button("runto", "Run to C")
+		vm16.menubar.add_button("run", "Run")
+		vm16.menubar.add_button("reset", "Reset")
+	end
+	mem.status = mem.running and "Running..." or minetest.formspec_escape("Debug  |  Out[0]: " .. (mem.output or ""))
+	if mem.file_text then
+		if mem.file_ext == "asm" then
+			return fs_window(pos, mem, 0.2, 0.6, 8.4, 9.6, textsize, mem.file_text) ..
 				vm16.memory.fs_window(pos, mem, 8.8, 0.6, 6, 9.6, textsize)
-		else
-			return fs_window(pos, mem, 0.2, 0.6, 11.4, 9.6, textsize, mem.text or "") ..
+		elseif mem.file_ext == "c" then
+			return fs_window(pos, mem, 0.2, 0.6, 11.4, 9.6, textsize, mem.file_text) ..
 				vm16.watch.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize)
 		end
+	end
 end
 
 function vm16.debug.on_receive_fields(pos, fields, mem)
@@ -214,12 +215,12 @@ function vm16.debug.on_receive_fields(pos, fields, mem)
 		end
 	elseif fields.step then
 		if vm16.is_loaded(mem.cpu_pos) then
-			if mem.asm_code then
+			if mem.file_ext == "asm" then
 				vm16.run(mem.cpu_pos, mem.cpu_def, mem.breakpoints, 1)
 				local addr = vm16.get_pc(mem.cpu_pos)
 				mem.cursorline = mem.tLineno[addr] or 1
 				mem.curr_lineno = mem.cursorline
-			else
+			elseif mem.file_ext == "c" then
 				local lineno = get_next_lineno(pos, mem)
 				set_temp_breakpoint(pos, mem, lineno)
 				start_cpu(mem)

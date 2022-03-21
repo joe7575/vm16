@@ -42,6 +42,64 @@ local function init(pos, mem)
 	end
 end
 
+local function after_place_node(pos, placer, itemstack, pointed_thing)
+	local mem = prog.get_mem(pos)
+	preserve_cpu_server_pos(pos, itemstack)
+	local meta = M(pos)
+	meta:set_string("infotext", "VM16 Programmer")
+	if cpu_server_pos(pos, mem) then
+		init(pos, mem)
+	end
+	meta:set_string("formspec", prog.fs_connect(mem))
+end
+
+local function on_rightclick(pos)
+	local mem = prog.get_mem(pos)
+	if cpu_server_pos(pos, mem) and mem.running then
+		M(pos):set_string("formspec", vm16.prog.formspec(pos, mem))
+	end
+end
+
+local function on_receive_fields(pos, formname, fields, player)
+	local mem = prog.get_mem(pos)
+	if cpu_server_pos(pos, mem) then
+		mem.cpu_def = mem.cpu_def or prog.get_cpu_def(mem.cpu_pos)
+		vm16.prog.on_receive_fields(pos, formname, fields, player)
+	end
+end
+
+local function after_dig_node(pos)
+	prog.del_mem(pos)
+end
+
+local function on_use(itemstack, user, pointed_thing)
+	if pointed_thing.type == "node" then
+		local name = user and user:get_player_name()
+		local pos = pointed_thing.under
+		if not user or minetest.is_protected(pos, user:get_player_name()) then
+			minetest.chat_send_player(name, "[vm16] Error: Protected position!")
+			return
+		end
+		local node = minetest.get_node(pos)
+		if prog.get_cpu_def(pos) then
+			local meta = itemstack:get_meta()
+			meta:set_string("cpu_pos", P2S(pos))
+			minetest.chat_send_player(name, "[vm16] Connected to CPU")
+		elseif node.name == "vm16:server" or node.name == "vm16:server2" then
+			local meta = itemstack:get_meta()
+			meta:set_string("server_pos", P2S(pos))
+			minetest.chat_send_player(name, "[vm16] Connected to Server")
+		end
+	end
+	return itemstack
+end
+
+local function preserve_metadata(pos, oldnode, oldmetadata, drops)
+	local meta = drops[1]:get_meta()
+	meta:set_string("cpu_pos", oldmetadata.cpu_pos)
+	meta:set_string("server_pos", oldmetadata.server_pos)
+end
+
 minetest.register_node("vm16:programmer", {
 	description = "VM16 Programmer",
 	drawtype = "nodebox",
@@ -67,67 +125,45 @@ minetest.register_node("vm16:programmer", {
 		'vm16_programmer_bottom.png^vm16_logo.png',
 		"vm16_programmer_front.png",
 	},
-	after_place_node = function(pos, placer, itemstack, pointed_thing)
-		local mem = prog.get_mem(pos)
-		preserve_cpu_server_pos(pos, itemstack)
-		local meta = M(pos)
-		meta:set_string("infotext", "VM16 Programmer")
-		if cpu_server_pos(pos, mem) then
-			init(pos, mem)
-		end
-		meta:set_string("formspec", prog.fs_connect(mem))
-	end,
-	on_rightclick = function(pos)
-		local mem = prog.get_mem(pos)
-		if cpu_server_pos(pos, mem) and mem.running then
-			M(pos):set_string("formspec", vm16.prog.formspec(pos, mem))
-		end
-	end,
-	on_receive_fields = function(pos, formname, fields, player)
-		local mem = prog.get_mem(pos)
-		if cpu_server_pos(pos, mem) then
-			mem.cpu_def = mem.cpu_def or prog.get_cpu_def(mem.cpu_pos)
-			vm16.prog.on_receive_fields(pos, formname, fields, player)
-		end
-	end,
-	after_dig_node = function(pos)
-		prog.del_mem(pos)
-	end,
-	on_use = function(itemstack, user, pointed_thing)
-		if pointed_thing.type == "node" then
-			local name = user and user:get_player_name()
-			local pos = pointed_thing.under
-			if not user or minetest.is_protected(pos, user:get_player_name()) then
-				minetest.chat_send_player(name, "[vm16] Error: Protected position!")
-				return
-			end
-			local node = minetest.get_node(pos)
-			if prog.get_cpu_def(pos) then
-				local meta = itemstack:get_meta()
-				meta:set_string("cpu_pos", P2S(pos))
-				minetest.chat_send_player(name, "[vm16] Connected to CPU")
-			elseif node.name == "vm16:server" then
-				local meta = itemstack:get_meta()
-				meta:set_string("server_pos", P2S(pos))
-				minetest.chat_send_player(name, "[vm16] Connected to Server")
-			end
-		end
-		return itemstack
-	end,
-	preserve_metadata = function(pos, oldnode, oldmetadata, drops)
-		local meta = drops[1]:get_meta()
-		meta:set_string("cpu_pos", oldmetadata.cpu_pos)
-		meta:set_string("server_pos", oldmetadata.server_pos)
-	end,
+	after_place_node = after_place_node,
+	on_rightclick = on_rightclick,
+	on_receive_fields = on_receive_fields,
+	after_dig_node = after_dig_node,
+	on_use = on_use,
+	preserve_metadata = preserve_metadata,
 	stack_max = 1,
 	groups = {cracky=2, crumbly=2, choppy=2},
 	is_ground_content = false,
 })
 
+minetest.register_node("vm16:programmer2", {
+	description = "VM16 Programmer",
+	paramtype2 = "facedir",
+	tiles = {
+		-- up, down, right, left, back, front
+		'vm16_programmer2_top.png',
+		'vm16_programmer2_top.png',
+		'vm16_programmer2_side.png',
+		'vm16_programmer2_side.png',
+		'vm16_programmer2_side.png',
+		"vm16_programmer2_front.png",
+	},
+	after_place_node = after_place_node,
+	on_rightclick = on_rightclick,
+	on_receive_fields = on_receive_fields,
+	after_dig_node = after_dig_node,
+	on_use = on_use,
+	preserve_metadata = preserve_metadata,
+	stack_max = 1,
+	groups = {cracky=2, crumbly=2, choppy=2},
+	is_ground_content = false,
+})
+
+
 minetest.register_lbm({
 	label = "vm16 Programmer",
 	name = "vm16:programmer",
-	nodenames = {"vm16:programmer"},
+	nodenames = {"vm16:programmer", "vm16:programmer2"},
 	run_at_every_load = true,
 	action = function(pos, node)
 		local mem = prog.get_mem(pos)

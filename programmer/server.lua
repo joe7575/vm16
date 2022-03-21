@@ -111,6 +111,26 @@ function vm16.server.add_ro_file(pos, filename, text)
 	mem.ro_files[filename] = text
 end
 
+local function after_place_node(pos, placer, itemstack, pointed_thing)
+	local meta = M(pos)
+	meta:set_string("owner", placer:get_player_name())
+	meta:set_string("formspec", "formspec_version[4]size[6,3]button[0.8,0.8;4.4,1.4;destroy;Destroy Server\n  with all files?]")
+	meta:set_string("files", minetest.serialize({}))
+	meta:mark_as_private("files")
+	meta:set_string("infotext", placer:get_player_name() .. "'s VM16 File Server")
+end
+
+local function on_receive_fields(pos, formname, fields, player)
+	if player and player:get_player_name() == M(pos):get_string("owner") then
+		if fields.destroy then
+			local node = minetest.get_node(pos)
+			minetest.remove_node(pos)
+			minetest.add_item(pos, node)
+			prog.del_mem(pos)
+		end
+	end
+end
+
 minetest.register_node("vm16:server", {
 	description = "VM16 File Server",
 	drawtype = "nodebox",
@@ -129,29 +149,38 @@ minetest.register_node("vm16:server", {
 		"vm16_server_back.png",
 		"vm16_server_front.png",
 	},
-	after_place_node = function(pos, placer, itemstack, pointed_thing)
-		local meta = M(pos)
-		meta:set_string("owner", placer:get_player_name())
-		meta:set_string("formspec", "formspec_version[4]size[6,3]button[0.8,0.8;4.4,1.4;destroy;Destroy Server\n  with all files?]")
-		meta:set_string("files", minetest.serialize({}))
-		meta:mark_as_private("files")
-		meta:set_string("infotext", placer:get_player_name() .. "'s VM16 File Server")
-	end,
-	on_receive_fields = function(pos, formname, fields, player)
-		if player and player:get_player_name() == M(pos):get_string("owner") then
-			if fields.destroy then
-				minetest.remove_node(pos)
-				minetest.add_item(pos, {name = "vm16:server"})
-				prog.del_mem(pos)
-			end
-		end
-	end,
+	after_place_node = after_place_node,
+	on_receive_fields = on_receive_fields,
 	paramtype2 = "facedir",
 	paramtype = "light",
 	sunlight_propagates = true,
 	light_source = 5,
 	glow = 12,
 	use_texture_alpha = "clip",
+	is_ground_content = false,
+	on_blast = function() end,
+	on_destruct = function () end,
+	can_dig = function() return false end,
+	diggable = false,
+	drop = "",
+	stack_max = 1,
+	groups = {cracky=2, crumbly=2, choppy=2},
+})
+
+minetest.register_node("vm16:server2", {
+	description = "VM16 File Server",
+	tiles = {
+		-- up, down, right, left, back, front
+		"vm16_programmer2_top.png",
+		"vm16_programmer2_top.png",
+		"vm16_programmer2_side.png",
+		"vm16_programmer2_side.png",
+		"vm16_server2_back.png",
+		"vm16_server2_front.png",
+	},
+	after_place_node = after_place_node,
+	on_receive_fields = on_receive_fields,
+	paramtype2 = "facedir",
 	is_ground_content = false,
 	on_blast = function() end,
 	on_destruct = function () end,
