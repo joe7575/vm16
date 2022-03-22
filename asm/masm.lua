@@ -241,11 +241,11 @@ function MacroAsm:scanner(pos, filename, read_file, get_path)
 	return self.tokens
 end
 
-function MacroAsm:assemble(tokens)
+function MacroAsm:assemble(filename, tokens)
 	if tokens then
 		self.asm = vm16.Asm:new({support_namespaces = true})
 		local errors
-		tokens, errors = self.asm:assembler(tokens)
+		tokens, errors = self.asm:assembler(filename, tokens)
 		if errors then
 			table.insert(self.output, errors)
 		end

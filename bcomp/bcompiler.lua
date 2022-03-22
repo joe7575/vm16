@@ -22,6 +22,11 @@ local function extend(into, from)
 	end
 end
 
+local function file_base(filename)
+	local name, _ = unpack(string.split(filename, ".", true, 1))
+	return name
+end
+
 local function gen_comp_output(lCode, lData)
 	local out = {}
 
@@ -88,14 +93,21 @@ end
 local function format_output_for_sourcecode_debugging(lToken)
 	local out = {}
 	local tok
+	local lineno
+	local inline_asm = false
 	for _,item in ipairs(lToken) do
 		if item[vm16.Asm.SECTION] == vm16.Asm.COMMENT then
+			inline_asm = string.find(item[vm16.Asm.TXTLINE], "_asm_")
 			if tok then
 				out[#out + 1] = tok
 				tok = nil
 			end
-			local lineno = tonumber(item[vm16.Asm.TXTLINE]:sub(2,5))
+			lineno = tonumber(item[vm16.Asm.TXTLINE]:sub(2,5))
 			tok = {lineno = lineno}
+		elseif inline_asm then
+			-- Add each line until the next comment line
+			lineno = lineno + 1
+			out[#out + 1] = {lineno = lineno, address = item[vm16.Asm.ADDRESS], opcodes = item[vm16.Asm.OPCODES]}
 		else
 			if tok and tok.address then
 				extend(tok.opcodes, item[vm16.Asm.OPCODES])
@@ -133,7 +145,7 @@ function vm16.gen_obj_code(filename, code)
 	if not err then
 		local asm = vm16.Asm:new({})
 		local lToken = gen_asm_token_list(prs.lCode, prs.lData)
-		lToken, err = asm:assembler(lToken)
+		lToken, err = asm:assembler(file_base(filename) .. ".asm", lToken)
 		if lToken then
 			local output = format_output_for_sourcecode_debugging(lToken)
 			return {
@@ -177,7 +189,7 @@ function vm16.assemble(filename, code)
 	code = code:gsub("\t", "  ")
 	local lToken, err = a:scanner(code)
 	if lToken then
-		lToken, err = a:assembler(lToken)
+		lToken, err = a:assembler(file_base(filename) .. ".asm", lToken)
 		if lToken then
 			local output = format_output_for_assembler_debugging(lToken)
 			return {

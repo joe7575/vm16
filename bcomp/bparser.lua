@@ -40,7 +40,7 @@ var_def_list:
 ]]--
 function BPars:var_def_list()
 	local val = self:tk_peek().val
-	while val == "var" do
+	while val and val == "var" do
 		self:tk_match("var")
 		local ident = self:ident()
 		self:add_global(ident, true)
@@ -62,7 +62,7 @@ func_def_list:
 ]]--
 function BPars:func_def_list()
 	local val = self:tk_peek().val
-	while val == "func" do
+	while val and val == "func" do
 		self:tk_match("func")
 		local ident = self:ident()
 		self.func_name = ident
@@ -91,7 +91,7 @@ lvar_def_list:
 ]]--
 function BPars:lvar_def_list()
 	local val = self:tk_peek().val
-	while val == "var" do
+	while val and val == "var" do
 		self:tk_match("var")
 		local ident = self:ident()
 		if self:tk_peek().val == "=" then
@@ -114,8 +114,10 @@ stmnt_list:
     = { statement }
 ]]--
 function BPars:stmnt_list()
-	while self:tk_peek().val ~= "}" do
+	local val = self:tk_peek().val
+	while val and val ~= "}" do
 		self:statement()
+		val = self:tk_peek().val
 	end
 end
 
@@ -152,6 +154,7 @@ statement:
     | while_statement
     | 'return' expression ";"
     | 'return' ";"
+    | asm_declaration
     | assignment ";"
     | expression ";"
 ]]--
@@ -175,6 +178,8 @@ function BPars:statement()
 		self:tk_match(";")
 		self:func_return(self.func_name or "")
 		self:reset_reg_use()
+	elseif val == "_asm_" then
+		self:asm_declaration()
 	elseif self:assignment() then
 		self:tk_match(";")
 	else
@@ -265,6 +270,20 @@ function BPars:while_statement()
 	self:add_instr("jump", loop)
 	self:tk_match("}")
 	self:add_label(lend)
+end
+
+--[[
+asm_declaration:
+    | _asm_ "{" { instruction } "}"
+]]--
+function BPars:asm_declaration()
+	self:tk_match("_asm_")
+	self:tk_match("{")
+	local line = string.trim(self:tk_rawline())
+	while line and line ~= "}" do
+		self:add_line("  " .. line)
+		line = string.trim(self:tk_rawline())
+	end
 end
 
 --[[

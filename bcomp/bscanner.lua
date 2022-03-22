@@ -99,7 +99,9 @@ function BScan:line_produce()
 	--require('mobdebug').on()
 	for lineno, line in ipairs(split_into_lines(self.text)) do
 		self.lineno = lineno
-		if line:trim() ~= "" then
+		if self.scanner_raw_mode then
+			coroutine.yield(line)
+		elseif line:trim() ~= "" then
 			self:add_line(string.format(";%4d: %s", lineno, line))
 			self:scanner(line)
 			coroutine.yield(true)
@@ -138,6 +140,13 @@ function BScan:tk_next()
 		if not res then break end
 	end
 	return self.ltok[self.tk_idx + 1] or {}
+end
+
+function BScan:tk_rawline()
+	self.scanner_raw_mode = true
+	local res, line = coroutine.resume(self.co, self)
+	self.scanner_raw_mode = false
+	return res and line
 end
 
 vm16.BScan = BScan

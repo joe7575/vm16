@@ -201,7 +201,7 @@ function Asm:new(o)
 end
 
 function Asm:err_msg(err)
-	local s = string.format("Err (%u): %s!", self.lineno or 0, err)
+	local s = string.format("%s(%d): %s!", self.filename, self.lineno or 0, err)
 	append(self.errors, s)
 	self.error = true
 end
@@ -477,9 +477,10 @@ function Asm:handle_label(tok, i, label)
 	end
 end
 
-function Asm:assembler(lToken)
+function Asm:assembler(filename, lToken)
 	local lOut = {}
 	-- pass 1
+	self.filename = filename
 	self.namespace_cnt = 1
 	for _,tok in ipairs(lToken or {}) do
 		self.lineno = tok[LINENO]

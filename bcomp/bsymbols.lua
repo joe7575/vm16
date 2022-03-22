@@ -15,7 +15,9 @@
 local KEYWORDS = {var=1, func=1, ["while"]=1, ["return"]=1, input=1, output=1,
                   putchar=1, system=1, sleep=1, ["if"]=1, ["else"]=1,
                   ["for"]=1, ["switch"]=1, ["case"]=1, ["break"]=1, ["continue"]=1, ["goto"]=1,
-                  ["and"]=1, ["or"]=1, ["not"]=1, ["xor"]=1, ["mod"]=1}
+                  ["and"]=1, ["or"]=1, ["not"]=1, ["xor"]=1, ["mod"]=1,
+                  A=1, B=1, C=1, D=1, X=1, Y=1, PC=1, SP=1,
+                  import=1, pragma=1, _asm_=1}
 
 local BSym = vm16.BScan:new({})
 

@@ -62,7 +62,31 @@ func main() {
 }
 ]]
 
+-- Will be added to the programmer file system as read-only C-file.
 local Example3 = [[
+// Example with inline assembler
+
+func main() {
+  var idx = 0;
+
+  while(1){
+    if(input(1) == 1) {
+      output(1, idx);
+      //idx = (idx + 1) % 64;
+      _asm_{
+        add [SP+0], #1
+        mod [SP+0], #64
+      }
+    } else {
+      output(1, 0);
+    }
+    sleep(2);
+  }
+}
+
+]]
+
+local Example4 = [[
 ; Read button on input #1 and
 ; control demo lamp on output #1.
 
@@ -144,7 +168,8 @@ local cpu_def = {
 		local s = find_io_nodes(pos)
 		vm16.add_ro_file(prog_pos, "example1.c", Example1)
 		vm16.add_ro_file(prog_pos, "example2.c", Example2)
-		vm16.add_ro_file(prog_pos, "example.asm", Example3)
+		vm16.add_ro_file(prog_pos, "example3.c", Example3)
+		vm16.add_ro_file(prog_pos, "example.asm", Example4)
 		vm16.add_ro_file(prog_pos, "info.txt", Info .. s)
 	end,
 	on_mem_size = function(pos)
