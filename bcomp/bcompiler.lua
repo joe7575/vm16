@@ -12,7 +12,7 @@
 
 ]]--
 
-local version = "1.0"
+local version = "1.1"
 
 local function extend(into, from)
 	if into and from then

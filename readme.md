@@ -86,8 +86,7 @@ Licensed under the GNU GPLv3 (See LICENSE.txt)
 
 ## ToDo
 
-- Improve compiler (more data types, functional blocks, ...)
-- Reactivate assembler mode for the programmer
+- Improve compiler (switch/case, functional blocks, ...)
 - Bug fixes
 - Adapt manuals
 - Add compiler manual
@@ -96,6 +95,16 @@ Licensed under the GNU GPLv3 (See LICENSE.txt)
 
 
 ## History
+
+### API v3.3/Core v2.6.5/asm v2.2/Compiler v1.1 (2022-03-26)
+
+**Work in progress!**
+
+- Expand compiler with arrays and pointers
+- Expand compiler with strings and chars
+- Expand compiler with constants and inline assembler
+- Update debugger
+- Bug fixes
 
 ### API v3.3/Core v2.6.5/asm v2.2 (2022-03-19)
 
