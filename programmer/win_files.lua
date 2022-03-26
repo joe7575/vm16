@@ -65,6 +65,7 @@ function vm16.files.fs_window(pos, mem, x, y, xsize, ysize, fontsize)
 	return "label[" .. x .. "," .. (y - 0.2) .. ";Files]" ..
 		"style_type[table;font=mono;font_size="  .. fontsize .. "]" ..
 		"tableoptions[color=" ..color .. ";highlight_text=" ..color .. ";highlight=#63007E]" ..
+		"field_close_on_enter[name;false]" ..
 		"table[" .. x .. "," .. y .. ";" .. xsize .. "," .. ysize .. ";files;" ..
 		format_files(pos, mem) .. ";]"
 end
@@ -80,7 +81,7 @@ function vm16.files.on_receive_fields(pos, fields, mem)
 			return true
 		end
 	elseif fields.name and fields.name ~= "" then
-		if fields.new then
+		if fields.new or fields.key_enter_field == "name" then
 			new_file(mem, fields.name)
 			return true
 		end

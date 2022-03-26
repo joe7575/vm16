@@ -15,6 +15,7 @@
 local T_IDENT   = vm16.T_IDENT
 local T_NUMBER  = vm16.T_NUMBER
 local T_OPERAND = vm16.T_OPERAND
+local T_STRING  = vm16.T_STRING
 
 local BUILDIN  = {system=1, input=1, output=1, putchar=1, sleep=1}
 
@@ -122,22 +123,52 @@ end
 
 --[[
 unary:
-    = factor
-    = '-' factor
-    = '~' factor
-    = 'not' factor
+    = postfix
+    | '-' postfix
+    | '~' postfix
+    | 'not' postfix
+    | '*' postfix
+    | '&' postfix
 ]]--
 function BExpr:unary()
 	local val = self:tk_peek().val
 	if val == "-" then
 		self:tk_match()
-		local opnd = self:factor()
+		local opnd = self:postfix()
 		opnd = self:add_instr("not", opnd)
 		return self:add_instr("add", opnd, "#1")
 	elseif val == "~" or val == "not" then
 		self:tk_match()
-		local opnd = self:factor()
+		local opnd = self:postfix()
 		return self:add_instr("not", opnd)
+	elseif val == "*" then
+		self:tk_match("*")
+		local opnd = self:postfix()
+		local reg = self:next_free_indexreg()
+		self:add_instr("move", reg, opnd)
+		return "[" .. reg .. "]"
+	elseif val == "&" then
+		self:tk_match("&")
+		return "#" .. self:postfix() -- TODO
+	end
+	return self:postfix()
+end
+
+--[[
+postfix:
+    = factor
+    | variable '[' expression ']'
+]]--
+function BExpr:postfix()
+	if self:tk_next().val == "[" then
+		local opnd1 = self:variable()
+		self:tk_match("[")
+		local opnd2 = self:expression()
+		self:tk_match("]")
+		opnd1 = self:add_instr("add", opnd1, opnd2)
+		local reg = self:next_free_indexreg()
+		self:add_instr("move", reg, opnd1)
+		return "[" .. reg .. "]"
 	end
 	return self:factor()
 end
@@ -146,7 +177,9 @@ end
 factor:
     = '(' expression ')'
     | variable
-    | value
+    | number
+    | CONST
+    | STRING
     | func_call
     | buildin_call
 ]]--
@@ -155,6 +188,9 @@ function BExpr:factor()
 	if tok.type == T_NUMBER then
 		self:tk_match()
 		return "#" .. tok.val
+	elseif self:is_const(tok.val) then
+		self:tk_match()
+		return self:get_const(tok.val)
 	elseif tok.val == "(" then
 		self:tk_match("(")
 		local res = self:expression()
@@ -168,11 +204,12 @@ function BExpr:factor()
 			return self:func_call()
 		end
 	elseif tok.type == T_IDENT then
-		self:tk_match()
-		if not self.new_local_variables and not self:local_get(tok.val) and not  self:is_global_var(tok.val) then
-			error(string.format("Unknown variable '%s'", tok.val or ""))
-		end
-		return self:local_get(tok.val) or tok.val or ""
+		return self:variable()
+	elseif tok.type == T_STRING then
+		local lbl = self:get_string_lbl()
+		self:add_string(lbl, tok.val)
+		self:tk_match(T_STRING)
+		return "#" .. lbl
 	else
 		error(string.format("Syntax error at '%s'", tok.val or ""))
 		return tok.val or ""
@@ -185,7 +222,7 @@ buildin_call:
     | putchar '(' expression ')'
     | sleep '(' expression ')'
     | input '(' expression ')'
-    | output '(' expression ',' expression ')'
+    | output '(' expression ',' expression { ',' expression } ')'
 ]]--
 function BExpr:buildin_call()
 	self:push_regs()
@@ -219,6 +256,11 @@ function BExpr:buildin_call()
 		local opnd1 = self:expression()
 		self:tk_match(",")
 		local opnd2 = self:expression()
+		if self:tk_peek().val == "," then
+			self:tk_match(",")
+			local opnd3 = self:expression()
+			self:add_instr("move", "B", opnd3)
+		end
 		self:tk_match(")")
 		self:add_instr("out", opnd1, opnd2)
 	end
@@ -238,7 +280,7 @@ function BExpr:func_call()
 	self.num_param = 0
 	local ident = self:ident()
 	self:tk_match("(")
-	if self:tk_peek().type == T_IDENT or self:tk_peek().type == T_NUMBER then
+	if self:tk_peek().val ~= ")" then
 		while true do
 			local val = self:expression()
 			self.num_param = self.num_param + 1
@@ -262,16 +304,18 @@ function BExpr:func_call()
 end
 
 --[[
-constant:
-    = number
+  variable:
+  | ident  
 ]]--
-function BExpr:constant()
-	local tok = self:tk_match()
-	if tok.type == T_NUMBER then
-		return "#" .. tok.val
-	else
-		error(string.format("Syntax error at '%s'", tok.val or ""))
+function BExpr:variable()
+	local ident = self:ident()
+	if not self.new_local_variables and not self:local_get(ident) and not self:is_global_var(ident) then
+		error(string.format("Unknown variable '%s'", ident or ""))
 	end
+	if self:is_array(ident) then
+		return "#" .. ident
+	end
+	return self:local_get(ident) or ident or ""
 end
 
 function BExpr:ident()

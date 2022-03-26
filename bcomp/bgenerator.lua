@@ -26,10 +26,12 @@ local BGen = {}
 function BGen:new(o)
 	o = o or {}
 	o.label_cnt = 0
+	o.string_cnt = 0
 	o.reg_cnt = 0
 	o.reg_cnt_stack = {}
 	o.lCode = {"  .code"}
 	o.lData = {"  .data"}
+	o.lString = {"  .ctext"}
 	setmetatable(o, self)
 	self.__index = self
 	return o
@@ -55,6 +57,18 @@ function BGen:next_free_reg(instr, opnd1, opnd2)
 	end
 end
 
+function BGen:next_free_indexreg()
+	if not self.x_in_use then
+		self.x_in_use = true
+		return "X"
+	elseif not self.y_in_use then
+		self.y_in_use = true
+		return "Y"
+	else
+		error("Pointer expression too complex", 2)
+	end
+end
+
 function BGen:free_last_operand_reg(instr, opnd)
 	if CLOSING_INSTR[instr] then
 		if REGS[opnd] then
@@ -67,6 +81,8 @@ end
 
 function BGen:reset_reg_use()
 	self.reg_cnt = 0
+	self.x_in_use = nil
+	self.y_in_use = nil
 end
 
 function BGen:add_instr(instr, opnd1, opnd2)
@@ -160,13 +176,29 @@ function BGen:add_line(line)
 	self.lCode[#self.lCode + 1] = line
 end
 
-function BGen:add_data(ident)
-	self.lData[#self.lData + 1] = ident .. ": 0"
+function BGen:add_data(ident, val)
+	self.lData[#self.lData + 1] = ident .. ": " .. (val or "0")
+end
+
+function BGen:append_val(val)
+	if #self.lData[#self.lData] > 32 then
+		self.lData[#self.lData + 1] = "  "
+	end
+	self.lData[#self.lData] = self.lData[#self.lData] .. "," .. val
 end
 
 function BGen:get_label()
 	self.label_cnt = self.label_cnt + 1
 	return "lbl" .. self.label_cnt
+end
+
+function BGen:get_string_lbl()
+	self.string_cnt = self.string_cnt + 1
+	return "s" .. self.string_cnt
+end
+
+function BGen:add_string(ident, str)
+	self.lString[#self.lString + 1] = ident .. ": " .. str
 end
 
 vm16.BGen = BGen

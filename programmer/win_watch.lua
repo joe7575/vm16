@@ -12,6 +12,8 @@
 
 vm16.watch = {}
 
+local prog = vm16.prog
+
 local function var_address(cpu, offs, num_stack_var)
 	-- Valid Base Pointer (before ret instruction)
 	if cpu.SP <= cpu.BP or cpu.BP == 0 then
@@ -21,25 +23,48 @@ local function var_address(cpu, offs, num_stack_var)
 	end
 end
 
-local function format_watch(pos, mem)
+local function get_string(data)
+	local out = {}
+	for i = 1, 8 do
+		print(data[i])
+		out[i] = prog.to_string(data[i] or 0)
+	end
+	return table.concat(out, "")
+end
+
+local function gen_varlist(pos, mem)
 	local out = {}
 	local cpu = vm16.get_cpu_reg(mem.cpu_pos)
 	if cpu and mem.tFunctions and mem.tLocals then
 		-- Globals
-		for _, var in ipairs(mem.lVars or {}) do
-			local s = string.format("%-16s: %d", var, vm16.peek(mem.cpu_pos, mem.tGlobals[var] or 0))
-			out[#out + 1] = s
+		for _, name in ipairs(mem.lVars or {}) do
+			local addr = mem.tGlobals[name] or 0
+			out[#out + 1] = {name = name, addr = addr, type = "global"}
 		end
-		out[#out + 1] = "----------------:------"
+		out[#out + 1] = {name = "", addr = 0}
 		-- Locals
 		local funcname = mem.tFunctions[mem.curr_lineno or 1] or ""
 		local t = mem.tLocals[funcname] or {}
 		for var, offs in pairs(t) do
 			if var ~= "@nsv@" then
 				local addr = var_address(cpu, offs, t["@nsv@"])
-				local s = string.format("%-16s: %d", var, vm16.peek(mem.cpu_pos, addr))
-				out[#out + 1] = s
+				out[#out + 1] = {name = var, addr = addr, type = "local"}
 			end
+		end
+	end
+	return out
+end
+
+local function format_watch(pos, mem)
+	local out = {}
+	mem.watch_varlist = gen_varlist(pos, mem)
+	for idx, item in ipairs(mem.watch_varlist) do
+		if item.name == "" then
+			out[#out + 1] = "----------------:----------"
+		else
+			local val = vm16.peek(mem.cpu_pos, item.addr)
+			local s = string.format("%-16s: %04X %d", item.name, val, val)
+			out[#out + 1] = s
 		end
 	end
 	return table.concat(out, ",")
@@ -60,6 +85,42 @@ local function memory_bar(pos, mem, x, y, xsize, ysize)
 	return ""
 end
 
+local function mem_dump(pos, mem, x, y, xsize, ysize, fontsize)
+	mem.startaddr = mem.startaddr or 0
+	local data = vm16.read_mem(mem.cpu_pos, mem.startaddr, 16)
+	local item = mem.watch_varlist[mem.last_watch_idx]
+	local str = get_string(data)
+	local var
+	if mem.pointaddr then
+		var = minetest.formspec_escape(string.format("'%s' => %04X = \"%s\"",  item.name, mem.pointaddr, str))
+	else
+		var = minetest.formspec_escape(string.format("'%s' at %04X = \"%s\"",  item.name, item.addr, str))
+	end
+	local lines = {"container[" .. x .. "," .. y .. "]" ..
+		"style_type[textarea;font=mono;font_size="  .. fontsize .. "]" ..
+		"image_button[4.9,0.1;0.5,0.5;vm16_arrow.png;watch_dec;]" ..
+		"image_button[5.5,0.1;0.5,0.5;vm16_arrow.png^[transformR180;watch_inc;]" ..
+		"label[0,0.4;" .. var .. "]" ..
+		"box[0,0.6;" .. xsize .. "," .. (ysize - 0.6) .. ";#006]" ..
+		"textarea[0,0.6;" .. (xsize + 0.4) .. "," .. (ysize - 0.6) .. ";;;"}
+
+	if data then
+		for i = 0,3 do
+			local offs = i * 4
+			table.insert(lines, string.format("%04X: %04X %04X %04X %04X",
+				mem.startaddr + offs, data[1+offs], data[2+offs], data[3+offs], data[4+offs]))
+			if i < 3 then
+				table.insert(lines, "\n")
+			end
+		end
+	else
+		table.insert(lines, "Error")
+	end
+	table.insert(lines, "]")
+	table.insert(lines, "container_end[]")
+	return table.concat(lines, "")
+end
+
 function vm16.watch.init(pos, mem, result)
 	mem.tGlobals = result.globals or {}
 	mem.tLocals = result.locals or {}
@@ -77,10 +138,61 @@ end
 
 function vm16.watch.fs_window(pos, mem, x, y, xsize, ysize, fontsize)
 	local color = mem.running and "#AAA" or "#FFF"
+	local y1, y2, y3, ysize1, ysize2, ysize3, dump
+	if mem.last_watch_idx then
+		ysize1 = ysize - 3.6
+		ysize2 = 2.4
+		ysize3 = 1
+		y1 = y
+		y2 = y + ysize - 3.4
+		y3 = y + ysize - 1
+		dump = mem_dump(pos, mem, x, y2, xsize, ysize2, fontsize)
+	else
+		ysize1 = ysize - 1
+		ysize3 = 1
+		y1 = y
+		y3 = y + ysize - 1
+		dump = ""
+	end
 	return "label[" .. x .. "," .. (y - 0.2) .. ";Variables]" ..
 		"style_type[table;font=mono;font_size="  .. fontsize .. "]" ..
 		"tableoptions[color=" ..color .. ";background=#033003;highlight_text=" ..color .. ";highlight=#036707]" ..
-		"table[" .. x .. "," .. y .. ";" .. xsize .. "," .. (ysize - 1) .. ";watch;" ..
+		"table[" .. x .. "," .. y1 .. ";" .. xsize .. "," .. ysize1 .. ";watch;" ..
 		format_watch(pos, mem) .. ";]" ..
-		memory_bar(pos, mem, x, y + ysize - 1, xsize, 1)
+		dump ..
+		memory_bar(pos, mem, x, y3, xsize, ysize3)
+end
+
+function vm16.watch.on_receive_fields(pos, fields, mem)
+	if fields.watch then
+		local evt = minetest.explode_table_event(fields.watch)
+		if evt.type == "DCL" then
+			local idx = tonumber(evt.row)
+			local item = mem.watch_varlist[idx]
+			if item then
+				local addr = vm16.peek(mem.cpu_pos, item.addr)
+				mem.last_watch_idx = idx
+				mem.startaddr = addr
+				mem.pointaddr = addr
+			else
+				mem.last_watch_idx = nil
+				mem.startaddr = nil
+			end
+		elseif evt.type == "CHG" then
+			local idx = tonumber(evt.row)
+			local item = mem.watch_varlist[idx]
+			if item and item.type == "global" and idx ~= mem.last_watch_idx then
+				mem.last_watch_idx = idx
+				mem.startaddr = item.addr
+				mem.pointaddr = nil
+			else
+				mem.last_watch_idx = nil
+				mem.startaddr = nil
+			end
+		end
+	elseif fields.watch_inc then
+		mem.startaddr = math.min(mem.startaddr + 8, (mem.mem_size or 64) - 8)
+	elseif fields.watch_dec then
+		mem.startaddr = math.max(mem.startaddr - 8, 0)
+	end
 end

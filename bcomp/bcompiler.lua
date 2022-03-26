@@ -27,7 +27,7 @@ local function file_base(filename)
 	return name
 end
 
-local function gen_comp_output(lCode, lData)
+local function gen_comp_output(lCode, lData, lString)
 	local out = {}
 
 	for idx,line in ipairs(lCode) do
@@ -37,7 +37,12 @@ local function gen_comp_output(lCode, lData)
 	for idx,line in ipairs(lData) do
 		table.insert(out, line)
 	end
-
+	if #lString > 1 then
+		table.insert(out, "")
+		for idx,line in ipairs(lString) do
+			table.insert(out, line)
+		end
+	end
 	return table.concat(out, "\n")
 end
 
@@ -63,7 +68,7 @@ local function lineno_to_Function(prs, lToken)
 	return out
 end
 
-local function gen_asm_token_list(lCode, lData)
+local function gen_asm_token_list(lCode, lData, lString)
 	local out = {}
 
 	local lineno = 0
@@ -78,6 +83,12 @@ local function gen_asm_token_list(lCode, lData)
 	for idx,txtline in ipairs(lData) do
 		lineno = lineno + 1
 		table.insert(out, {lineno, txtline:trim(), ""})
+	end
+	if #lString > 1 then
+		for idx,txtline in ipairs(lString) do
+			lineno = lineno + 1
+			table.insert(out, {lineno, txtline:trim(), ""})
+		end
 	end
 	return out
 end
@@ -144,7 +155,7 @@ function vm16.gen_obj_code(filename, code)
 	local status, err = pcall(prs.main, prs)
 	if not err then
 		local asm = vm16.Asm:new({})
-		local lToken = gen_asm_token_list(prs.lCode, prs.lData)
+		local lToken = gen_asm_token_list(prs.lCode, prs.lData, prs.lString)
 		lToken, err = asm:assembler(file_base(filename) .. ".asm", lToken)
 		if lToken then
 			local output = format_output_for_sourcecode_debugging(lToken)
@@ -161,12 +172,15 @@ function vm16.gen_obj_code(filename, code)
 			functions = {},
 			errors = err}
 	end
+	local fname = prs.filename or ""
+	local lineno = prs.lineno or "0"
+	local errors = string.format("%s(%d): %s", fname, lineno, error_msg(err))
 	return {
 		locals = {},
 		output = {},
 		globals = {},
 		functions = {},
-		errors = error_msg(err)}
+		errors = errors}
 end
 
 function vm16.gen_asm_code(filename, code)
@@ -176,11 +190,12 @@ function vm16.gen_asm_code(filename, code)
 	prs:bpars_init()
 	local status, err = pcall(prs.main, prs)
 	if not err then
-		return gen_comp_output(prs.lCode, prs.lData)
+		return gen_comp_output(prs.lCode, prs.lData, prs.lString)
 	else
 		local fname = prs.filename or ""
 		local lineno = prs.lineno or "0"
-		return nil, string.format("%s(%d): %s", fname, lineno, error_msg(err))
+		return gen_comp_output(prs.lCode, prs.lData, prs.lString), 
+			string.format("%s(%d): %s", fname, lineno, error_msg(err))
 	end
 end
 

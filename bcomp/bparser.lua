@@ -25,34 +25,105 @@ end
 
 --[[
 program:
-    = var_def_list func_def_list
+    = def_list func_def_list
 ]]--
 function BPars:main()
-	self:var_def_list()
+	self:def_list()
 	self:insert_instr("call", "main", nil, -1)
 	self:insert_instr("halt", nil, nil, -1)
 	self:func_def_list()
 end
 
 --[[
-var_def_list:
-    = 'var' ident [ '=' expression ] ';' glob_def_list
+def_list:
+    = 'var' ident [ '=' expression ] ';' def_list
+    | 'var' array_def ';' def_list
+    | 'const' ident '=' expression ';' def_list
 ]]--
-function BPars:var_def_list()
+function BPars:def_list()
 	local val = self:tk_peek().val
-	while val and val == "var" do
-		self:tk_match("var")
-		local ident = self:ident()
-		self:add_global(ident, true)
-		self:add_data(ident)
-		if self:tk_peek().val == "=" then
+	while val do
+		if val == "var" then
+			self:tk_match("var")
+			local ident = self:ident()
+			if self:tk_peek().val == "[" then
+				self:add_global(ident, true, true)
+				self:array_def(ident)
+				self:tk_match(";")
+				self:reset_reg_use()
+			else
+				self:add_global(ident, true)
+				self:add_data(ident)
+				if self:tk_peek().val == "=" then
+					self:tk_match("=")
+					local right = self:expression()
+					self:add_instr("move", ident, right)
+					self:reset_reg_use()
+				end
+				self:tk_match(";")
+			end
+		elseif val == "const" then
+			self:tk_match("const")
+			local ident = self:ident()
 			self:tk_match("=")
 			local right = self:expression()
-			self:add_instr("move", ident, right)
+			self:add_const(ident, right)
+			self:tk_match(";")
 			self:reset_reg_use()
+		else
+			break
 		end
-		self:tk_match(";")
 		val = self:tk_peek().val
+	end
+end
+
+--[[
+array_def:
+    = ident '[' ']' '=' '{' const_list '}'
+    = ident '[' number ']' '=' '{' const_list '}'
+    = ident '[' number ']'
+]]--
+function BPars:array_def(ident)
+	print(ident)
+	self:tk_match("[")
+	local size = 0
+	if self:tk_peek().val ~= ']' then
+		local tok = self:tk_match(T_NUMBER)
+		size = tok.val
+	end
+	self:tk_match("]")
+	if self:tk_peek().val ~= '=' and size > 0 then
+		self:add_data(ident)
+		while size > 1 do
+			self:append_val(0)
+			size = size - 1
+		end
+		return
+	end
+	self:tk_match("=")
+	self:tk_match("{")
+	self:const_list(ident, size)
+	self:tk_match("}")
+end
+
+--[[
+const_list:
+    number { ',' const_list }
+]]--
+function BPars:const_list(ident, size)
+	local tok = self:tk_match(T_NUMBER)
+	self:add_data(ident, tok.val)
+	size = size - 1
+	while self:tk_peek().val == ',' do
+		self:tk_match(",")
+		tok = self:tk_match(T_NUMBER)
+		self:append_val(tok.val)
+		size = size - 1
+	end
+	
+	while size > 0 do
+		self:append_val(0)
+		size = size - 1
 	end
 end
 
@@ -125,7 +196,7 @@ end
 param_list:
     =
     | expression
-    | expression  ',' param_list
+    | expression ',' param_list
 ]]--
 function BPars:param_list()
 	local cnt = 0
@@ -291,28 +362,32 @@ assignment:
     = left_value '=' expression
     | left_value '++'
     | left_value '--'
+	| 
 ]]--
 function BPars:assignment()
-	local val = self:tk_next().val
-	if val == "=" then
-		local left = self:left_value()
-		self:tk_match("=")
-		local right = self:expression()
-		self:add_instr("move", left, right)
-		self:reset_reg_use()
+	if self:tk_peek().val == ";" then
 		return true
-	elseif val == "++" then
-		local left = self:left_value()
-		self:tk_match("++")
-		self:add_instr("inc", left)
-		self:reset_reg_use()
-		return true
-	elseif val == "--" then
-		local left = self:left_value()
-		self:tk_match("--")
-		self:add_instr("dec", left)
-		self:reset_reg_use()
-		return true
+	end
+	local left = self:left_value()
+	if left then
+		local val = self:tk_peek().val
+		if val == "=" then
+			self:tk_match("=")
+			local right = self:expression()
+			self:add_instr("move", left, right)
+			self:reset_reg_use()
+			return true
+		elseif val == "++" then
+			self:tk_match("++")
+			self:add_instr("inc", left)
+			self:reset_reg_use()
+			return true
+		elseif val == "--" then
+			self:tk_match("--")
+			self:add_instr("dec", left)
+			self:reset_reg_use()
+			return true
+		end
 	end
 end
 
@@ -358,13 +433,36 @@ function BPars:condition()
 	end
 end
 
+--[[
+left_value:
+    = ident
+    | '*' ident
+    | postfix
+]]--
 function BPars:left_value()
-	local ident = self:tk_match(T_IDENT).val
-	local lval = self:local_get(ident) or (self.globals[ident] and ident)
-	if not lval then
-		error(string.format("Unknown identifier '%s'", ident))
+	if self:tk_peek().val == '*' then
+		self:tk_match("*")
+		local ident = self:tk_match(T_IDENT).val
+		local lval = self:local_get(ident) or (self.globals[ident] and ident)
+		if not lval then
+			error(string.format("Unknown identifier '%s'", ident))
+		end
+		local reg = self:next_free_indexreg()
+		self:add_instr("move", reg, lval)
+		return "[" .. reg .. "]"
+	elseif self:tk_next().val == '[' then
+		return self:postfix()
+	else
+		local val = self:tk_next().val
+		if val == "=" or val == "++" or val == "--" then
+			local ident = self:tk_match(T_IDENT).val
+			local lval = self:local_get(ident) or (self.globals[ident] and ident)
+			if not lval then
+				error(string.format("Unknown identifier '%s'", ident))
+			end
+			return lval
+		end
 	end
-	return lval or ident
 end
 
 vm16.BPars = BPars

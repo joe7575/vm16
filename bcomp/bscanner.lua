@@ -16,14 +16,17 @@ local IDENT1   = "[A-Za-z_]+"
 local IDENT2   = "[A-Za-z_][A-Za-z_0-9]*"
 local NUMBER   = "[0-9]+"
 local HEXNUM   = "[0-9a-fA-F]+"
-local OPERAND  = "[%+%-/%*%%=<>!;,&|!~%^]+"
-local BRACE    = "[{}%(%)]"
+local OPERAND  = "[%+%-/%*%%=<>!;,&|!~%^][%+%-/=<>&|]*"
+local BRACE    = "[{}%(%)%[%]]"
 local SPACE    = "[%s]"
+local CHAR     = "'([^'][^']?)'"
+local STRING   = '"[^"]+"'
 
 local T_IDENT   = 1
 local T_NUMBER  = 2
 local T_OPERAND = 3
 local T_BRACE   = 4
+local T_STRING  = 5
 
 local strfind = string.find
 local strsub  = string.sub
@@ -46,6 +49,15 @@ local function split_into_lines(text)
 	return list
 end
 
+local function char_to_val(char)
+	if #char == 2 then
+		return char:byte(1) * 256 + char:byte(2)
+	else
+		return char:byte(1)
+	end
+end
+
+
 local BScan = vm16.BGen:new({})
 
 function BScan:bscan_init()
@@ -63,7 +75,10 @@ function BScan:scanner(text)
 
 	while idx <= size do
 		local ch = text:sub(idx, idx)
-		if ch:match(IDENT1) then
+		if ch:match(SPACE) then
+			local space = text:match(SPACE, idx)
+			idx = idx + #space
+		elseif ch:match(IDENT1) then
 			local ident = text:match(IDENT2, idx)
 			table.insert(self.ltok, {type = T_IDENT, val = ident})
 			idx = idx + #ident
@@ -86,9 +101,15 @@ function BScan:scanner(text)
 		elseif ch:match(BRACE) then
 			table.insert(self.ltok, {type = T_BRACE, val = ch})
 			idx = idx + 1
-		elseif ch:match(SPACE) then
-			local space = text:match(SPACE, idx)
-			idx = idx + #space
+		elseif ch == "'" and text:match(CHAR, idx) then
+			local char = text:match(CHAR, idx)
+			local val = char_to_val(char)
+			table.insert(self.ltok, {type = T_NUMBER, val = val})
+			idx = idx + #char + 2
+		elseif ch == '"' and text:match(STRING, idx) then
+			local str = text:match(STRING, idx)
+			table.insert(self.ltok, {type = T_STRING, val = str})
+			idx = idx + #str
 		else
 			error(string.format("Syntax error at '%s'", ch))
 		end
@@ -162,3 +183,4 @@ vm16.T_IDENT   = T_IDENT
 vm16.T_NUMBER  = T_NUMBER
 vm16.T_OPERAND = T_OPERAND
 vm16.T_BRACE   = T_BRACE
+vm16.T_STRING  = T_STRING

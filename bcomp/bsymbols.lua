@@ -23,7 +23,9 @@ local BSym = vm16.BScan:new({})
 
 function BSym:bsym_init()
 	self:bscan_init()
+	self.constants = {}
 	self.globals = {}
+	self.arrays = {}
 	self.locals = {}
 	self.all_locals = {}
 end
@@ -84,9 +86,9 @@ function BSym:func_return(ident)
 end
 
 -------------------------------------------------------------------------------
--- Globals and functions
+-- Globals, constants, and functions
 -------------------------------------------------------------------------------
-function BSym:add_global(ident, value)
+function BSym:add_global(ident, value, is_array)
 	if type(value) == "number" and type(self.globals[ident]) == "number" then
 		if value ~= self.globals[ident] then
 			error(string.format("Wrong number of parameters for '%s'", ident))
@@ -97,12 +99,31 @@ function BSym:add_global(ident, value)
 		error(string.format("'%s' is a protected keyword", ident))
 	end
 	self.globals[ident] = value
+	self.arrays[ident] = is_array
 end
 
 function BSym:is_global_var(val)
 	if self.globals[val] and self.globals[val] == true then
 		return val
 	end
+end
+
+function BSym:is_array(val)
+	if self.arrays[val] and self.arrays[val] == true then
+		return val
+	end
+end
+
+function BSym:add_const(ident, val)
+	self.constants[ident] = val
+end
+
+function BSym:is_const(ident)
+	return self.constants[ident] ~= nil
+end
+
+function BSym:get_const(ident)
+	return self.constants[ident]
 end
 
 function BSym:num_func_param(val)

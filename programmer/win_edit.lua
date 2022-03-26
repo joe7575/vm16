@@ -66,7 +66,8 @@ function vm16.edit.formspec(pos, mem, textsize)
 				vm16.files.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize)
 		elseif mem.file_ext == "asm" then
 			mem.status = "Edit"
-			vm16.menubar.add_button("edit", "Edit")
+			vm16.menubar.add_button("cancel", "Cancel")
+			vm16.menubar.add_button("save", "Save")
 			vm16.menubar.add_button("asmdbg", "Debug")
 		elseif mem.file_ext == "c" then
 			mem.status = "Edit"
@@ -74,11 +75,6 @@ function vm16.edit.formspec(pos, mem, textsize)
 			vm16.menubar.add_button("save", "Save")
 			vm16.menubar.add_button("compile", "Compile")
 			vm16.menubar.add_button("debug", "Debug")
-		elseif mem.file_ext == "asm" then
-			mem.status = "Edit"
-			vm16.menubar.add_button("cancel", "Cancel")
-			vm16.menubar.add_button("save", "Save")
-			vm16.menubar.add_button("asmdbg", "Debug")
 		end
 		return fs_editor(pos, mem, textsize, mem.file_name, mem.file_text) ..
 			vm16.files.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize)
