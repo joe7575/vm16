@@ -11,8 +11,7 @@
   Scanner/Tokenizer
   
   The Scanner is called recursive to handle import files.
-  
-  It returns a list with tokens according to:
+  It generates a list with tokens according to:
   
   {type = T_SOURCE, val = "while(1)", lineno = 5}
   {type = T_IDENT, val = "while"}
@@ -200,11 +199,14 @@ function BScan:scanner(filename)
 	end
 	
 	table.insert(lToken, {type = T_ENDFILE, val = filename})
-	return lToken
+	if self.nested_calls == 0 then
+		self.lTok = lToken
+		lToken = {}
+	end
 end
 
 function BScan:tk_match(ttype)
-	local tok = lToken[self.tk_idx] or {}
+	local tok = self.lTok[self.tk_idx] or {}
 	if not ttype or ttype == tok.type or ttype == tok.val then
 		self.tk_idx = self.tk_idx + 1
 		return tok
@@ -213,17 +215,17 @@ function BScan:tk_match(ttype)
 end
 
 function BScan:tk_peek()
-	return lToken[self.tk_idx] or {}
+	return self.lTok[self.tk_idx] or {}
 end
 
 function BScan:tk_next()
-	return lToken[self.tk_idx + 1] or {}
+	return self.lTok[self.tk_idx + 1] or {}
 end
 
-function BScan:dump(lToken)
+function BScan:dump()
 	local out = {}
 	
-	for idx,tok in ipairs(lToken) do
+	for idx,tok in ipairs(self.lTok) do
 		if tok.type == T_SRCCODE or tok.type == T_ASMCODE then
 			out[idx] = string.format('%8s: (%d) "%s"', lTypeString[tok.type], tok.lineno, tok.val)
 		elseif tok.type == T_NEWFILE then
