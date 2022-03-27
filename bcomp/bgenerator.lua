@@ -37,6 +37,11 @@ function BGen:new(o)
 	return o
 end
 
+function BGen:error_msg(err)
+	err = string.format("\001%s(%d): %s", self.filename or "", self.lineno or 0, err)
+	error(err)
+end
+
 function BGen:add_move_instr(instr, opnd1, opnd2)
 	self.reg_cnt = self.reg_cnt + 1
 	if self.reg_cnt < 5 then
@@ -44,8 +49,7 @@ function BGen:add_move_instr(instr, opnd1, opnd2)
 		self.lCode[#self.lCode + 1] = "  move " .. new_opnd .. ", " .. opnd1
 		return new_opnd
 	else
-		print(dump(self.lCode))
-		error("Expression too complex", 2)
+		self:error_msg("Expression too complex", 2)
 	end
 end
 
@@ -65,7 +69,7 @@ function BGen:next_free_indexreg()
 		self.y_in_use = true
 		return "Y"
 	else
-		error("Pointer expression too complex", 2)
+		self:error_msg("Pointer expression too complex", 2)
 	end
 end
 
