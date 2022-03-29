@@ -16,6 +16,7 @@ local T_IDENT   = vm16.T_IDENT
 local T_NUMBER  = vm16.T_NUMBER
 local T_OPERAND = vm16.T_OPERAND
 local T_ASMCODE = vm16.T_ASMCODE
+local T_NEWFILE = vm16.T_NEWFILE
 
 local BPars = vm16.BExpr:new({})
 
@@ -29,9 +30,10 @@ program:
     = def_list func_def_list
 ]]--
 function BPars:main()
+	self:tk_match(T_NEWFILE)
 	self:def_list()
-	self:add_meta("code", self.lineno - 1, "call main")
-	self:add_meta("code", self.lineno - 1, "halt")
+	self:add_item("code", self.lineno - 1, "call main")
+	self:add_item("code", self.lineno - 1, "halt")
 	self:func_def_list()
 end
 
@@ -351,8 +353,8 @@ asm_declaration:
 function BPars:asm_declaration()
 	local tok = self:tk_peek()
 	while tok.type == T_ASMCODE do
-		self:add_asm_code(tok.val)
 		self:tk_match()
+		self:add_asm_code(tok.val)
 		tok = self:tk_peek()
 	end
 end

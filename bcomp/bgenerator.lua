@@ -167,7 +167,7 @@ function BGen:add_then_label()
 	end
 end
 
-function BGen:add_meta(ctype, lineno, val)
+function BGen:add_item(ctype, lineno, val)
 	table.insert(self.lCode, {ctype, lineno, val})
 end
 
@@ -200,11 +200,15 @@ function BGen:gen_output()
 	local out = {}
 
 	local lineno = 0
-	for _,item in ipairs(self.lCode) do
-		table.insert(out, item)
+	if #self.lCode > 1 then
+		for _,item in ipairs(self.lCode) do
+			table.insert(out, item)
+		end
 	end
-	for _,item in ipairs(self.lData) do
-		table.insert(out, item)
+	if #self.lData > 1 then
+		for _,item in ipairs(self.lData) do
+			table.insert(out, item)
+		end
 	end
 	if #self.lText > 1 then
 		for _,item in ipairs(self.lText) do

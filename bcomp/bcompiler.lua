@@ -224,17 +224,22 @@ end
 function vm16.gen_asm_code(output, sourcecode)
 	local out = {}
 	local oldlineno = 0
+	local add_src_code = function(lineno)
+		for no = oldlineno + 1, lineno do
+			if sourcecode[no] and sourcecode[no] ~= "" then
+				out[#out + 1] = string.format("; %3d: %s", no, sourcecode[no])
+			end
+		end
+		oldlineno = math.max(oldlineno, lineno)
+	end
 
 	for idx,tok in ipairs(output.lCode) do
 		local ctype, lineno, code = tok[1], tok[2], tok[3]
 
-		if sourcecode and oldlineno < lineno and sourcecode[lineno] then
-			for no = oldlineno + 1, lineno do
-				if sourcecode[no] ~= "" then
-					out[#out + 1] = string.format("; %3d: %s", no, sourcecode[no])
-				end
-			end
-			oldlineno = lineno
+		if sourcecode and ctype == "code" then
+			add_src_code(lineno)
+		elseif sourcecode and ctype == "data" then
+			add_src_code(#sourcecode)
 		end
 
 		if ctype == "code" then
@@ -260,5 +265,9 @@ function vm16.gen_asm_code(output, sourcecode)
 		end
 	end
 
+	if sourcecode then
+		add_src_code(#sourcecode)
+	end
+	
 	return table.concat(out, "\n")
 end
