@@ -29,9 +29,9 @@ function BGen:new(o)
 	o.string_cnt = 0
 	o.reg_cnt = 0
 	o.reg_cnt_stack = {}
-	o.lCode = {"  .code"}
-	o.lData = {"  .data"}
-	o.lString = {"  .ctext"}
+	o.lCode = {{"code",  0, ".code"}}
+	o.lData = {{"data",  999, ".data"}}
+	o.lText = {{"ctext", 999, ".ctext"}}
 	setmetatable(o, self)
 	self.__index = self
 	return o
@@ -46,7 +46,7 @@ function BGen:add_move_instr(instr, opnd1, opnd2)
 	self.reg_cnt = self.reg_cnt + 1
 	if self.reg_cnt < 5 then
 		local new_opnd = REGLIST[self.reg_cnt]
-		self.lCode[#self.lCode + 1] = "  move " .. new_opnd .. ", " .. opnd1
+		table.insert(self.lCode, {"code", self.lineno, "move " .. new_opnd .. ", " .. opnd1})
 		return new_opnd
 	else
 		self:error_msg("Expression too complex", 2)
@@ -92,31 +92,18 @@ end
 function BGen:add_instr(instr, opnd1, opnd2)
 	if opnd2 then
 		opnd1 = self:next_free_reg(instr, opnd1, opnd2)
-		self.lCode[#self.lCode + 1] = "  " .. instr .. " " .. opnd1 .. ", " .. opnd2
+		table.insert(self.lCode, {"code", self.lineno, instr .. " " .. opnd1 .. ", " .. opnd2})
 		self.free_last_operand_reg(instr, opnd2)
 	elseif opnd1 then
 		if instr == "not" then
 			opnd1 = self:next_free_reg(instr, opnd1)
-			self.lCode[#self.lCode + 1] = "  " .. instr .. " " .. opnd1
+			table.insert(self.lCode, {"code", self.lineno, instr .. " " .. opnd1})
 		else
-			self.lCode[#self.lCode + 1] = "  " .. instr .. " " .. opnd1
+			table.insert(self.lCode, {"code", self.lineno, instr .. " " .. opnd1})
 			self:free_last_operand_reg(instr, opnd1)
 		end
 	else
-		self.lCode[#self.lCode + 1] = "  " .. instr
-	end
-	self.last_instr = instr
-	return opnd1
-end
-
-function BGen:insert_instr(instr, opnd1, opnd2, pos)
-	pos = #self.lCode + pos + 1
-	if opnd2 then
-		table.insert(self.lCode, pos, "  " .. instr .. " " .. opnd1 .. ", " .. opnd2)
-	elseif opnd1 then
-		table.insert(self.lCode, pos, "  " .. instr .. " " .. opnd1)
-	else
-		table.insert(self.lCode, pos, "  " .. instr)
+		table.insert(self.lCode, {"code", self.lineno, instr})
 	end
 	self.last_instr = instr
 	return opnd1
@@ -126,7 +113,7 @@ end
 function BGen:push_regs()
 	table.insert(self.reg_cnt_stack, self.reg_cnt)
 	for i = 1, self.reg_cnt do
-		table.insert(self.lCode, "  push " .. REGLIST[i] .. "  ; push_regs")
+		table.insert(self.lCode,  {"code", self.lineno, "push " .. REGLIST[i]})
 	end
 	self.reg_cnt = 0
 end
@@ -144,7 +131,7 @@ function BGen:pop_regs()
 		reg = "A"
 	end
 	for i = old_reg_cnt, 1, -1 do
-		table.insert(self.lCode, "  pop  " .. REGLIST[i] .. "  ; pop_regs")
+		table.insert(self.lCode,  {"code", self.lineno, "pop  " .. REGLIST[i]})
 	end
 	return reg
 end
@@ -166,29 +153,33 @@ function BGen:get_last_instr()
 end
 
 function BGen:add_label(lbl)
-	self.lCode[#self.lCode + 1] = lbl .. ":"
+	table.insert(self.lCode, {"code", self.lineno, lbl .. ":"})
+end
+
+function BGen:add_asm_code(code)
+	table.insert(self.lCode, {"code", self.lineno, code})
 end
 
 function BGen:add_then_label()
 	if self.then_lbl then
-		self.lCode[#self.lCode + 1] = self.then_lbl .. ":"
+		table.insert(self.lCode, {"code", self.lineno, self.then_lbl .. ":"})
 		self.then_lbl = nil
 	end
 end
 
-function BGen:add_line(line)
-	self.lCode[#self.lCode + 1] = line
+function BGen:add_meta(ctype, lineno, val)
+	table.insert(self.lCode, {ctype, lineno, val})
 end
 
 function BGen:add_data(ident, val)
-	self.lData[#self.lData + 1] = ident .. ": " .. (val or "0")
+	table.insert(self.lData, {"data", self.lineno, ident .. ": " .. (val or "0")})
 end
 
 function BGen:append_val(val)
-	if #self.lData[#self.lData] > 32 then
-		self.lData[#self.lData + 1] = "  "
+	if #self.lData[#self.lData][3] > 32 then
+		table.insert(self.lData, {"data", self.lineno, "  "})
 	end
-	self.lData[#self.lData] = self.lData[#self.lData] .. "," .. val
+	self.lData[#self.lData][3] = self.lData[#self.lData][3] .. "," .. val
 end
 
 function BGen:get_label()
@@ -202,7 +193,43 @@ function BGen:get_string_lbl()
 end
 
 function BGen:add_string(ident, str)
-	self.lString[#self.lString + 1] = ident .. ": " .. str
+	table.insert(self.lText, {"ctext", self.lineno, ident .. ": " .. str})
+end
+
+function BGen:gen_output()
+	local out = {}
+
+	local lineno = 0
+	for _,item in ipairs(self.lCode) do
+		table.insert(out, item)
+	end
+	for _,item in ipairs(self.lData) do
+		table.insert(out, item)
+	end
+	if #self.lText > 1 then
+		for _,item in ipairs(self.lText) do
+			table.insert(out, item)
+		end
+	end
+	return {locals = self.all_locals, lCode = out}
+end
+
+
+function BGen:gen_dbg_dump(output)
+	local out = {}
+
+	out[#out + 1] = "############  Code  ###########"
+	for idx,tok in ipairs(output.lCode) do
+		local ctype, lineno, code = tok[1], tok[2], tok[3]
+		out[#out + 1] = string.format('%5s: (%d) "%s"', ctype, lineno, code)
+	end
+
+	out[#out + 1] = "############ Locals ###########"
+	for id,offs in ipairs(output.locals) do
+		out[#out + 1] = string.format('%12s: %d', id, offs)
+	end
+
+	return table.concat(out, "\n")
 end
 
 vm16.BGen = BGen

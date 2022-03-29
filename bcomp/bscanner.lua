@@ -23,9 +23,8 @@
   {type = T_ASMSRC, val = "move A, #1", lineno = 7}
   
   {type = T_SOURCE, val = 'import "test.c"', lineno = 8}
-  {type = T_NEWFILE, val = "test.c"}
-  {type = T_ENDFILE, val = "test.c"}  
-
+  {type = T_FILE,   val = "test.c"}
+  
 ]]--
 
 local IDENT1   = "[A-Za-z_]+"
@@ -46,7 +45,6 @@ local T_STRING  = 5
 local T_ASMCODE = 6
 local T_SRCCODE = 7
 local T_NEWFILE = 8
-local T_ENDFILE = 9
 
 local lTypeString = {"ident", "number", "operand", "brace", "string", "asm code", "src code", "new file", "end file"}
 local lToken = {}
@@ -90,7 +88,8 @@ end
 local BScan = vm16.BGen:new({})
 
 function BScan:bscan_init()
-	self.tk_idx = 1
+	self.tk_idx = 0
+	self.tk_nxt = 0
 	self.nested_calls = self.nested_calls or 0
 	-- Reset global tables only once
 	if self.nested_calls == 0 then
@@ -112,6 +111,7 @@ function  BScan:import_file(filename)
 	})
 	i:bscan_init()
 	i:scanner(filename)
+	table.insert(lToken, {type = T_NEWFILE, val = self.filename})
 end
 
 function BScan:tokenize(text)
@@ -183,7 +183,6 @@ function BScan:scanner(filename)
 
 	local text = self.readfile(self.pos, filename)
 	for lineno, line in ipairs(split_into_lines(text)) do
-		local size = #line
 		self.lineno = lineno
 		if self.is_asm_code then
 			if line:trim() == "}" then
@@ -198,20 +197,41 @@ function BScan:scanner(filename)
 		end
 	end
 	
-	table.insert(lToken, {type = T_ENDFILE, val = filename})
 	if self.nested_calls == 0 then
 		self.lTok = lToken
 		lToken = {}
+		self.lineno = 1
+		self.nxt_lineno = 1
+		-- Init both index values
+		self:tk_get_next_idx()
+		self:tk_get_next_idx()
 	end
+end
+
+function BScan:tk_get_next_idx()
+	self.tk_idx = self.tk_nxt
+	self.lineno = self.nxt_lineno
+	local idx = self.tk_nxt + 1
+	local tok = self.lTok[idx]
+	while tok and tok.type > T_ASMCODE do
+		self.nxt_lineno = tok.lineno or self.nxt_lineno
+		if tok.type == T_NEWFILE then
+			self:add_meta("file", 0, tok.val)
+		end
+		idx = idx + 1
+		tok = self.lTok[idx]
+	end
+	self.nxt_lineno = (tok and tok.lineno) or self.nxt_lineno
+	self.tk_nxt = idx
 end
 
 function BScan:tk_match(ttype)
 	local tok = self.lTok[self.tk_idx] or {}
+	self:tk_get_next_idx()
 	if not ttype or ttype == tok.type or ttype == tok.val then
-		self.tk_idx = self.tk_idx + 1
 		return tok
 	end
-	self:error_msg(string.format("Syntax error at '%s', '%s' expected", tok.val or "", ttype or ""))
+	self:error_msg(string.format("Syntax error: '%s' expected near '%s'", tok.val or "", ttype or ""))
 end
 
 function BScan:tk_peek()
@@ -219,19 +239,17 @@ function BScan:tk_peek()
 end
 
 function BScan:tk_next()
-	return self.lTok[self.tk_idx + 1] or {}
+	return self.lTok[self.tk_nxt] or {}
 end
 
-function BScan:dump()
+function BScan:scan_dbg_dump()
 	local out = {}
 	
 	for idx,tok in ipairs(self.lTok) do
 		if tok.type == T_SRCCODE or tok.type == T_ASMCODE then
 			out[idx] = string.format('%8s: (%d) "%s"', lTypeString[tok.type], tok.lineno, tok.val)
 		elseif tok.type == T_NEWFILE then
-			out[idx] = string.format('%8s: <<<<<<<< "%s" <<<<<<<<', lTypeString[tok.type], tok.val)
-		elseif tok.type == T_ENDFILE then
-			out[idx] = string.format('%8s: >>>>>>>> "%s" >>>>>>>>', lTypeString[tok.type], tok.val)
+			out[idx] = string.format('%8s: ######## "%s" ########', lTypeString[tok.type], tok.val)
 		else
 			out[idx] = string.format('%8s: "%s"', lTypeString[tok.type], tok.val)
 		end
@@ -257,5 +275,4 @@ vm16.T_BRACE   = T_BRACE
 vm16.T_STRING  = T_STRING
 vm16.T_ASMCODE = T_ASMCODE
 vm16.T_SRCCODE = T_SRCCODE
-vm16.T_NEWFILE = T_NEWFILE
-vm16.T_ENDFILE = T_ENDFILE
+vm16.T_FILE =    T_FILE

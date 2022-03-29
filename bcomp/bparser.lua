@@ -15,6 +15,7 @@
 local T_IDENT   = vm16.T_IDENT
 local T_NUMBER  = vm16.T_NUMBER
 local T_OPERAND = vm16.T_OPERAND
+local T_ASMCODE = vm16.T_ASMCODE
 
 local BPars = vm16.BExpr:new({})
 
@@ -29,8 +30,8 @@ program:
 ]]--
 function BPars:main()
 	self:def_list()
-	self:insert_instr("call", "main", nil, -1)
-	self:insert_instr("halt", nil, nil, -1)
+	self:add_meta("code", self.lineno - 1, "call main")
+	self:add_meta("code", self.lineno - 1, "halt")
 	self:func_def_list()
 end
 
@@ -150,8 +151,8 @@ function BPars:func_def_list()
 		self:tk_match("{")
 		self:lvar_def_list();
 		self:stmnt_list()
-		self:tk_match("}")
 		self:func_return(ident)
+		self:tk_match("}")
 		val = self:tk_peek().val
 	end
 end
@@ -231,7 +232,9 @@ statement:
 ]]--
 function BPars:statement()
 	local val = self:tk_peek().val
-	if val == "if" then
+	if self:tk_peek().type == T_ASMCODE then
+		self:asm_declaration()
+	elseif val == "if" then
 		self:if_statement()
 	elseif val == "for" then
 		self:for_statement()
@@ -246,11 +249,9 @@ function BPars:statement()
 		else
 			self:add_instr("move", "A", "#0")
 		end
-		self:tk_match(";")
 		self:func_return(self.func_name or "")
+		self:tk_match(";")
 		self:reset_reg_use()
-	elseif val == "_asm_" then
-		self:asm_declaration()
 	elseif self:assignment() then
 		self:tk_match(";")
 	else
@@ -283,8 +284,8 @@ function BPars:if_statement()
 		self:add_label(lbl1)
 		self:tk_match("{")
 		self:stmnt_list()
-		self:tk_match("}")
 		self:add_label(lbl2)
+		self:tk_match("}")
 	else
 		self:add_label(lbl1)
 	end
@@ -316,9 +317,9 @@ function BPars:for_statement()
 	self:stmnt_list()
 	local pos3 = self:get_instr_pos()
 	self:add_instr("jump", loop)
-	self:tk_match("}")
 	self:add_label(lend)
 	self:instr_move(pos1, pos2, pos3)
+	self:tk_match("}")
 end
 
 --[[
@@ -339,8 +340,8 @@ function BPars:while_statement()
 	self:add_then_label()
 	self:stmnt_list()
 	self:add_instr("jump", loop)
-	self:tk_match("}")
 	self:add_label(lend)
+	self:tk_match("}")
 end
 
 --[[
@@ -348,12 +349,11 @@ asm_declaration:
     | _asm_ "{" { instruction } "}"
 ]]--
 function BPars:asm_declaration()
-	self:tk_match("_asm_")
-	self:tk_match("{")
-	local line = string.trim(self:tk_rawline())
-	while line and line ~= "}" do
-		self:add_line("  " .. line)
-		line = string.trim(self:tk_rawline())
+	local tok = self:tk_peek()
+	while tok.type == T_ASMCODE do
+		self:add_asm_code(tok.val)
+		self:tk_match()
+		tok = self:tk_peek()
 	end
 end
 

@@ -234,23 +234,19 @@ function BExpr:buildin_call()
 		local opnd2 = self:expression()
 		self:tk_match(",")
 		local opnd3 = self:expression()
-		self:tk_match(")")
 		self:add_instr("move", "A", opnd2)
 		self:add_instr("move", "B", opnd3)
 		self:add_instr("sys", opnd1)
 	elseif ident == "putchar" then
 		self:expression()
-		self:tk_match(")")
 		self:add_instr("sys", "#0")
 	elseif ident == "sleep" then
 		local opnd = self:expression()
-		self:tk_match(")")
 		self:add_instr("move", "A", opnd)
 		self:add_instr("nop")
 		self:add_instr("dbnz", "A", "-1")
 	elseif ident == "input" then
 		local opnd = self:expression()
-		self:tk_match(")")
 		self:add_instr("in", "A", opnd)
 	elseif ident == "output" then
 		local opnd1 = self:expression()
@@ -261,10 +257,10 @@ function BExpr:buildin_call()
 			local opnd3 = self:expression()
 			self:add_instr("move", "B", opnd3)
 		end
-		self:tk_match(")")
 		self:add_instr("out", opnd1, opnd2)
 	end
 	local opnd = self:pop_regs()
+	self:tk_match(")")
 	return opnd
 end
 

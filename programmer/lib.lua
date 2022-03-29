@@ -81,3 +81,12 @@ function vm16.prog.get_cpu_def(cpu_pos)
 	end
 end
 
+function vm16.prog.file_ext(filename)
+	local _, ext = unpack(string.split(filename, ".", true, 1))
+	return ext
+end
+
+function vm16.prog.file_base(filename)
+	local name, _ = unpack(string.split(filename, ".", true, 1))
+	return name
+end

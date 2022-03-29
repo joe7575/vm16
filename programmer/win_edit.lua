@@ -14,6 +14,8 @@
 local M = minetest.get_meta
 local prog = vm16.prog
 local server = vm16.server
+local file_ext = vm16.prog.file_ext
+local file_base = vm16.prog.file_base
 
 local EDIT_SIZE = "0.2,0.6;11.4, 9.6"
 
@@ -32,15 +34,6 @@ local function add_lineno(pos, text, err)
 	return table.concat(out, "\n")
 end
 
-local function file_ext(filename)
-	local _, ext = unpack(string.split(filename, ".", true, 1))
-	return ext
-end
-
-local function file_base(filename)
-	local name, _ = unpack(string.split(filename, ".", true, 1))
-	return name
-end
 
 local function fs_editor(pos, mem, fontsize, file, text)
 	return "box[" .. EDIT_SIZE .. ";#000]" ..

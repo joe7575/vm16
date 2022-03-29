@@ -22,11 +22,6 @@ local function extend(into, from)
 	end
 end
 
-local function file_base(filename)
-	local name, _ = unpack(string.split(filename, ".", true, 1))
-	return name
-end
-
 local function gen_comp_output(lCode, lData, lString)
 	local out = {}
 
@@ -68,33 +63,9 @@ local function lineno_to_Function(prs, lToken)
 	return out
 end
 
-local function gen_asm_token_list(lCode, lData, lString)
-	local out = {}
-
-	local lineno = 0
-	for _,txtline in ipairs(lCode) do
-		lineno = lineno + 1
-		if string.byte(txtline, 1) == 59 then -- ';'
-			table.insert(out, {lineno, "", txtline})
-		else
-			table.insert(out, {lineno, txtline:trim(), ""})
-		end
-	end
-	for idx,txtline in ipairs(lData) do
-		lineno = lineno + 1
-		table.insert(out, {lineno, txtline:trim(), ""})
-	end
-	if #lString > 1 then
-		for idx,txtline in ipairs(lString) do
-			lineno = lineno + 1
-			table.insert(out, {lineno, txtline:trim(), ""})
-		end
-	end
-	return out
-end
 
 local function error_msg(err)
-	local t = string.split(err, ":")
+	local t = string.split(err, "\001")
 	if t and #t > 1 then
 		return t[#t]
 	end
@@ -226,4 +197,68 @@ function vm16.assemble(filename, code)
 		globals = {},
 		functions = {},
 		errors = err}
+end
+
+function vm16.compile(pos, filename, readfile, debug)
+	local prs =  vm16.BPars:new({pos = pos, readfile = readfile})
+	prs:bpars_init()
+
+	local sts, res = pcall(prs.scanner, prs, filename)
+	if not sts then
+		return false, error_msg(res)
+	end
+
+	sts, res = pcall(prs.main, prs)
+	if not sts then
+		return false, error_msg(res)
+	end
+
+	if debug then
+		local output = prs:gen_output()
+		return true, prs:gen_dbg_dump(output)
+	end
+	
+	return true, prs:gen_output()
+end
+
+function vm16.gen_asm_code(output, sourcecode)
+	local out = {}
+	local oldlineno = 0
+
+	for idx,tok in ipairs(output.lCode) do
+		local ctype, lineno, code = tok[1], tok[2], tok[3]
+
+		if sourcecode and oldlineno < lineno and sourcecode[lineno] then
+			for no = oldlineno + 1, lineno do
+				if sourcecode[no] ~= "" then
+					out[#out + 1] = string.format("; %3d: %s", no, sourcecode[no])
+				end
+			end
+			oldlineno = lineno
+		end
+
+		if ctype == "code" then
+			if code == ".code" then
+				out[#out + 1] = "  " .. code
+			elseif string.sub(code, -1, -1) == ":" then
+				out[#out + 1] = code
+			else
+				out[#out + 1] = "  " .. code
+			end
+		elseif ctype == "data" then
+			if code == ".data" then
+				out[#out + 1] = "\n  " .. code
+			else
+				out[#out + 1] = "" .. code
+			end
+		elseif ctype == "ctext" then
+			if code == ".ctext" then
+				out[#out + 1] = "  " .. code
+			else
+				out[#out + 1] = "  " .. code
+			end
+		end
+	end
+
+	return table.concat(out, "\n")
 end
