@@ -10,7 +10,21 @@
 
   Compiler API
 
-]]--
+  The compiler generates a list with tokens according to:
+  
+  {<type>, <lineno>, <asm-code>}
+  {"code", 2, "move A, #1"}     -- ASM code
+  {"data", 3, "va1: 0"}         -- Variable
+  {"ctext", 4, "str: 'Hallo'"}  -- String
+  {"func", 5, "foo"}            -- Start of function 'foo' (debugging)
+  {"endf", 6, "foo"}            -- End of function 'foo' (debugging)
+  {"call", 7, "foo"}            -- Call of function 'foo' (debugging)
+
+  And a table with local variable definitions:
+  
+  {foo = {<name> = <offs>, ...} -- positive offs = parameter, negative offs = stack variable
+  
+--]]
 
 local version = "1.1"
 

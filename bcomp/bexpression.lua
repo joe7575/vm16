@@ -289,6 +289,7 @@ function BExpr:func_call()
 		end
 	end
 	self:tk_match(")")
+	self:add_item("call", self.lineno, ident)
 	self:add_instr("call", ident)
 	if self.num_param > 0 then
 		self:add_instr("add", "SP", "#" .. self.num_param)

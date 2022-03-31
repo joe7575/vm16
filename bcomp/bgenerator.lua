@@ -29,9 +29,10 @@ function BGen:new(o)
 	o.string_cnt = 0
 	o.reg_cnt = 0
 	o.reg_cnt_stack = {}
-	o.lCode = {{"code",  0, ".code"}}
-	o.lData = {{"data",  999, ".data"}}
-	o.lText = {{"ctext", 999, ".ctext"}}
+	o.lInit = {}
+	o.lCode = {}
+	o.lData = {}
+	o.lText = {}
 	setmetatable(o, self)
 	self.__index = self
 	return o
@@ -42,7 +43,7 @@ function BGen:error_msg(err)
 	error(err)
 end
 
-function BGen:add_move_instr(instr, opnd1, opnd2)
+function BGen:__add_move_instr(instr, opnd1, opnd2)
 	self.reg_cnt = self.reg_cnt + 1
 	if self.reg_cnt < 5 then
 		local new_opnd = REGLIST[self.reg_cnt]
@@ -53,11 +54,21 @@ function BGen:add_move_instr(instr, opnd1, opnd2)
 	end
 end
 
-function BGen:next_free_reg(instr, opnd1, opnd2)
+function BGen:__next_free_reg(instr, opnd1, opnd2)
 	if not ASSIGNMENT_INSTR[instr] and not REGS[opnd1] then
-		return self:add_move_instr(instr, opnd1, opnd2)
+		return self:__add_move_instr(instr, opnd1, opnd2)
 	else
 		return opnd1
+	end
+end
+
+function BGen:__free_last_operand_reg(instr, opnd)
+	if CLOSING_INSTR[instr] then
+		if REGS[opnd] then
+			if self.reg_cnt > 0 then
+				self.reg_cnt = self.reg_cnt - 1
+			end
+		end
 	end
 end
 
@@ -73,16 +84,6 @@ function BGen:next_free_indexreg()
 	end
 end
 
-function BGen:free_last_operand_reg(instr, opnd)
-	if CLOSING_INSTR[instr] then
-		if REGS[opnd] then
-			if self.reg_cnt > 0 then
-				self.reg_cnt = self.reg_cnt - 1
-			end
-		end
-	end
-end
-
 function BGen:reset_reg_use()
 	self.reg_cnt = 0
 	self.x_in_use = nil
@@ -91,16 +92,16 @@ end
 
 function BGen:add_instr(instr, opnd1, opnd2)
 	if opnd2 then
-		opnd1 = self:next_free_reg(instr, opnd1, opnd2)
+		opnd1 = self:__next_free_reg(instr, opnd1, opnd2)
 		table.insert(self.lCode, {"code", self.lineno, instr .. " " .. opnd1 .. ", " .. opnd2})
-		self.free_last_operand_reg(instr, opnd2)
+		self.__free_last_operand_reg(instr, opnd2)
 	elseif opnd1 then
 		if instr == "not" then
-			opnd1 = self:next_free_reg(instr, opnd1)
+			opnd1 = self:__next_free_reg(instr, opnd1)
 			table.insert(self.lCode, {"code", self.lineno, instr .. " " .. opnd1})
 		else
 			table.insert(self.lCode, {"code", self.lineno, instr .. " " .. opnd1})
-			self:free_last_operand_reg(instr, opnd1)
+			self:__free_last_operand_reg(instr, opnd1)
 		end
 	else
 		table.insert(self.lCode, {"code", self.lineno, instr})
@@ -125,7 +126,7 @@ function BGen:pop_regs()
 	-- Move function result in next free register
 	local old_reg_cnt = self.reg_cnt
 	if self.reg_cnt > 0 then
-		reg = self:add_move_instr("move", "A", "A")
+		reg = self:__add_move_instr("move", "A", "A")
 	else
 		self.reg_cnt = 1
 		reg = "A"
@@ -196,28 +197,48 @@ function BGen:add_string(ident, str)
 	table.insert(self.lText, {"ctext", self.lineno, ident .. ": " .. str})
 end
 
-function BGen:gen_output()
-	local out = {}
+function BGen:switch_to_var_def()
+	self.gen_base_pos = #self.lCode + 1
+end
 
-	local lineno = 0
-	if #self.lCode > 1 then
+function BGen:switch_to_func_def()
+	for i = self.gen_base_pos, #self.lCode do
+		local item = table.remove(self.lCode, self.gen_base_pos)
+		table.insert(self.lInit, item)
+	end
+end
+
+function BGen:gen_output()
+	local out = {{"code",  0, ".code"}}
+
+	if #self.lInit > 0 then
+		for _,item in ipairs(self.lInit) do
+			table.insert(out, item)
+		end
+	end
+
+	table.insert(out, {"code", 0, "call main"})
+	table.insert(out, {"code", 0, "halt"})
+
+	if #self.lCode > 0 then
 		for _,item in ipairs(self.lCode) do
 			table.insert(out, item)
 		end
 	end
-	if #self.lData > 1 then
+	if #self.lData > 0 then
+		table.insert(out, {"data",  999, ".data"})
 		for _,item in ipairs(self.lData) do
 			table.insert(out, item)
 		end
 	end
-	if #self.lText > 1 then
+	if #self.lText > 0 then
+		table.insert(out, {"ctext", 999, ".ctext"})
 		for _,item in ipairs(self.lText) do
 			table.insert(out, item)
 		end
 	end
 	return {locals = self.all_locals, lCode = out}
 end
-
 
 function BGen:gen_dbg_dump(output)
 	local out = {}
@@ -229,8 +250,17 @@ function BGen:gen_dbg_dump(output)
 	end
 
 	out[#out + 1] = "############ Locals ###########"
-	for id,offs in ipairs(output.locals) do
-		out[#out + 1] = string.format('%12s: %d', id, offs)
+	for func, item in pairs(output.locals) do
+		out[#out + 1] = string.format('function %s (%d):', func, item["@nsv@"]) -- number of variables
+		for id, offs in pairs(item) do
+			if id ~= "@nsv@" then
+				if offs > 0 then
+					out[#out + 1] = string.format('  parameter %-12s: %d', id, offs)
+				else
+					out[#out + 1] = string.format('  variable  %-12s: %d', id, offs)
+				end
+			end
+		end
 	end
 
 	return table.concat(out, "\n")

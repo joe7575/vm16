@@ -27,67 +27,95 @@ end
 
 --[[
 program:
-    = def_list func_def_list
+    = definition { definition }
 ]]--
 function BPars:main()
-	self:tk_match(T_NEWFILE)
-	self:def_list()
-	self:add_item("code", self.lineno - 1, "call main")
-	self:add_item("code", self.lineno - 1, "halt")
-	self:func_def_list()
-end
-
---[[
-def_list:
-    = 'var' ident [ '=' expression ] ';' def_list
-    | 'var' array_def ';' def_list
-    | 'const' ident '=' expression ';' def_list
-]]--
-function BPars:def_list()
-	local val = self:tk_peek().val
-	while val do
-		if val == "var" then
-			self:tk_match("var")
-			local ident = self:ident()
-			if self:tk_peek().val == "[" then
-				self:add_global(ident, true, true)
-				self:array_def(ident)
-				self:tk_match(";")
-				self:reset_reg_use()
-			else
-				self:add_global(ident, true)
-				self:add_data(ident)
-				if self:tk_peek().val == "=" then
-					self:tk_match("=")
-					local right = self:expression()
-					self:add_instr("move", ident, right)
-					self:reset_reg_use()
-				end
-				self:tk_match(";")
-			end
-		elseif val == "const" then
-			self:tk_match("const")
-			local ident = self:ident()
-			self:tk_match("=")
-			local right = self:expression()
-			self:add_const(ident, right)
-			self:tk_match(";")
-			self:reset_reg_use()
-		else
-			break
-		end
-		val = self:tk_peek().val
+	local tok = self:tk_peek()
+	while tok.val do
+		self:definition()
+		tok = self:tk_peek()
 	end
 end
 
 --[[
+definition:
+    = 'var' var_def
+    | 'const' const_def
+    | 'func' func_def
+    | T_NEWFILE
+    | T_ASMCODE
+]]--
+function BPars:definition()
+	local tok = self:tk_peek()
+	if tok.val == "var" then
+		self:tk_match("var")
+		self:var_def()
+	elseif tok.val == "const" then
+		self:tk_match("const")
+		self:const_def()
+	elseif tok.val == "func" then
+		self:tk_match("func")
+		self:func_def()
+	elseif tok.type == T_NEWFILE then
+		self:add_item("file", tok.lineno, tok.val)
+		self:tk_match(T_NEWFILE)
+	elseif tok.type == T_ASMCODE then
+		self:add_item("code", tok.lineno, tok.val)
+		self:tk_match(T_ASMCODE)
+	elseif tok.val ~= nil then
+		error(string.format("Unexpected item '%s'", tok.val))
+	end
+end
+
+--[[
+var_def:
+    = ident [ '=' expression ] ';
+    | array_def ';'
+]]--
+function BPars:var_def()
+	self:switch_to_var_def()
+	local ident = self:ident()
+	if self:tk_peek().val == "[" then
+		self:add_global(ident, true, true)
+		self:array_def(ident)
+		self:tk_match(";")
+		self:reset_reg_use()
+	else
+		self:add_global(ident, true)
+		self:add_data(ident)
+		if self:tk_peek().val == "=" then
+			self:tk_match("=")
+			local right = self:expression()
+			self:add_instr("move", ident, right)
+			self:reset_reg_use()
+		end
+		self:tk_match(";")
+	end
+	self:switch_to_func_def()
+end
+
+--[[
+const_def:
+    = ident '=' expression ';' def_list
+]]--
+function BPars:const_def()
+	self:switch_to_var_def()
+	local ident = self:ident()
+	self:tk_match("=")
+	local right = self:expression()
+	self:add_const(ident, right)
+	self:tk_match(";")
+	self:reset_reg_use()
+	self:switch_to_func_def()
+end
+
+--[[
 array_def:
-    = ident '[' ']' '=' '{' const_list '}'
-    = ident '[' number ']' '=' '{' const_list '}'
-    = ident '[' number ']'
+    = '[' ']' '=' '{' const_list '}'
+    = '[' number ']' '=' '{' const_list '}'
+    = '[' number ']'
 ]]--
 function BPars:array_def(ident)
-	print(ident)
 	self:tk_match("[")
 	local size = 0
 	if self:tk_peek().val ~= ']' then
@@ -131,32 +159,29 @@ function BPars:const_list(ident, size)
 end
 
 --[[
-func_def_list:
-    = 'func' ident '(' param_list ')' '{' lvar_def_list stmnt_list '}' func_def_list
+func_def:
+    = ident '(' param_list ')' '{' lvar_def_list stmnt_list '}'
 ]]--
-function BPars:func_def_list()
-	local val = self:tk_peek().val
-	while val and val == "func" do
-		self:tk_match("func")
-		local ident = self:ident()
-		self.func_name = ident
-		self.tLineno2Func[self.lineno] = ident
-		self:add_label(ident)
-		self:tk_match("(")
-		self:local_new()
-		local cnt = self:param_list()
-		self:add_global(ident, cnt)
-		self:tk_match(")")
-		-- Consider the return address in between param and local variables
-		-- "func" is used here, because "func" is no valid variable name
-		self:local_add("func")
-		self:tk_match("{")
-		self:lvar_def_list();
-		self:stmnt_list()
-		self:func_return(ident)
-		self:tk_match("}")
-		val = self:tk_peek().val
-	end
+function BPars:func_def()
+	local ident = self:ident()
+	self:add_item("func", self.lineno, ident)
+	self.func_name = ident
+	self.tLineno2Func[self.lineno] = ident
+	self:add_label(ident)
+	self:tk_match("(")
+	self:local_new()
+	local cnt = self:param_list()
+	self:add_global(ident, cnt)
+	self:tk_match(")")
+	-- Consider the return address in between param and local variables
+	-- "func" is used here, because "func" is no valid variable name
+	self:local_add("func")
+	self:tk_match("{")
+	self:lvar_def_list();
+	self:stmnt_list()
+	self:func_return(ident)
+	self:add_item("endf", self.lineno, ident)
+	self:tk_match("}")
 end
 
 --[[
