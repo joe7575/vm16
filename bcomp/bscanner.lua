@@ -46,30 +46,9 @@ local lTypeString = {"ident", "number", "operand", "brace", "string", "asm code"
 local lToken = {}
 local tScannedFiles = {}
 
-local strfind = string.find
-local strsub  = string.sub
-local tinsert = table.insert
-
 local function file_ext(filename)
 	local _, ext = unpack(string.split(filename, ".", true, 1))
 	return ext
-end
-
-local function split_into_lines(text)
-	local list = {}
-	local pos = 1
-
-	while true do
-		local first, last = strfind(text, "\n", pos)
-		if first then -- found?
-			tinsert(list, strsub(text, pos, first-1))
-			pos = last+1
-		else
-			tinsert(list, strsub(text, pos))
-			break
-		end
-	end
-	return list
 end
 
 local function char_to_val(char)
@@ -79,7 +58,6 @@ local function char_to_val(char)
 		return char:byte(1)
 	end
 end
-
 
 local BScan = vm16.BGen:new({})
 
@@ -178,7 +156,7 @@ function BScan:scanner(filename)
 	table.insert(lToken, {type = T_NEWFILE, val = filename, lineno = 0})
 
 	local text = self.readfile(self.pos, filename)
-	for lineno, line in ipairs(split_into_lines(text)) do
+	for lineno, line in ipairs(vm16.splitlines(text)) do
 		self.lineno = lineno
 		if self.is_asm_code then
 			line = line:trim()
@@ -222,7 +200,7 @@ function BScan:scan_dbg_dump()
 	
 	for idx,tok in ipairs(self.lTok) do
 		if tok.type == T_NEWFILE then
-			out[idx] = string.format('%8s: ######## "%s" ########', lTypeString[tok.type], tok.val)
+			out[idx] = string.format('%8s: #### "%s" ####', lTypeString[tok.type], tok.val)
 		else
 			out[idx] = string.format('%8s: (%d) "%s"', lTypeString[tok.type], tok.lineno, tok.val)
 		end

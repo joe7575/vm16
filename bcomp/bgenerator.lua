@@ -21,6 +21,13 @@ local CLOSING_INSTR = {move=1, push=1, add=1, addc=1, mul=1, mulc=1, div=1, sub=
                        mod=1, ["and"]=1, ["or"]=1, xor=1, ["not"]=1, ["in"]=1, out=1,
                        push=1, shl=1, shr=1}
 
+local tSections = {
+	[".data"]  = true,
+	[".code"]  = true,
+	[".text"]  = true,
+	[".ctext"] = true,
+}
+
 local BGen = {}
 
 function BGen:new(o)
@@ -28,6 +35,7 @@ function BGen:new(o)
 	o.label_cnt = 0
 	o.string_cnt = 0
 	o.reg_cnt = 0
+	o.ctype = "code"
 	o.reg_cnt_stack = {}
 	o.lInit = {}
 	o.lCode = {}
@@ -157,8 +165,24 @@ function BGen:add_label(lbl)
 	table.insert(self.lCode, {"code", self.lineno, lbl .. ":"})
 end
 
-function BGen:add_asm_code(code)
-	table.insert(self.lCode, {"code", self.lineno, code})
+function BGen:add_asm_token(tok)
+	local _, _, codestr = tok.val:find("(.+);")
+	codestr = string.trim(codestr or "")
+	if tSections[codestr] then
+		self.ctype = string.sub(codestr, 2)
+	elseif codestr ~= "" and string.byte(codestr, 1) ~= 59 then -- ';'
+		if self.ctype == "code" then
+			table.insert(self.lCode, {"code", tok.lineno, codestr})
+		elseif self.ctype == "data" then
+			table.insert(self.lData, {"data", tok.lineno, codestr})
+		elseif self.ctype == "ctext" then
+			table.insert(self.lText, {"ctext", tok.lineno, codestr})
+		end
+	end
+end
+
+function BGen:end_asm_code()
+	self.ctype = "code"
 end
 
 function BGen:add_then_label()
@@ -209,7 +233,7 @@ function BGen:switch_to_func_def()
 end
 
 function BGen:gen_output()
-	local out = {{"code",  0, ".code"}}
+	local out = {}
 
 	if #self.lInit > 0 then
 		for _,item in ipairs(self.lInit) do
@@ -226,13 +250,11 @@ function BGen:gen_output()
 		end
 	end
 	if #self.lData > 0 then
-		table.insert(out, {"data",  999, ".data"})
 		for _,item in ipairs(self.lData) do
 			table.insert(out, item)
 		end
 	end
 	if #self.lText > 0 then
-		table.insert(out, {"ctext", 999, ".ctext"})
 		for _,item in ipairs(self.lText) do
 			table.insert(out, item)
 		end
@@ -243,13 +265,13 @@ end
 function BGen:gen_dbg_dump(output)
 	local out = {}
 
-	out[#out + 1] = "############  Code  ###########"
+	out[#out + 1] = "#### Code ####"
 	for idx,tok in ipairs(output.lCode) do
 		local ctype, lineno, code = tok[1], tok[2], tok[3]
 		out[#out + 1] = string.format('%5s: (%d) "%s"', ctype, lineno, code)
 	end
 
-	out[#out + 1] = "############ Locals ###########"
+	out[#out + 1] = "#### Locals ####"
 	for func, item in pairs(output.locals) do
 		out[#out + 1] = string.format('function %s (%d):', func, item["@nsv@"]) -- number of variables
 		for id, offs in pairs(item) do

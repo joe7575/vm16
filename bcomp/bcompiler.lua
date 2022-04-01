@@ -13,6 +13,7 @@
   The compiler generates a list with tokens according to:
   
   {<type>, <lineno>, <asm-code>}
+  {"file", 0, "test.c"}         -- File info
   {"code", 2, "move A, #1"}     -- ASM code
   {"data", 3, "va1: 0"}         -- Variable
   {"ctext", 4, "str: 'Hallo'"}  -- String
@@ -23,60 +24,15 @@
   And a table with local variable definitions:
   
   {foo = {<name> = <offs>, ...} -- positive offs = parameter, negative offs = stack variable
+ 
+  The assembler adds address and opcode information:
   
+  {CTYPE,  LINENO,  CODESTR,      ADDRESS,  OPCODES}
+  {"code",  2,     "move A, #1",   10,     {0x1020, 0x0001}}
+ 
 --]]
 
 local version = "1.1"
-
-local function extend(into, from)
-	if into and from then
-		for _, t in ipairs(from or {}) do
-			into[#into + 1] = t
-		end
-	end
-end
-
-local function gen_comp_output(lCode, lData, lString)
-	local out = {}
-
-	for idx,line in ipairs(lCode) do
-		table.insert(out, line)
-	end
-	table.insert(out, "")
-	for idx,line in ipairs(lData) do
-		table.insert(out, line)
-	end
-	if #lString > 1 then
-		table.insert(out, "")
-		for idx,line in ipairs(lString) do
-			table.insert(out, line)
-		end
-	end
-	return table.concat(out, "\n")
-end
-
-local function get_glob_variables(prs, symbols)
-	local out = {}
-	for ident,addr in pairs(symbols or {}) do
-		if prs:is_global_var(ident) then
-			out[ident] = addr
-		end
-	end
-	return out
-end
-
-local function lineno_to_Function(prs, lToken)
-	local out = {}
-	local fname = ""
-	for _, tok in ipairs(lToken) do
-		if tok.lineno and tok.address then
-			fname = prs.tLineno2Func[tok.lineno] or fname
-			out[tok.lineno] = fname
-		end
-	end
-	return out
-end
-
 
 local function error_msg(err)
 	local t = string.split(err, "\001")
@@ -86,158 +42,32 @@ local function error_msg(err)
 	return err
 end
 
-local function format_output_for_sourcecode_debugging(lToken)
-	local out = {}
-	local tok
-	local lineno
-	local inline_asm = false
-	for _,item in ipairs(lToken) do
-		if item[vm16.Asm.SECTION] == vm16.Asm.COMMENT then
-			inline_asm = string.find(item[vm16.Asm.TXTLINE], "_asm_")
-			if tok then
-				out[#out + 1] = tok
-				tok = nil
-			end
-			lineno = tonumber(item[vm16.Asm.TXTLINE]:sub(2,5))
-			tok = {lineno = lineno}
-		elseif inline_asm then
-			-- Add each line until the next comment line
-			lineno = lineno + 1
-			out[#out + 1] = {lineno = lineno, address = item[vm16.Asm.ADDRESS], opcodes = item[vm16.Asm.OPCODES]}
-		else
-			if tok and tok.address then
-				extend(tok.opcodes, item[vm16.Asm.OPCODES])
+local function comp_code_listing(lCode, filename)
+	local mydump = function(tbl)
+		local t = {}
+		for _,e in ipairs(tbl or {}) do
+			if type(e) == "number" then
+				table.insert(t, string.format("%04X", e))
 			else
-				tok = tok or {}
-				tok.address = item[vm16.Asm.ADDRESS]
-				tok.opcodes = item[vm16.Asm.OPCODES]
+				table.insert(t, "'"..e.."'")
 			end
 		end
+		return table.concat(t, " ")
 	end
-	out[#out + 1] = tok
-	return out
+
+	local out = {"##### " .. vm16.file_base(filename) .. ".lst" .. " #####"}
+	for _,item in ipairs(lCode) do
+		local ctype, lineno, scode, address, opcodes = unpack(item)
+		table.insert(out, string.format("%5s %3d %04X: %-15s %s", ctype, lineno, address or 0, scode, mydump(opcodes)))
+	end
+	return table.concat(out, "\n")
 end
 
-local function format_output_for_assembler_debugging(lToken)
-	local out = {}
-	for _,item in ipairs(lToken) do
-		if item[vm16.Asm.SECTION] ~= vm16.Asm.COMMENT then
-			out[#out + 1] = {
-				lineno  = item[vm16.Asm.LINENO],
-				address = item[vm16.Asm.ADDRESS],
-				opcodes = item[vm16.Asm.OPCODES],
-			}
-		end
-	end
-	return out
-end
-
-function vm16.gen_obj_code(filename, code)
-	local out = {}
-	local prs =  vm16.BPars:new({text = code})
-	prs.filename = filename
-	prs:bpars_init()
-	local status, err = pcall(prs.main, prs)
-	if not err then
-		local asm = vm16.Asm:new({})
-		local lToken = gen_asm_token_list(prs.lCode, prs.lData, prs.lString)
-		lToken, err = asm:assembler(file_base(filename) .. ".asm", lToken)
-		if lToken then
-			local output = format_output_for_sourcecode_debugging(lToken)
-			return {
-				locals = prs.all_locals,
-				output = output,
-				globals = get_glob_variables(prs, asm.symbols),
-				functions = lineno_to_Function(prs, output)}
-		end
-		return {
-			locals = {},
-			output = {},
-			globals = {},
-			functions = {},
-			errors = err}
-	end
-	local fname = prs.filename or ""
-	local lineno = prs.lineno or "0"
-	local errors = string.format("%s(%d): %s", fname, lineno, error_msg(err))
-	return {
-		locals = {},
-		output = {},
-		globals = {},
-		functions = {},
-		errors = errors}
-end
-
-function vm16.gen_asm_code(filename, code)
-	local out = {}
-	local prs =  vm16.BPars:new({text = code, add_sourcecode = true})
-	prs.filename = filename
-	prs:bpars_init()
-	local status, err = pcall(prs.main, prs)
-	if not err then
-		return gen_comp_output(prs.lCode, prs.lData, prs.lString)
-	else
-		local fname = prs.filename or ""
-		local lineno = prs.lineno or "0"
-		return gen_comp_output(prs.lCode, prs.lData, prs.lString), 
-			string.format("%s(%d): %s", fname, lineno, error_msg(err))
-	end
-end
-
-function vm16.assemble(filename, code)
-	local a = vm16.Asm:new({})
-	code = code:gsub("\t", "  ")
-	local lToken, err = a:scanner(code)
-	if lToken then
-		lToken, err = a:assembler(file_base(filename) .. ".asm", lToken)
-		if lToken then
-			local output = format_output_for_assembler_debugging(lToken)
-			return {
-				locals = {},
-				output = output,
-				globals = {},
-				functions = {}}
-		end
-		return {
-			locals = {},
-			output = {},
-			globals = {},
-			functions = {},
-			errors = err}
-	end
-	return {
-		locals = {},
-		output = {},
-		globals = {},
-		functions = {},
-		errors = err}
-end
-
-function vm16.compile(pos, filename, readfile, debug)
-	local prs =  vm16.BPars:new({pos = pos, readfile = readfile})
-	prs:bpars_init()
-
-	local sts, res = pcall(prs.scanner, prs, filename)
-	if not sts then
-		return false, error_msg(res)
-	end
-
-	sts, res = pcall(prs.main, prs)
-	if not sts then
-		return false, error_msg(res)
-	end
-
-	if debug then
-		local output = prs:gen_output()
-		return true, prs:gen_dbg_dump(output)
-	end
-	
-	return true, prs:gen_output()
-end
-
-function vm16.gen_asm_code(output, sourcecode)
-	local out = {}
+local function gen_asm_code(output, text, filename)
+	local out = {";##### " .. vm16.file_base(filename) .. ".asm" .. " #####"}
 	local oldlineno = 0
+	local sourcecode = vm16.splitlines(text)
+
 	local add_src_code = function(lineno)
 		for no = oldlineno + 1, lineno do
 			if sourcecode[no] and sourcecode[no] ~= "" then
@@ -285,3 +115,71 @@ function vm16.gen_asm_code(output, sourcecode)
 	
 	return table.concat(out, "\n")
 end
+
+;------------------------------------------------------------------------------
+;-- API
+;------------------------------------------------------------------------------
+function vm16.assemble(pos, filename, readfile, debug)
+	local code = readfile(pos, filename)
+	code = code:gsub("\t", "  ")
+
+	local a = vm16.Asm:new({})
+	local sts, res = pcall(a.scanner, a, code, filename)
+	if not sts then
+		return false, error_msg(res)
+	end
+
+	sts, res = pcall(a.assembler, a, filename, res)
+	if not sts then
+		return false, error_msg(res)
+	end
+	
+	if debug then
+		return true, a:listing(res)
+	end
+	
+	return true, res
+end
+
+function vm16.compile(pos, filename, readfile, output_format)
+	local prs =  vm16.BPars:new({pos = pos, readfile = readfile})
+	prs:bpars_init()
+
+	local sts, res = pcall(prs.scanner, prs, filename)
+	if not sts then
+		return false, error_msg(res)
+	end
+
+	if output_format == "tok" then
+		return true, prs:scan_dbg_dump()
+	end
+
+	sts, res = pcall(prs.main, prs)
+	if not sts then
+		return false, error_msg(res)
+	end
+
+	local output = prs:gen_output()
+
+	if output_format == "dbg" then
+		return true, prs:gen_dbg_dump(output)
+	end
+	
+	if output_format == "asm" then
+		local text = readfile(pos, filename)
+		return true, gen_asm_code(output, text, filename)
+	end
+	
+	local asm = vm16.Asm:new({})
+	sts, res = pcall(asm.assembler, asm, filename, output.lCode)
+	if not sts then
+		return false, error_msg(res)
+	end
+	
+	if output_format == "lst" then
+		return true, comp_code_listing(res, filename)
+	end
+	
+	return true, {lCode = res, locals = output.locals}
+end
+

@@ -12,9 +12,6 @@
 
 -- for lazy programmers
 local M = minetest.get_meta
-local strfind = string.find
-local strsub = string.sub
-local tinsert = table.insert
 
 local Cache = {}    -- [hash] = {}
 
@@ -41,23 +38,6 @@ function vm16.prog.get_linenum(lToken, addr)
 	return 0
 end
 
-function vm16.prog.strsplit(text)
-   local list = {}
-   local pos = 1
-
-   while true do
-      local first, last = strfind(text, "\n", pos)
-      if first then -- found?
-         tinsert(list, strsub(text, pos, first-1))
-         pos = last+1
-      else
-         tinsert(list, strsub(text, pos))
-         break
-      end
-   end
-   return list
-end
-
 function vm16.prog.to_char(val)
 	if val >= 32 and val <= 127 then
 		return string.char(val)
@@ -79,14 +59,4 @@ function vm16.prog.get_cpu_def(cpu_pos)
 	if ndef and ndef.vm16_cpu then
 		return ndef.vm16_cpu
 	end
-end
-
-function vm16.prog.file_ext(filename)
-	local _, ext = unpack(string.split(filename, ".", true, 1))
-	return ext
-end
-
-function vm16.prog.file_base(filename)
-	local name, _ = unpack(string.split(filename, ".", true, 1))
-	return name
 end

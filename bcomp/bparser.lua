@@ -59,8 +59,9 @@ function BPars:definition()
 	elseif tok.type == T_NEWFILE then
 		self:add_item("file", tok.lineno, tok.val)
 		self:tk_match(T_NEWFILE)
+		self:end_asm_code()
 	elseif tok.type == T_ASMCODE then
-		self:add_item("code", tok.lineno, tok.val)
+		self:add_asm_token(tok)
 		self:tk_match(T_ASMCODE)
 	elseif tok.val ~= nil then
 		error(string.format("Unexpected item '%s'", tok.val))
@@ -379,9 +380,10 @@ function BPars:asm_declaration()
 	local tok = self:tk_peek()
 	while tok.type == T_ASMCODE do
 		self:tk_match()
-		self:add_asm_code(tok.val)
+		self:add_asm_token(tok)
 		tok = self:tk_peek()
 	end
+	self:end_asm_code()
 end
 
 --[[
