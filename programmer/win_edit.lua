@@ -14,8 +14,8 @@
 local M = minetest.get_meta
 local prog = vm16.prog
 local server = vm16.server
-local file_ext = vm16.prog.file_ext
-local file_base = vm16.prog.file_base
+local file_ext = vm16.file_ext
+local file_base = vm16.file_base
 
 local EDIT_SIZE = "0.2,0.6;11.4, 9.6"
 
@@ -27,7 +27,7 @@ local function add_lineno(pos, text, err)
 		out[#out + 1] = err
 		out[#out + 1] = ""
 	end
-	for i, line in ipairs(prog.strsplit(text)) do
+	for i, line in ipairs(vm16.splitlines(text)) do
 		local lineno = string.format("%3d: ", i)
 		out[#out + 1] = lineno .. line
 	end
@@ -99,23 +99,31 @@ function vm16.edit.on_receive_fields(pos, fields, mem)
 		mem.error = nil
 	elseif mem.file_name and mem.file_text then
 		if fields.compile then
-			mem.error = nil
-			mem.file_name = file_base(mem.file_name) .. ".asm"
-			mem.file_ext = "asm"
-			mem.file_text, mem.error = vm16.gen_asm_code(mem.file_name, mem.file_text)
-			vm16.files.init(pos, mem)
+			local sts, res = vm16.compile(mem.server_pos, mem.file_name, server.read_file, "asm")
+			if sts then
+				mem.file_text = res
+				--mem.file_name = file_base(mem.file_name) .. ".asm"
+				mem.file_name = "out.asm"
+				mem.file_ext = "asm"
+				server.write_file(mem.server_pos, mem.file_name, mem.file_text)
+				vm16.files.init(pos, mem)
+				mem.error = nil
+			else
+				mem.file_text = nil
+				mem.error = res
+			end
 		elseif fields.debug then
 			local def = prog.get_cpu_def(mem.cpu_pos)
 			if def then
 				local prog_pos = def.on_check_connection(mem.cpu_pos)
 				if vector.equals(pos, prog_pos) then
-					local result = vm16.gen_obj_code(mem.file_name, mem.file_text)
-					if not result.errors then
-						vm16.debug.init(pos, mem, result)
-						vm16.watch.init(pos, mem, result)
+					local sts, res = vm16.compile(mem.server_pos, mem.file_name, server.read_file)
+					if sts then
+						vm16.debug.init(pos, mem, res)
+						vm16.watch.init(pos, mem, res)
 						mem.error = nil
 					else
-						mem.error = result.errors
+						mem.error = res
 					end
 				end
 			end
@@ -124,13 +132,13 @@ function vm16.edit.on_receive_fields(pos, fields, mem)
 			if def then
 				local prog_pos = def.on_check_connection(mem.cpu_pos)
 				if vector.equals(pos, prog_pos) then
-					local result = vm16.assemble(mem.file_name, mem.file_text)
-					if not result.errors then
-						vm16.debug.init(pos, mem, result)
-						vm16.memory.init(pos, mem, result)
+					local sts, res = vm16.assemble(mem.server_pos, mem.file_name, server.read_file)
+					if sts then
+						vm16.debug.init(pos, mem, res)
+						vm16.memory.init(pos, mem, res)
 						mem.error = nil
 					else
-						mem.error = result.errors
+						mem.error = res
 					end
 				end
 			end

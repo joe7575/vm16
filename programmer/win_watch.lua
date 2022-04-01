@@ -13,6 +13,11 @@
 vm16.watch = {}
 
 local prog = vm16.prog
+local CTYPE   = vm16.Asm.CTYPE
+local LINENO  = vm16.Asm.LINENO
+local CODESTR = vm16.Asm.CODESTR
+local ADDRESS = vm16.Asm.ADDRESS
+local OPCODES = vm16.Asm.OPCODES
 
 local function var_address(cpu, offs, num_stack_var)
 	-- Valid Base Pointer (before ret instruction)
@@ -51,6 +56,28 @@ local function gen_varlist(pos, mem)
 				out[#out + 1] = {name = var, addr = addr, type = "local"}
 			end
 		end
+	end
+	return out
+end
+
+local function globals(obj)
+	local out = {}
+	for _, item in ipairs(obj.lCode) do
+		if item[CTYPE] == "data" then
+			out[item[CODESTR]] = item[ADDRESS]
+		end
+	end
+	return out
+end
+
+local function functions(obj)
+	local out = {}
+	local fname = ""
+	for _, item in ipairs(obj.lCode) do
+		if item[CTYPE] == "func" then
+			fname = item[CODESTR]
+		end
+		out[item[LINENO]] = fname
 	end
 	return out
 end
@@ -121,10 +148,10 @@ local function mem_dump(pos, mem, x, y, xsize, ysize, fontsize)
 	return table.concat(lines, "")
 end
 
-function vm16.watch.init(pos, mem, result)
-	mem.tGlobals = result.globals or {}
-	mem.tLocals = result.locals or {}
-	mem.tFunctions = result.functions or {}
+function vm16.watch.init(pos, mem, obj)
+	mem.tGlobals = globals(obj)
+	mem.tLocals = obj.locals or {}
+	mem.tFunctions = functions(obj)
 
 	local last_used_mem_addr = mem.last_code_addr
 	mem.lVars = {}

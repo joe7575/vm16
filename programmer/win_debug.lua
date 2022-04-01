@@ -23,7 +23,7 @@ local function format_asm_code(mem, text)
 	mem.breakpoint_lines = mem.breakpoint_lines or {}
 	local addr = vm16.get_pc(mem.cpu_pos)
 
-	for lineno, line in ipairs(prog.strsplit(text)) do
+	for lineno, line in ipairs(vm16.splitlines(text)) do
 		local tag = "  "
 		local saddr = ""
 		local is_curr_line = false
@@ -47,7 +47,7 @@ local function format_src_code(mem, text)
 	local out = {}
 	mem.breakpoint_lines = mem.breakpoint_lines or {}
 
-	for lineno, line in ipairs(prog.strsplit(text)) do
+	for lineno, line in ipairs(vm16.splitlines(text)) do
 		local tag = "  "
 		if lineno == mem.curr_lineno and mem.breakpoint_lines[lineno] then
 			tag = "*>"
@@ -118,33 +118,36 @@ local function reset_temp_breakpoint(pos, mem)
 	end
 end
 
-function vm16.debug.init(pos, mem, result)
+function vm16.debug.init(pos, mem, obj)
 	mem.breakpoints = {}
 	mem.breakpoint_lines = {}
 	mem.tAddress = {}
 	mem.tLineno = {}
+	mem.step_in = {}
 	mem.last_lineno = 1  -- source file size in lines
 	mem.curr_lineno = 1  -- PC position
 	mem.last_code_addr = 0
 	mem.output = ""
 
-	for _, tok in ipairs(result.output) do
-		if tok.lineno and tok.address and tok.opcodes and #tok.opcodes > 0 then
-			mem.tAddress[tok.lineno] = tok.address
-			mem.tLineno[tok.address] = tok.lineno
-			mem.last_lineno = tok.lineno
-		end
-	end
-
 	mem.cpu_def = prog.get_cpu_def(mem.cpu_pos)
 	local mem_size = mem.cpu_def and mem.cpu_def.on_mem_size(mem.cpu_pos) or 3
 	vm16.create(mem.cpu_pos, mem_size)
-	for _,tok in ipairs(result.output) do
-		for i, opc in pairs(tok.opcodes or {}) do
-			vm16.poke(mem.cpu_pos, tok.address + i - 1, opc)
-			mem.last_code_addr = math.max(mem.last_code_addr, tok.address + i - 1)
+	
+	for _, item in ipairs(obj.lCode) do
+		local ctype, lineno, scode, address, opcodes = unpack(item)
+		if ctype == "code" and #opcodes > 0 then
+			mem.tAddress[lineno] = mem.tAddress[lineno] or address
+			mem.tLineno[address] = lineno
+			mem.last_lineno = lineno
+		elseif ctype == "call" then
+			mem.step_in[lineno] = address
+		end
+		for i, opc in pairs(opcodes or {}) do
+			vm16.poke(mem.cpu_pos, address + i - 1, opc)
+			mem.last_code_addr = math.max(mem.last_code_addr, address + i - 1)
 		end
 	end
+
 	vm16.set_pc(mem.cpu_pos, 0)
 	mem.mem_size = vm16.mem_size(mem.cpu_pos)
 	mem.startaddr = 0
@@ -183,6 +186,9 @@ function vm16.debug.formspec(pos, mem, textsize)
 	else
 		vm16.menubar.add_button("edit", "Edit")
 		vm16.menubar.add_button("step", "Step")
+		if mem.file_ext == "c" then
+			vm16.menubar.add_button("stepin", "Step in")
+		end
 		vm16.menubar.add_button("runto", "Run to C")
 		vm16.menubar.add_button("run", "Run")
 		vm16.menubar.add_button("reset", "Reset")
@@ -224,6 +230,16 @@ function vm16.debug.on_receive_fields(pos, fields, mem)
 				local lineno = get_next_lineno(pos, mem)
 				set_temp_breakpoint(pos, mem, lineno)
 				start_cpu(mem)
+			end
+		end
+	elseif fields.stepin then
+		if vm16.is_loaded(mem.cpu_pos) then
+			if mem.file_ext == "c" then
+				local lineno = mem.step_in[mem.curr_lineno]
+				if lineno then
+					set_temp_breakpoint(pos, mem, lineno)
+					start_cpu(mem)
+				end
 			end
 		end
 	elseif fields.runto then

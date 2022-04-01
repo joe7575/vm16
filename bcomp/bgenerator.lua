@@ -166,7 +166,7 @@ function BGen:add_label(lbl)
 end
 
 function BGen:add_asm_token(tok)
-	local _, _, codestr = tok.val:find("(.+);")
+	local _, _, codestr = tok.val:find("(.+);?")
 	codestr = string.trim(codestr or "")
 	if tSections[codestr] then
 		self.ctype = string.sub(codestr, 2)

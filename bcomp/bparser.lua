@@ -22,7 +22,6 @@ local BPars = vm16.BExpr:new({})
 
 function BPars:bpars_init()
 	self:bexpr_init()
-	self.tLineno2Func = {}
 end
 
 --[[
@@ -167,7 +166,6 @@ function BPars:func_def()
 	local ident = self:ident()
 	self:add_item("func", self.lineno, ident)
 	self.func_name = ident
-	self.tLineno2Func[self.lineno] = ident
 	self:add_label(ident)
 	self:tk_match("(")
 	self:local_new()

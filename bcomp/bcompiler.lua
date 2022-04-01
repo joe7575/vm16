@@ -66,6 +66,7 @@ end
 local function gen_asm_code(output, text, filename)
 	local out = {";##### " .. vm16.file_base(filename) .. ".asm" .. " #####"}
 	local oldlineno = 0
+	local oldctype = nil
 	local sourcecode = vm16.splitlines(text)
 
 	local add_src_code = function(lineno)
@@ -85,7 +86,12 @@ local function gen_asm_code(output, text, filename)
 		elseif sourcecode and ctype == "data" then
 			add_src_code(#sourcecode)
 		end
-
+		
+		if oldctype ~= ctype and (ctype == "code" or ctype == "data" or ctype == "ctext") then
+			out[#out + 1] = "  ." .. ctype
+			oldctype = ctype
+		end
+		
 		if ctype == "code" then
 			if code == ".code" then
 				out[#out + 1] = "  " .. code
@@ -116,9 +122,9 @@ local function gen_asm_code(output, text, filename)
 	return table.concat(out, "\n")
 end
 
-;------------------------------------------------------------------------------
-;-- API
-;------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+-- API
+------------------------------------------------------------------------------
 function vm16.assemble(pos, filename, readfile, debug)
 	local code = readfile(pos, filename)
 	code = code:gsub("\t", "  ")
@@ -138,7 +144,7 @@ function vm16.assemble(pos, filename, readfile, debug)
 		return true, a:listing(res)
 	end
 	
-	return true, res
+	return true, {lCode = res, locals = {}}
 end
 
 function vm16.compile(pos, filename, readfile, output_format)
