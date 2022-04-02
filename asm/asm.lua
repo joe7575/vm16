@@ -175,7 +175,8 @@ function Asm:new(o)
 end
 
 function Asm:err_msg(err)
-	error(string.format("%s(%d): %s!", self.filename, self.lineno or 0, err))
+	--print(string.format("%s(%d): %s!", self.filename, self.lineno or 0, err))
+	error(string.format("\001%s(%d): %s!", self.filename, self.lineno or 0, err))
 end
 
 function Asm:scanner(text, filename)
@@ -215,13 +216,16 @@ function Asm:address_label(tok)
 	if label then
 		if self.globals[label] == -1 then
 			self.globals[label] = self.address
+			-- Add 'func' line to the output stream
+			tok[CODESTR] = label
+			tok[CTYPE] = "func"
 		else
 			if self.symbols[self:postfix(label)] then
 				self:err_msg("Redefinition of label " .. label)
 			end
 			self.symbols[self:postfix(label)] = self.address
+			tok[CODESTR] = codestr:sub(pos+1, -1)
 		end
-		tok[CODESTR] = codestr:sub(pos+1, -1)
 		self.label = label
 	end
 	return tok
@@ -235,7 +239,7 @@ function Asm:global_def(tok)
 			self:err_msg("Redefinition of global " .. label)
 		end
 		self.globals[label] = -1
-		tok[CODESTR] = codestr:sub(pos+1, -1)
+		tok[CODESTR] = ""
 	end
 	return tok
 end
@@ -417,15 +421,23 @@ function Asm:handle_label(tok, i, label)
 end
 
 function Asm:assembler(filename, lToken)
+	local get_var_addr = function(name)
+		-- TODO hand-written asm files use globals, compiler generated files use unique
+		-- symbols and therefore, store all
+		--return self.globals[name] or self.symbols[name] or 0
+		return self.globals[name] or 0
+	end
+
 	local lOut = {}
 	-- pass 1
 	self.filename = filename
 	self.namespace_cnt = 1
 	for _,tok in ipairs(lToken or {}) do
-		self.ctype = tok[CTYPE]
 		self.lineno = tok[LINENO]
+		tok = self:global_def(tok)
 		tok = self:org_directive(tok)
 		tok = self:address_label(tok)
+		self.ctype = tok[CTYPE]
 
 		if tok[CODESTR] ~= "" then
 			if self.ctype == "code" then
@@ -436,6 +448,9 @@ function Asm:assembler(filename, lToken)
 				extend(lOut, self:decode_text(tok))
 			elseif self.ctype == "ctext" then
 				extend(lOut, self:decode_ctext(tok))
+			elseif self.ctype == "file" then
+				self.filename = tok[CODESTR]
+				append(lOut, tok)
 			elseif self.ctype == "endf" then
 				tok[ADDRESS] = self.address - 1
 				append(lOut, tok)
@@ -451,12 +466,12 @@ function Asm:assembler(filename, lToken)
 		self.lineno = tok[LINENO]
 		if tok[CODESTR] == "namespace" then
 			self.namespace_cnt = self.namespace_cnt + 1
+		elseif tok[CTYPE] == "file" then
+			self.filename = tok[CODESTR]
 		elseif tok[CTYPE] == "func" then
-			local addr = self.symbols[tok[CODESTR]] or 0
-			tok[ADDRESS] = addr
+			tok[ADDRESS] = get_var_addr(tok[CODESTR])
 		elseif tok[CTYPE] == "call" then
-			local addr = self.symbols[tok[CODESTR]] or 0
-			tok[ADDRESS] = addr
+			tok[ADDRESS] = get_var_addr(tok[CODESTR])
 		else
 			for i, opc in ipairs(tok[OPCODES] or {}) do
 				if type(opc) == "string" then

@@ -22,11 +22,13 @@ function Lut:new()
 	o.lineno2addr = {}
 	o.step_in = {}
 	o.globals = {}
+	o.last_lineno = 0
 	o.last_used_mem_addr = 0
 	setmetatable(o, self)
 	self.__index = self
 	return o
 end
+
 
 function Lut:init(obj)
 	print("Lut:init")
@@ -34,6 +36,14 @@ function Lut:init(obj)
 	local file = ""
 	local lineno1, lineno2
 	local address1, address2
+	local file1
+
+	local add = function(_file, _func, l1, l2, a1, a2)
+		if a1 then
+			self.items[#self.items + 1] = 
+				{file = _file, func = _func, lines = {l1, l2}, addresses = {a1, a2}}
+		end
+	end
 
 	for _, item in ipairs(obj.lCode) do
 		local ctype, lineno, scode, address, opcodes = unpack(item)
@@ -42,25 +52,27 @@ function Lut:init(obj)
 			self.lineno2addr[file] = self.lineno2addr[file] or {}
 			self.lineno2addr[file][lineno] = self.lineno2addr[file][lineno] or address
 			self.addr2lineno[address] = lineno
-			self.last_lineno = lineno
+			self.last_lineno = math.max(self.last_lineno, lineno)
+			lineno2 = lineno
+			address2 = address
 		elseif ctype == "data" then
 			self.globals[#self.globals + 1] = {name = scode, addr = address, type = "global"}
 		elseif ctype == "file" then
+			add(file, func, lineno1, lineno2, address1, address2)
 			file = scode
+			address1 = nil
 		elseif ctype == "func" then
+			add(file, func, lineno1, lineno, address1, address - 1)
 			func = scode
 			lineno1 = lineno
 			address1 = address
-		elseif ctype == "endf" then
-			lineno2 = lineno
-			address2 = address
-			self.items[#self.items + 1] = {file = file, func = func, 
-				lines = {lineno1, lineno2}, addresses = {address1, address2}}
 		elseif ctype == "call" then
 			self.step_in[file] = self.step_in[file] or {}
 			self.step_in[file][lineno] = address
 		end
 	end
+	add(file, func, lineno1, lineno2, address1, address2)
+	
 	self.locals = obj.locals
 	table.sort(self.globals, function(a,b) return a.name < b.name end)
 end
@@ -144,6 +156,7 @@ function Lut:get_next_line(address)
 					return no
 				end
 			end
+			print("Lut:get_next_line", "oops", item.file, lineno)
 		end
 	end
 	print("Lut:get_next_line", "oops")

@@ -183,10 +183,8 @@ function vm16.debug.formspec(pos, mem, textsize)
 	else
 		vm16.menubar.add_button("edit", "Edit")
 		vm16.menubar.add_button("step", "Step")
-		if mem.file_ext == "c" then
-			vm16.menubar.add_button("stepin", "Step in")
-			vm16.menubar.add_button("stepout", "Step out")
-		end
+		vm16.menubar.add_button("stepin", "Step in")
+		vm16.menubar.add_button("stepout", "Step out")
 		vm16.menubar.add_button("runto", "Run to C")
 		vm16.menubar.add_button("run", "Run")
 		vm16.menubar.add_button("reset", "Reset")
@@ -233,28 +231,24 @@ function vm16.debug.on_receive_fields(pos, fields, mem)
 		end
 	elseif fields.stepin then
 		if vm16.is_loaded(mem.cpu_pos) then
-			if mem.file_ext == "c" then
-				local addr = mem.lut:get_stepin_address(mem.file_name, mem.curr_lineno) or 0
-				local item = loadfile_by_address(mem, addr)
-				if item then
-					local lineno = mem.lut:get_line(item.addresses[1])
-					set_temp_breakpoint(pos, mem, lineno)
-					start_cpu(mem)
-				end
+			local addr = mem.lut:get_stepin_address(mem.file_name, mem.curr_lineno) or 0
+			local item = loadfile_by_address(mem, addr)
+			if item then
+				local lineno = mem.lut:get_line(item.addresses[1])
+				set_temp_breakpoint(pos, mem, lineno)
+				start_cpu(mem)
 			end
 		end
 	elseif fields.stepout then
 		if vm16.is_loaded(mem.cpu_pos) then
-			if mem.file_ext == "c" then
-				local cpu = vm16.get_cpu_reg(mem.cpu_pos)
-				local addr = vm16.peek(mem.cpu_pos, cpu.BP) or 0
-				addr = mem.lut:find_next_address(addr)
-				local item = loadfile_by_address(mem, addr)
-				if item then
-					local lineno = mem.lut:get_line(addr)
-					set_temp_breakpoint(pos, mem, lineno)
-					start_cpu(mem)
-				end
+			local cpu = vm16.get_cpu_reg(mem.cpu_pos)
+			local addr = vm16.peek(mem.cpu_pos, cpu.BP) or 0
+			addr = mem.lut:find_next_address(addr)
+			local item = loadfile_by_address(mem, addr)
+			if item then
+				local lineno = mem.lut:get_line(addr)
+				set_temp_breakpoint(pos, mem, lineno)
+				start_cpu(mem)
 			end
 		end
 	elseif fields.runto then

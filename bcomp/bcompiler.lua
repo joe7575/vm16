@@ -63,28 +63,40 @@ local function comp_code_listing(lCode, filename)
 	return table.concat(out, "\n")
 end
 
-local function gen_asm_code(output, text, filename)
-	local out = {";##### " .. vm16.file_base(filename) .. ".asm" .. " #####"}
+local function gen_asm_code(pos, output, filename, readfile)
+	local out = {}
 	local oldlineno = 0
 	local oldctype = nil
+	local text = readfile(pos, filename)
 	local sourcecode = vm16.splitlines(text)
+	local is_asm_file = vm16.file_ext(filename) == "asm"
 
 	local add_src_code = function(lineno)
-		for no = oldlineno + 1, lineno do
-			if sourcecode[no] and sourcecode[no] ~= "" then
-				out[#out + 1] = string.format("; %3d: %s", no, sourcecode[no])
+		if not is_asm_file then
+			for no = oldlineno + 1, lineno do
+				if sourcecode[no] and sourcecode[no] ~= "" then
+					out[#out + 1] = string.format("; %3d: %s", no, sourcecode[no])
+				end
 			end
+			oldlineno = math.max(oldlineno, lineno)
 		end
-		oldlineno = math.max(oldlineno, lineno)
 	end
 
 	for idx,tok in ipairs(output.lCode) do
 		local ctype, lineno, code = tok[1], tok[2], tok[3]
 
-		if sourcecode and ctype == "code" then
+		if ctype == "code" then
 			add_src_code(lineno)
-		elseif sourcecode and ctype == "data" then
+		elseif ctype == "data" then
 			add_src_code(#sourcecode)
+		elseif ctype == "file" then
+			filename = code
+			text = readfile(pos, filename)
+			sourcecode = vm16.splitlines(text)
+			is_asm_file = vm16.file_ext(filename) == "asm"
+			oldlineno = 0
+			oldctype = nil
+			out[#out + 1] = ";##### " .. filename .. " #####"
 		end
 		
 		if oldctype ~= ctype and (ctype == "code" or ctype == "data" or ctype == "ctext") then
@@ -115,10 +127,8 @@ local function gen_asm_code(output, text, filename)
 		end
 	end
 
-	if sourcecode then
-		add_src_code(#sourcecode)
-	end
-	
+	add_src_code(#sourcecode)
+
 	return table.concat(out, "\n")
 end
 
@@ -172,8 +182,7 @@ function vm16.compile(pos, filename, readfile, output_format)
 	end
 	
 	if output_format == "asm" then
-		local text = readfile(pos, filename)
-		return true, gen_asm_code(output, text, filename)
+		return true, gen_asm_code(pos, output, filename, readfile)
 	end
 	
 	local asm = vm16.Asm:new({})

@@ -164,7 +164,7 @@ func_def:
 ]]--
 function BPars:func_def()
 	local ident = self:ident()
-	self:add_item("func", self.lineno, ident)
+	self:reg_func(ident)
 	self.func_name = ident
 	self:add_label(ident)
 	self:tk_match("(")
@@ -179,7 +179,6 @@ function BPars:func_def()
 	self:lvar_def_list();
 	self:stmnt_list()
 	self:func_return(ident)
-	self:add_item("endf", self.lineno, ident)
 	self:tk_match("}")
 end
 
