@@ -79,6 +79,7 @@ function  BScan:import_file(filename)
 	tScannedFiles[filename] = true
 	local is_asm_code = file_ext(filename) == "asm"
 	local i = vm16.BScan:new({
+		pos = self.pos,
 		readfile = self.readfile, 
 		is_asm_code = is_asm_code,
 		nested_calls = self.nested_calls + 1

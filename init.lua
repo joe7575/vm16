@@ -40,6 +40,7 @@ dofile(MP.."/bcomp/bparser.lua")
 dofile(MP.."/bcomp/bcompiler.lua")
 
 dofile(MP.."/programmer/lib.lua")
+dofile(MP.."/programmer/lookup.lua")
 dofile(MP.."/programmer/server.lua")
 dofile(MP.."/programmer/menubar.lua")
 dofile(MP.."/programmer/win_edit.lua")

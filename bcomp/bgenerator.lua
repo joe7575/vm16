@@ -235,6 +235,9 @@ end
 function BGen:gen_output()
 	local out = {}
 
+	-- "new file" line first
+	table.insert(out, table.remove(self.lCode, 1))
+	
 	if #self.lInit > 0 then
 		for _,item in ipairs(self.lInit) do
 			table.insert(out, item)

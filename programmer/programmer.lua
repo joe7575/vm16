@@ -205,7 +205,7 @@ end
 function vm16.update_programmer(cpu_pos, prog_pos, resp)
 	if cpu_pos and prog_pos then
 		local mem = prog.get_mem(prog_pos)
-		vm16.debug.on_update(prog_pos, mem)
+		vm16.debug.on_update(prog_pos, mem, resp)
 		M(prog_pos):set_string("formspec", prog.formspec(prog_pos, mem))
 	end
 end

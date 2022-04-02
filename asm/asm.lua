@@ -437,7 +437,7 @@ function Asm:assembler(filename, lToken)
 			elseif self.ctype == "ctext" then
 				extend(lOut, self:decode_ctext(tok))
 			elseif self.ctype == "endf" then
-				tok[ADDRESS] = self.address
+				tok[ADDRESS] = self.address - 1
 				append(lOut, tok)
 			else
 				append(lOut, tok)

@@ -31,7 +31,6 @@ end
 local function get_string(data)
 	local out = {}
 	for i = 1, 8 do
-		print(data[i])
 		out[i] = prog.to_string(data[i] or 0)
 	end
 	return table.concat(out, "")
@@ -40,44 +39,20 @@ end
 local function gen_varlist(pos, mem)
 	local out = {}
 	local cpu = vm16.get_cpu_reg(mem.cpu_pos)
-	if cpu and mem.tFunctions and mem.tLocals then
+	if cpu then
 		-- Globals
-		for _, name in ipairs(mem.lVars or {}) do
-			local addr = mem.tGlobals[name] or 0
-			out[#out + 1] = {name = name, addr = addr, type = "global"}
+		for _, item in ipairs(mem.lut:get_globals() or {}) do
+			out[#out + 1] = item
 		end
 		out[#out + 1] = {name = "", addr = 0}
 		-- Locals
-		local funcname = mem.tFunctions[mem.curr_lineno or 1] or ""
-		local t = mem.tLocals[funcname] or {}
-		for var, offs in pairs(t) do
+		local locals = mem.lut:get_locals(cpu.PC) or {}
+		for var, offs in pairs(locals) do
 			if var ~= "@nsv@" then
-				local addr = var_address(cpu, offs, t["@nsv@"])
+				local addr = var_address(cpu, offs, locals["@nsv@"])
 				out[#out + 1] = {name = var, addr = addr, type = "local"}
 			end
 		end
-	end
-	return out
-end
-
-local function globals(obj)
-	local out = {}
-	for _, item in ipairs(obj.lCode) do
-		if item[CTYPE] == "data" then
-			out[item[CODESTR]] = item[ADDRESS]
-		end
-	end
-	return out
-end
-
-local function functions(obj)
-	local out = {}
-	local fname = ""
-	for _, item in ipairs(obj.lCode) do
-		if item[CTYPE] == "func" then
-			fname = item[CODESTR]
-		end
-		out[item[LINENO]] = fname
 	end
 	return out
 end
@@ -149,18 +124,6 @@ local function mem_dump(pos, mem, x, y, xsize, ysize, fontsize)
 end
 
 function vm16.watch.init(pos, mem, obj)
-	mem.tGlobals = globals(obj)
-	mem.tLocals = obj.locals or {}
-	mem.tFunctions = functions(obj)
-
-	local last_used_mem_addr = mem.last_code_addr
-	mem.lVars = {}
-	for k,v in pairs(mem.tGlobals or {}) do
-		mem.lVars[#mem.lVars + 1] = k
-		last_used_mem_addr = math.max(last_used_mem_addr, v)
-	end
-	table.sort(mem.lVars)
-	mem.last_used_mem_addr = last_used_mem_addr
 end
 
 function vm16.watch.fs_window(pos, mem, x, y, xsize, ysize, fontsize)

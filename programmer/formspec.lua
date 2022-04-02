@@ -39,7 +39,7 @@ function prog.formspec(pos, mem)
 		textsize = tostring(textsize)
 	end
 
-	vm16.menubar.init(0.2, 10.4, 2.2)
+	vm16.menubar.init(0.2, 10.4, 2.0)
 
 	local windows
 	if mem.cpu_pos and vm16.is_loaded(mem.cpu_pos) then
