@@ -75,6 +75,7 @@ var_def:
 function BPars:var_def()
 	self:switch_to_var_def()
 	local ident = self:ident()
+	self:set_global(ident)
 	if self:tk_peek().val == "[" then
 		self:add_global(ident, true, true)
 		self:array_def(ident)
@@ -164,7 +165,7 @@ func_def:
 ]]--
 function BPars:func_def()
 	local ident = self:ident()
-	self:reg_func(ident)
+	self:set_global(ident)
 	self.func_name = ident
 	self:add_label(ident)
 	self:tk_match("(")

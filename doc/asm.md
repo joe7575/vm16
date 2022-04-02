@@ -64,17 +64,17 @@ Labels can be used in two different ways:
 - `jump  loop` is translated into an instruction with an absolute memory address
 - `jump +loop` is translated into an instruction with a relative address (+/- some addresses), so that the code can be relocated to a different memory address
 
-### Namespaces with local and global labels
+### Local and global labels
 
-The complete assembler program represents a namespace in which all labels are known. However, to divide the program into separate namespaces, the keyword `namespace` can be used. Labels now are `namespace` section local. To make a label globally available again, the keyword `global` is used.
+Labels (code and data) are valid only within the file they are defined. To be able to use labels from outside (e.g. imported file), labels have to be declared as global. To make a label globally available, the keyword `global` is used.
 
-The following example should explain the usage:
+The following example two global labels:
 
 ```asm
 global func1
-global func2
+global var1
 
-; Function 1 with a local `loop` label
+.code
 func1:
   ...
 loop:
@@ -82,15 +82,8 @@ loop:
   djnz A, loop
   ret
   
-namespace ;--------------------------------------------------
-
-; Function 2 with the same local `loop` label
-func2:
-  ...
-loop:
-  ....
-  djnz A, loop
-  ret
+  .data
+var1: 100
 ```
 
 

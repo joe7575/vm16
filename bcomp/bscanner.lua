@@ -139,7 +139,8 @@ function BScan:tokenize(text)
 				self.is_import_line = nil
 				self:import_file(string.sub(str, 2, -2))
 			else
-				table.insert(lToken, {type = T_STRING, val = str, lineno = self.lineno})
+				local str2 = string.sub(str, 1, -2) .. '\\0"'
+				table.insert(lToken, {type = T_STRING, val = str2, lineno = self.lineno})
 			end
 			idx = idx + #str
 		else

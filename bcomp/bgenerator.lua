@@ -41,7 +41,7 @@ function BGen:new(o)
 	o.lCode = {}
 	o.lData = {}
 	o.lText = {}
-	o.lFunc = {}
+	o.lGlobal = {}
 	setmetatable(o, self)
 	self.__index = self
 	return o
@@ -197,9 +197,9 @@ function BGen:add_item(ctype, lineno, val)
 	table.insert(self.lCode, {ctype, lineno, val})
 end
 
--- For functions to be declared as global
-function BGen:reg_func(name)
-	table.insert(self.lFunc, name)
+-- For functions and Variables to be declared as global
+function BGen:set_global(name)
+	table.insert(self.lGlobal, name)
 end
 
 function BGen:add_data(ident, val)
@@ -244,8 +244,8 @@ function BGen:gen_output()
 	-- "new file" line first
 	table.insert(out, table.remove(self.lCode, 1))
 	
-	if #self.lFunc > 0 then
-		for _,name in ipairs(self.lFunc) do
+	if #self.lGlobal > 0 then
+		for _,name in ipairs(self.lGlobal) do
 			table.insert(out, {"code", 0, "global " .. name})
 		end
 	end
