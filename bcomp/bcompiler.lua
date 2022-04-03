@@ -18,7 +18,6 @@
   {"data", 3, "va1: 0"}         -- Variable
   {"ctext", 4, "str: 'Hallo'"}  -- String
   {"func", 5, "foo"}            -- Start of function 'foo' (debugging)
-  {"endf", 6, "foo"}            -- End of function 'foo' (debugging)
   {"call", 7, "foo"}            -- Call of function 'foo' (debugging)
 
   And a table with local variable definitions:

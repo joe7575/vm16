@@ -100,9 +100,9 @@ Licensed under the GNU GPLv3 (See LICENSE.txt)
 
 **Work in progress!**
 
-- Simplify and standardize  compiler and assembler output
-- Enable import of C and ASM files
-- Update and improve debugger
+- Simplify and standardize compiler and assembler output
+- Enable import of C and ASM files in C files
+- Update and improve debugger (add step-in and step-out buttons)
 - Add more example code to the demo CPU
 - Many improvements and bug fixes
 
