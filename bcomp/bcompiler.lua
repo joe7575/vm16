@@ -32,7 +32,7 @@
  
 --]]
 
-local version = "1.1"
+local version = "1.2"
 
 local function error_msg(err)
 	local t = string.split(err, "\001")

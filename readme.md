@@ -96,6 +96,16 @@ Licensed under the GNU GPLv3 (See LICENSE.txt)
 
 ## History
 
+### API v3.3/Core v2.6.5/asm v2.3/Compiler v1.2 (2022-04-03)
+
+**Work in progress!**
+
+- Simplify and standardize  compiler and assembler output
+- Enable import of C and ASM files
+- Update and improve debugger
+- Add more example code to the demo CPU
+- Many improvements and bug fixes
+
 ### API v3.3/Core v2.6.5/asm v2.2/Compiler v1.1 (2022-03-26)
 
 **Work in progress!**
