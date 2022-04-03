@@ -22,7 +22,7 @@ function Lut:new()
 	o.lineno2addr = {}
 	o.step_in = {}
 	o.globals = {}
-	o.last_lineno = 0
+	o.last_lineno = 0  -- source file size in lines
 	o.last_used_mem_addr = 0
 	setmetatable(o, self)
 	self.__index = self
@@ -84,18 +84,22 @@ end
 
 function Lut:get_locals(address)
 	print("Lut:get_locals", address)
-	local item = self:get_item(address or 0)
-	if item and self.locals[item.func] then
-		return self.locals[item.func]
+	if address then
+		local item = self:get_item(address or 0)
+		if item and self.locals[item.func] then
+			return self.locals[item.func]
+		end
 	end
 	print("Lut:get_locals", "oops")
 end
 
 function Lut:get_item(address)
 	print("Lut:get_item", address)
-	for _, item in ipairs(self.items) do
-		if address >= item.addresses[1] and address <= item.addresses[2] then
-			return item
+	if address then
+		for _, item in ipairs(self.items) do
+			if address >= item.addresses[1] and address <= item.addresses[2] then
+				return item
+			end
 		end
 	end
 	print("Lut:get_item", "oops")
@@ -122,11 +126,11 @@ function Lut:get_line(address)
 end
 
 function Lut:get_address(file, lineno)
-	print("Lut:get_address", file, lineno)
+	--print("Lut:get_address", file, lineno)
 	if file and lineno and self.lineno2addr[file] and self.lineno2addr[file][lineno] then
 		return self.lineno2addr[file][lineno]
 	end
-	print("Lut:get_address", "oops")
+	--print("Lut:get_address", "oops")
 end
 
 function Lut:find_next_address(address)
@@ -168,6 +172,20 @@ function Lut:get_stepin_address(file, lineno)
 		return self.step_in[file][lineno]
 	end
 	print("Lut:get_stepin_address", "oops")
+end
+
+function Lut:get_function_address(func)
+	print("Lut:get_function_address", func)
+	for _, item in ipairs(self.items) do
+		if item.func == func then
+			return item.addresses[1]
+		end
+	end
+	print("Lut:get_function_address", "oops")
+end
+
+function Lut:get_program_size()
+	return self.last_used_mem_addr or 0
 end
 
 vm16.Lut = Lut

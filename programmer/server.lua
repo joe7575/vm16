@@ -34,13 +34,15 @@ local function get_filelist(pos, files)
 		files = minetest.deserialize(s) or {}
 	end
 	local out = {}
-	for name, text in pairs(files) do
-		out[#out + 1] = {name = name, attr = "rw"}
-	end
 	local mem = prog.get_mem(pos)
 	mem.ro_files = mem.ro_files or {}
 	for name, text in pairs(mem.ro_files) do
 		out[#out + 1] = {name = name, attr = "ro"}
+	end
+	for name, text in pairs(files) do
+		if not mem.ro_files[name] then
+			out[#out + 1] = {name = name, attr = "rw"}
+		end
 	end
 	table.sort(out, order)
 	return out

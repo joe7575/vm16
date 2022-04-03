@@ -13,95 +13,16 @@
 -- for lazy programmers
 local M = minetest.get_meta
 local H = minetest.hash_node_position
+local MP = minetest.get_modpath("vm16")
 local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
 local S2P = function(s) return minetest.string_to_pos(s) end
 
+local Files = dofile(MP .. "/demo/files.lua")
 local RADIUS = 3    -- for I/O nodes
 
 local Inputs = {}   -- [hash] = {addr = value}
 local Outputs = {}  -- [hash] = {addr = pos}
 local IONodes = {}  -- Known I/O nodes
-
--- Will be added to the programmer file system as read-only C-file.
-local Example1 = [[
-// Read button on input #1 and
-// control demo lamp on output #1.
-
-func main() {
-  var idx = 0;
-
-  while(1){
-    if(input(1) == 1) {
-      output(1, idx);
-      idx = (idx + 1) % 64;
-    } else {
-      output(1, 0);
-    }
-    sleep(2);
-  }
-}
-]]
-
--- Will be added to the programmer file system as read-only C-file.
-local Example2 = [[
-// Output some characters on the
-// programmer status line (output #0).
-
-var max = 32;
-
-func get_char(i) {
-  return 0x40 + i;
-}
-
-func main() {
-  var i;
-
-  for(i = 0; i < max; i++) {
-    output(0, get_char(i));
-  }
-}
-]]
-
--- Will be added to the programmer file system as read-only C-file.
-local Example3 = [[
-// Example with inline assembler
-
-func main() {
-  var idx = 0;
-
-  while(1){
-    if(input(1) == 1) {
-      output(1, idx);
-      //idx = (idx + 1) % 64;
-      _asm_{
-        add [SP+0], #1
-        mod [SP+0], #64
-      }
-    } else {
-      output(1, 0);
-    }
-    sleep(2);
-  }
-}
-
-]]
-
-local Example4 = [[
-; Read button on input #1 and
-; control demo lamp on output #1.
-
-  move A, #00  ; color value in A
-
-loop:
-  nop          ; 100 ms delay
-  nop          ; 100 ms delay
-  in   B, #1   ; read switch value
-  bze  B, loop
-  and  A, #$3F ; values from 1 to 64
-  add  A, #01
-  out  #01, A  ; output color value
-  jump loop
-]]
 
 -- Will be added to the programmer file system as read-only TXT-file.
 -- Can be used as CPU description.
@@ -145,6 +66,7 @@ local cpu_def = {
 		if address == 0 then
 			local prog_pos = S2P(M(pos):get_string("prog_pos"))
 			vm16.putchar(prog_pos, val1)
+			return 500  -- number of instructions for putchar
 		else
 			local hash = H(pos)
 			local item = Outputs[hash] and Outputs[hash][address]
@@ -164,13 +86,15 @@ local cpu_def = {
 	end,
 	on_init = function(pos, prog_pos)
 		M(pos):set_string("prog_pos", P2S(prog_pos))
-		M(pos):set_int("running", 0)
 		local s = find_io_nodes(pos)
-		vm16.add_ro_file(prog_pos, "example1.c", Example1)
-		vm16.add_ro_file(prog_pos, "example2.c", Example2)
-		vm16.add_ro_file(prog_pos, "example3.c", Example3)
-		vm16.add_ro_file(prog_pos, "example.asm", Example4)
-		vm16.add_ro_file(prog_pos, "info.txt", Info .. s)
+		vm16.add_ro_file(prog_pos, "example1.c",   Files.example1_c)
+		vm16.add_ro_file(prog_pos, "example2.c",   Files.example2_c)
+		vm16.add_ro_file(prog_pos, "example3.c",   Files.example3_c)
+		vm16.add_ro_file(prog_pos, "example4.c",   Files.example4_c)
+		vm16.add_ro_file(prog_pos, "example1.asm", Files.example1_asm)
+		vm16.add_ro_file(prog_pos, "stdio.asm",    Files.stdio_asm)
+		vm16.add_ro_file(prog_pos, "mem.asm",      Files.mem_asm)
+		vm16.add_ro_file(prog_pos, "info.txt",     Info .. s)
 	end,
 	on_mem_size = function(pos)
 		return 4  -- 1024 words

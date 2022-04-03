@@ -13,7 +13,7 @@
 ]]--
 
 local KEYWORDS = {var=1, func=1, ["while"]=1, ["return"]=1, input=1, output=1,
-                  putchar=1, system=1, sleep=1, ["if"]=1, ["else"]=1,
+                  system=1, sleep=1, ["if"]=1, ["else"]=1,
                   ["for"]=1, ["switch"]=1, ["case"]=1, ["break"]=1, ["continue"]=1, ["goto"]=1,
                   ["and"]=1, ["or"]=1, ["not"]=1, ["xor"]=1, ["mod"]=1,
                   A=1, B=1, C=1, D=1, X=1, Y=1, PC=1, SP=1,
@@ -25,6 +25,7 @@ function BSym:bsym_init()
 	self:bscan_init()
 	self.constants = {}
 	self.globals = {}
+	self.functions = {}
 	self.arrays = {}
 	self.locals = {}
 	self.all_locals = {}
@@ -91,12 +92,12 @@ end
 function BSym:add_global(ident, value, is_array)
 	if type(value) == "number" and type(self.globals[ident]) == "number" then
 		if value ~= self.globals[ident] then
-			error(string.format("Wrong number of parameters for '%s'", ident))
+			self:error_msg(string.format("Wrong number of parameters for '%s'", ident))
 		end
 	elseif self.globals[ident] then
-		error(string.format("Redefinition of '%s'", ident))
+		self:error_msg(string.format("Redefinition of '%s'", ident))
 	elseif KEYWORDS[ident] then
-		error(string.format("'%s' is a protected keyword", ident))
+		self:error_msg(string.format("'%s' is a protected keyword", ident))
 	end
 	self.globals[ident] = value
 	self.arrays[ident] = is_array
@@ -114,6 +115,14 @@ function BSym:is_array(val)
 	end
 end
 
+function BSym:add_func(ident)
+	self.functions[ident] = true
+end
+
+function BSym:is_func(ident)
+	return self.functions[ident] ~= nil
+end
+
 function BSym:add_const(ident, val)
 	self.constants[ident] = val
 end
@@ -124,12 +133,6 @@ end
 
 function BSym:get_const(ident)
 	return self.constants[ident]
-end
-
-function BSym:num_func_param(val)
-	if self.globals[val] and (self.globals[val]) == "number" then
-		return self.globals[val]
-	end
 end
 
 vm16.BSym = BSym

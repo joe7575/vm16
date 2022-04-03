@@ -17,7 +17,7 @@ local T_NUMBER  = vm16.T_NUMBER
 local T_OPERAND = vm16.T_OPERAND
 local T_STRING  = vm16.T_STRING
 
-local BUILDIN  = {system=1, input=1, output=1, putchar=1, sleep=1}
+local BUILDIN  = {system=1, input=1, output=1, sleep=1}
 
 local BExpr = vm16.BSym
 
@@ -211,7 +211,7 @@ function BExpr:factor()
 		self:tk_match(T_STRING)
 		return "#" .. lbl
 	else
-		error(string.format("Syntax error at '%s'", tok.val or ""))
+		self:error_msg(string.format("Syntax error at '%s'", tok.val or ""))
 		return tok.val or ""
 	end
 end
@@ -219,7 +219,6 @@ end
 --[[
 buildin_call:
     = system '(' expression ',' expression  ',' expression ')'
-    | putchar '(' expression ')'
     | sleep '(' expression ')'
     | input '(' expression ')'
     | output '(' expression ',' expression { ',' expression } ')'
@@ -237,9 +236,6 @@ function BExpr:buildin_call()
 		self:add_instr("move", "A", opnd2)
 		self:add_instr("move", "B", opnd3)
 		self:add_instr("sys", opnd1)
-	elseif ident == "putchar" then
-		self:expression()
-		self:add_instr("sys", "#0")
 	elseif ident == "sleep" then
 		local opnd = self:expression()
 		self:add_instr("move", "A", opnd)
@@ -266,15 +262,15 @@ end
 
 --[[
 func_call:
-    | ident '(' ')'
-    | ident '(' expression { ',' expression } ')'
+    | address '(' ')'
+    | address '(' expression { ',' expression } ')'
 ]]--
 function BExpr:func_call()
 	self:push_regs()
 	-- A function call as parameter is a recursive call to 'func_call'
 	table.insert(self.num_param_stack, self.num_param)
 	self.num_param = 0
-	local ident = self:ident()
+	local addr = self:address()
 	self:tk_match("(")
 	if self:tk_peek().val ~= ")" then
 		while true do
@@ -289,15 +285,44 @@ function BExpr:func_call()
 		end
 	end
 	self:tk_match(")")
-	self:add_item("call", self.lineno, ident)
-	self:add_instr("call", ident)
+	self:add_item("call", self.lineno, addr)
+	self:add_instr("call", addr)
 	if self.num_param > 0 then
 		self:add_instr("add", "SP", "#" .. self.num_param)
 	end
-	self:add_global(ident or "<unknown>", self.num_param)
+	if self:is_func(ident) then
+		self:add_global(ident, self.num_param)
+	end
 	self.num_param = table.remove(self.num_param_stack)
 	local opnd = self:pop_regs()
 	return opnd
+end
+
+--[[
+  address:
+    | <func>
+    | <local variabe>
+    | <global variable>
+    | postfix
+]]--
+function BExpr:address()
+	local ident = self:ident()
+	if not self.new_local_variables and not self:local_get(ident) 
+	and not self:is_global_var(ident) and not self:is_func(ident) then
+		self:error_msg(string.format("Unknown variable '%s'", ident or ""))
+	end
+	if self:is_func(ident) then
+		return ident
+	elseif self:local_get(ident) then
+		local opnd = self:local_get(ident)
+		self:add_instr("move", "A", opnd)
+		return "A"
+	elseif self:is_global_var(ident) then
+		self:add_instr("move", "A", ident)
+		return "A"
+	else
+		self:error_msg(string.format("Syntax error at '%s'", tok.val or ""))
+	end
 end
 
 --[[
@@ -306,10 +331,11 @@ end
 ]]--
 function BExpr:variable()
 	local ident = self:ident()
-	if not self.new_local_variables and not self:local_get(ident) and not self:is_global_var(ident) then
-		error(string.format("Unknown variable '%s'", ident or ""))
+	if not self.new_local_variables and not self:local_get(ident) 
+	and not self:is_global_var(ident) and not self:is_func(ident) then
+		self:error_msg(string.format("Unknown variable '%s'", ident or ""))
 	end
-	if self:is_array(ident) then
+	if self:is_array(ident) or self:is_func(ident) then
 		return "#" .. ident
 	end
 	return self:local_get(ident) or ident or ""

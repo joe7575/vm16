@@ -63,7 +63,7 @@ function BPars:definition()
 		self:add_asm_token(tok)
 		self:tk_match(T_ASMCODE)
 	elseif tok.val ~= nil then
-		error(string.format("Unexpected item '%s'", tok.val))
+		self:error_msg(string.format("Unexpected item '%s'", tok.val))
 	end
 end
 
@@ -166,6 +166,7 @@ func_def:
 function BPars:func_def()
 	local ident = self:ident()
 	self:set_global(ident)
+	self:add_func(ident)
 	self.func_name = ident
 	self:add_label(ident)
 	self:tk_match("(")
@@ -472,7 +473,7 @@ function BPars:left_value()
 		local ident = self:tk_match(T_IDENT).val
 		local lval = self:local_get(ident) or (self.globals[ident] and ident)
 		if not lval then
-			error(string.format("Unknown identifier '%s'", ident))
+			self:error_msg(string.format("Unknown identifier '%s'", ident))
 		end
 		local reg = self:next_free_indexreg()
 		self:add_instr("move", reg, lval)
@@ -485,7 +486,7 @@ function BPars:left_value()
 			local ident = self:tk_match(T_IDENT).val
 			local lval = self:local_get(ident) or (self.globals[ident] and ident)
 			if not lval then
-				error(string.format("Unknown identifier '%s'", ident))
+				self:error_msg(string.format("Unknown identifier '%s'", ident))
 			end
 			return lval
 		end

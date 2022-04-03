@@ -71,9 +71,9 @@ local function reg_dump(pos, mem, x, y)
 	return "box[8.8,0.6;9,0.8;#060]" ..
 		"label[8.8,0.4;Registers]" ..
 		"textarea[8.8,0.6;9.6,0.8;;;" ..
-		" A    B    C    D     X    Y    PC   SP   BP\n" ..
+		" A    B    C    D     X    Y    PC   SP\n" ..
 		string.format("%04X %04X %04X %04X", cpu.A, cpu.B, cpu.C, cpu.D) .. "  " ..
-		string.format("%04X %04X %04X %04X %04X", cpu.X, cpu.Y, cpu.PC, cpu.SP, cpu.BP) .. "]"
+		string.format("%04X %04X %04X %04X", cpu.X, cpu.Y, cpu.PC, cpu.SP) .. "]"
 end
 
 function vm16.memory.init(pos, mem)

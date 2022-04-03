@@ -187,7 +187,7 @@ function Asm:scanner(text, filename)
 		self:err_msg("Invalid ASCII file format!")
 	end
 
-	append(lOut, {"file", 0, "test.c"})
+	append(lOut, {"file", 0, filename})
 	self.ctype = "code"
 
 	for lineno, txtline in ipairs(vm16.splitlines(text)) do

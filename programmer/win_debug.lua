@@ -31,7 +31,9 @@ local function format_asm_code(mem, text)
 		local saddr = ""
 		local is_curr_line = false
 		local addr2 = mem.lut:get_address(mem.file_name, lineno)
-		saddr = string.format("%04X: ", addr2 or 0)
+		if addr2 then
+			saddr = string.format("%04X: ", addr2)
+		end
 		is_curr_line = addr2 == addr
 		if is_curr_line and mem.breakpoint_lines[lineno] then
 			tag = "*>"
@@ -93,7 +95,6 @@ end
 local function set_temp_breakpoint(pos, mem, lineno)
 	lineno = lineno or mem.curr_lineno or 1
 	local addr = mem.lut:get_address(mem.file_name, lineno)
-	print("set_temp_breakpoint", addr, lineno)
 	if addr and not mem.breakpoint_lines[lineno] then
 		vm16.set_breakpoint(mem.cpu_pos, addr, mem.breakpoints)
 		mem.temp_breakpoint = addr
@@ -121,12 +122,11 @@ end
 function vm16.debug.init(pos, mem, obj)
 	mem.breakpoints = {}
 	mem.breakpoint_lines = {}
-	mem.last_lineno = 1  -- source file size in lines
-	mem.curr_lineno = 1  -- PC position
 	mem.output = ""
 	mem.lut = vm16.Lut:new()
 	mem.lut:init(obj)
 
+	--print(vm16.dump_obj_code_listing(obj))
 	mem.cpu_def = prog.get_cpu_def(mem.cpu_pos)
 	local mem_size = mem.cpu_def and mem.cpu_def.on_mem_size(mem.cpu_pos) or 3
 	vm16.create(mem.cpu_pos, mem_size)
@@ -141,7 +141,18 @@ function vm16.debug.init(pos, mem, obj)
 	vm16.set_pc(mem.cpu_pos, 0)
 	mem.mem_size = vm16.mem_size(mem.cpu_pos)
 	mem.startaddr = 0
-	mem.cursorline = mem.lut:get_line(0) or 1
+	
+	mem.main_filename = mem.file_name
+	local address = mem.lut:get_function_address("main")
+	if address then
+		local lineno = mem.lut:get_line(address)
+		set_temp_breakpoint(pos, mem, lineno)
+		start_cpu(mem)
+	else
+		local lineno = mem.lut:get_line(0)
+		mem.cursorline = lineno
+		mem.curr_lineno = lineno  -- PC position
+	end
 end
 
 function vm16.debug.on_update(pos, mem, resp)
@@ -160,7 +171,6 @@ function vm16.debug.on_update(pos, mem, resp)
 end
 
 local function fs_window(pos, mem, x, y, xsize, ysize, fontsize, text)
-	print("fs_window")
 	local color = mem.running and "#AAA" or "#FFF"
 	local filename = mem.file_name or ""
 	local code
@@ -182,12 +192,14 @@ function vm16.debug.formspec(pos, mem, textsize)
 		vm16.menubar.add_button("stop", "Stop")
 	else
 		vm16.menubar.add_button("edit", "Edit")
-		vm16.menubar.add_button("step", "Step")
-		vm16.menubar.add_button("stepin", "Step in")
-		vm16.menubar.add_button("stepout", "Step out")
-		vm16.menubar.add_button("runto", "Run to C")
-		vm16.menubar.add_button("run", "Run")
-		vm16.menubar.add_button("reset", "Reset")
+		if mem.lut then
+			vm16.menubar.add_button("step", "Step")
+			vm16.menubar.add_button("stepin", "Step in")
+			vm16.menubar.add_button("stepout", "Step out")
+			vm16.menubar.add_button("runto", "Run to C")
+			vm16.menubar.add_button("run", "Run")
+			vm16.menubar.add_button("reset", "Reset")
+		end
 	end
 	mem.status = mem.running and "Running..." or minetest.formspec_escape("Debug  |  Out[0]: " .. (mem.output or ""))
 	if mem.file_text then
@@ -206,7 +218,7 @@ function vm16.debug.on_receive_fields(pos, fields, mem)
 		minetest.get_node_timer(mem.cpu_pos):stop()
 		vm16.destroy(mem.cpu_pos)
 		mem.error = nil
-	elseif fields.code then
+	elseif fields.code and mem.lut then
 		local evt = minetest.explode_table_event(fields.code)
 		if evt.type == "DCL" then
 			set_breakpoint(pos, mem, tonumber(evt.row))
@@ -216,7 +228,7 @@ function vm16.debug.on_receive_fields(pos, fields, mem)
 			return true  -- repaint formspec
 		end
 	elseif fields.step then
-		if vm16.is_loaded(mem.cpu_pos) then
+		if vm16.is_loaded(mem.cpu_pos) and mem.lut then
 			if mem.file_ext == "asm" then
 				vm16.run(mem.cpu_pos, mem.cpu_def, mem.breakpoints, 1)
 				local addr = vm16.get_pc(mem.cpu_pos)
@@ -230,7 +242,7 @@ function vm16.debug.on_receive_fields(pos, fields, mem)
 			end
 		end
 	elseif fields.stepin then
-		if vm16.is_loaded(mem.cpu_pos) then
+		if vm16.is_loaded(mem.cpu_pos) and mem.lut then
 			local addr = mem.lut:get_stepin_address(mem.file_name, mem.curr_lineno) or 0
 			local item = loadfile_by_address(mem, addr)
 			if item then
@@ -240,7 +252,7 @@ function vm16.debug.on_receive_fields(pos, fields, mem)
 			end
 		end
 	elseif fields.stepout then
-		if vm16.is_loaded(mem.cpu_pos) then
+		if vm16.is_loaded(mem.cpu_pos) and mem.lut then
 			local cpu = vm16.get_cpu_reg(mem.cpu_pos)
 			local addr = vm16.peek(mem.cpu_pos, cpu.BP) or 0
 			addr = mem.lut:find_next_address(addr)
@@ -252,24 +264,39 @@ function vm16.debug.on_receive_fields(pos, fields, mem)
 			end
 		end
 	elseif fields.runto then
-		if vm16.is_loaded(mem.cpu_pos) then
+		if vm16.is_loaded(mem.cpu_pos) and mem.lut then
 			set_temp_breakpoint(pos, mem, mem.cursorline)
 			start_cpu(mem)
 		end
 	elseif fields.run then
-		if vm16.is_loaded(mem.cpu_pos) then
+		if vm16.is_loaded(mem.cpu_pos) and mem.lut then
 			start_cpu(mem)
 		end
 	elseif fields.reset then
-		if vm16.is_loaded(mem.cpu_pos) then
+		if vm16.is_loaded(mem.cpu_pos) and mem.lut then
 			vm16.set_cpu_reg(mem.cpu_pos, {A=0, B=0, C=0, D=0, X=0, Y=0, SP=0, PC=0})
 			mem.output = ""
-			mem.cursorline = 1
-			mem.curr_lineno = 1
+			local address = mem.lut:get_function_address("main")
+			if address then
+				local item = loadfile_by_address(mem, address)
+				if item then
+					local lineno = mem.lut:get_line(address)
+					reset_temp_breakpoint(pos, mem)
+					set_temp_breakpoint(pos, mem, lineno)
+					start_cpu(mem)
+				end
+			else
+				local lineno = mem.lut:get_line(0)
+				mem.cursorline = lineno
+				mem.curr_lineno = lineno
+			end
 		end
 	elseif fields.stop then
 		if mem.running then
 			stop_cpu(mem)
+		end
+		if not mem.lut then
+			vm16.destroy(mem.cpu_pos)
 		end
 	elseif fields.inc then
 		mem.startaddr = math.min(mem.startaddr + 64, (mem.mem_size or 64) - 64)

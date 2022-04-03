@@ -75,8 +75,8 @@ end
 local function memory_bar(pos, mem, x, y, xsize, ysize)
 	local mem_size = vm16.mem_size(mem.cpu_pos)
 	local cpu = vm16.get_cpu_reg(mem.cpu_pos)
-	if mem_size and cpu and mem.last_used_mem_addr then
-		local x1 = x + xsize * (mem.last_used_mem_addr / mem_size)
+	if mem_size and cpu and mem.lut then
+		local x1 = x + xsize * (mem.lut:get_program_size() / mem_size)
 		local x2 = x + xsize * ((cpu.TOS % mem_size) / mem_size)
 		local x3 = x + xsize * 1.0
 		return "label[" .. x .. "," .. (y + 0.4) .. ";Memory (" .. mem_size .. ")]" ..
@@ -93,34 +93,37 @@ local function mem_dump(pos, mem, x, y, xsize, ysize, fontsize)
 	local item = mem.watch_varlist[mem.last_watch_idx]
 	local str = get_string(data)
 	local var
-	if mem.pointaddr then
-		var = minetest.formspec_escape(string.format("'%s' => %04X = \"%s\"",  item.name, mem.pointaddr, str))
-	else
-		var = minetest.formspec_escape(string.format("'%s' at %04X = \"%s\"",  item.name, item.addr, str))
-	end
-	local lines = {"container[" .. x .. "," .. y .. "]" ..
-		"style_type[textarea;font=mono;font_size="  .. fontsize .. "]" ..
-		"image_button[4.9,0.1;0.5,0.5;vm16_arrow.png;watch_dec;]" ..
-		"image_button[5.5,0.1;0.5,0.5;vm16_arrow.png^[transformR180;watch_inc;]" ..
-		"label[0,0.4;" .. var .. "]" ..
-		"box[0,0.6;" .. xsize .. "," .. (ysize - 0.6) .. ";#006]" ..
-		"textarea[0,0.6;" .. (xsize + 0.4) .. "," .. (ysize - 0.6) .. ";;;"}
-
-	if data then
-		for i = 0,3 do
-			local offs = i * 4
-			table.insert(lines, string.format("%04X: %04X %04X %04X %04X",
-				mem.startaddr + offs, data[1+offs], data[2+offs], data[3+offs], data[4+offs]))
-			if i < 3 then
-				table.insert(lines, "\n")
-			end
+	if data and item and str then
+		if mem.pointaddr then
+			var = minetest.formspec_escape(string.format("'%s' => %04X = \"%s\"",  item.name, mem.pointaddr, str))
+		else
+			var = minetest.formspec_escape(string.format("'%s' at %04X = \"%s\"",  item.name, item.addr, str))
 		end
-	else
-		table.insert(lines, "Error")
+		local lines = {"container[" .. x .. "," .. y .. "]" ..
+			"style_type[textarea;font=mono;font_size="  .. fontsize .. "]" ..
+			"image_button[4.9,0.1;0.5,0.5;vm16_arrow.png;watch_dec;]" ..
+			"image_button[5.5,0.1;0.5,0.5;vm16_arrow.png^[transformR180;watch_inc;]" ..
+			"label[0,0.4;" .. var .. "]" ..
+			"box[0,0.6;" .. xsize .. "," .. (ysize - 0.6) .. ";#006]" ..
+			"textarea[0,0.6;" .. (xsize + 0.4) .. "," .. (ysize - 0.6) .. ";;;"}
+
+		if data then
+			for i = 0,3 do
+				local offs = i * 4
+				table.insert(lines, string.format("%04X: %04X %04X %04X %04X",
+					mem.startaddr + offs, data[1+offs], data[2+offs], data[3+offs], data[4+offs]))
+				if i < 3 then
+					table.insert(lines, "\n")
+				end
+			end
+		else
+			table.insert(lines, "Error")
+		end
+		table.insert(lines, "]")
+		table.insert(lines, "container_end[]")
+		return table.concat(lines, "")
 	end
-	table.insert(lines, "]")
-	table.insert(lines, "container_end[]")
-	return table.concat(lines, "")
+	return ""
 end
 
 function vm16.watch.init(pos, mem, obj)

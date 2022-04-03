@@ -60,3 +60,26 @@ function vm16.prog.get_cpu_def(cpu_pos)
 		return ndef.vm16_cpu
 	end
 end
+
+function vm16.dump_obj_code_listing(obj)
+	local mydump = function(tbl)
+		local t = {}
+		for _,e in ipairs(tbl or {}) do
+			if type(e) == "number" then
+				table.insert(t, string.format("%04X", e))
+			else
+				table.insert(t, "'"..e.."'")
+			end
+		end
+		return table.concat(t, " ")
+	end
+
+	local out = {"##### VM16 Object Code #####"}
+	if obj and obj.lCode then
+		for _,item in ipairs(obj.lCode) do
+			local ctype, lineno, scode, address, opcodes = unpack(item)
+			table.insert(out, string.format("%5s %3d %04X: %-15s %s", ctype, lineno, address or 0, scode, mydump(opcodes)))
+		end
+	end
+	return table.concat(out, "\n")
+end
