@@ -152,7 +152,7 @@ function BPars:const_list(ident, size)
 		self:append_val(tok.val)
 		size = size - 1
 	end
-	
+
 	while size > 0 do
 		self:append_val(0)
 		size = size - 1
@@ -390,7 +390,7 @@ assignment:
     = left_value '=' expression
     | left_value '++'
     | left_value '--'
-	| 
+	|
 ]]--
 function BPars:assignment()
 	if self:tk_peek().val == ";" then

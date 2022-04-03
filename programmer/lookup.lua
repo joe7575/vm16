@@ -40,7 +40,7 @@ function Lut:init(obj)
 
 	local add = function(_file, _func, l1, l2, a1, a2)
 		if a1 then
-			self.items[#self.items + 1] = 
+			self.items[#self.items + 1] =
 				{file = _file, func = _func, lines = {l1, l2}, addresses = {a1, a2}}
 		end
 	end
@@ -72,7 +72,7 @@ function Lut:init(obj)
 		end
 	end
 	add(file, func, lineno1, lineno2, address1, address2)
-	
+
 	self.locals = obj.locals
 	table.sort(self.globals, function(a,b) return a.name < b.name end)
 end

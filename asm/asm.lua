@@ -9,7 +9,7 @@
   See LICENSE.txt for more information
 
   The Assembler accepts a list with following code items:
-  
+
   {CTYPE,  LINENO,  CODESTR,      ADDRESS,  OPCODES}
   {"code",  2,     "move A, #1",   10,     {0x1020, 0x0001}}
 
@@ -415,7 +415,7 @@ function Asm:assembler(filename, lToken)
 	self.filename = filename
 	self.all_symbols[self.filename] = {}
 	self.symbols = self.all_symbols[self.filename]
-	
+
 	for _,tok in ipairs(lToken or {}) do
 		self.lineno = tok[LINENO]
 		tok = self:global_def(tok)
@@ -431,7 +431,7 @@ function Asm:assembler(filename, lToken)
 			append(lOut, {"func", self.lineno, self.set_func})
 			self.set_func = nil
 		end
-		
+
 		if tok[CODESTR] ~= "" then
 			if self.ctype == "code" then
 				append(lOut, self:decode_code(tok))

@@ -141,7 +141,7 @@ function vm16.debug.init(pos, mem, obj)
 	vm16.set_pc(mem.cpu_pos, 0)
 	mem.mem_size = vm16.mem_size(mem.cpu_pos)
 	mem.startaddr = 0
-	
+
 	mem.main_filename = mem.file_name
 	local address = mem.lut:get_function_address("main")
 	if address then

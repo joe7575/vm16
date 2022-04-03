@@ -9,19 +9,19 @@
   See LICENSE.txt for more information
 
   Scanner/Tokenizer
-  
+
   The Scanner is called recursive to handle import files.
   It generates a list with tokens according to:
-  
+
   {type = T_IDENT, val = "while", lineno = 5}
   {type = T_BRACE, val = "(", lineno = 5}
   {type = T_NUMBER, val = 1, lineno = 5}
   {type = T_BRACE, val = ")", lineno = 5}
-  
+
   {type = T_ASMSRC, val = "move A, #1", lineno = 7}
-  
+
   {type = T_NEWFILE, val = "test.c", lineno = 8}
-  
+
 ]]--
 
 local IDENT1   = "[A-Za-z_]+"
@@ -80,7 +80,7 @@ function  BScan:import_file(filename)
 	local is_asm_code = file_ext(filename) == "asm"
 	local i = vm16.BScan:new({
 		pos = self.pos,
-		readfile = self.readfile, 
+		readfile = self.readfile,
 		is_asm_code = is_asm_code,
 		nested_calls = self.nested_calls + 1
 	})
@@ -92,7 +92,7 @@ end
 function BScan:tokenize(text)
 	local idx = 1
 	local size = #text
-	
+
 	while idx <= size do
 		local ch = text:sub(idx, idx)
 		if ch:match(SPACE) then
@@ -171,7 +171,7 @@ function BScan:scanner(filename)
 			self:tokenize(line)
 		end
 	end
-	
+
 	if self.nested_calls == 0 then
 		self.lTok = lToken
 		lToken = {}
@@ -199,7 +199,7 @@ end
 
 function BScan:scan_dbg_dump()
 	local out = {}
-	
+
 	for idx,tok in ipairs(self.lTok) do
 		if tok.type == T_NEWFILE then
 			out[idx] = string.format('%8s: #### "%s" ####', lTypeString[tok.type], tok.val)
@@ -207,7 +207,7 @@ function BScan:scan_dbg_dump()
 			out[idx] = string.format('%8s: (%d) "%s"', lTypeString[tok.type], tok.lineno, tok.val)
 		end
 	end
-	
+
 	return table.concat(out, "\n")
 end
 

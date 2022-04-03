@@ -307,7 +307,7 @@ end
 ]]--
 function BExpr:address()
 	local ident = self:ident()
-	if not self.new_local_variables and not self:local_get(ident) 
+	if not self.new_local_variables and not self:local_get(ident)
 	and not self:is_global_var(ident) and not self:is_func(ident) then
 		self:error_msg(string.format("Unknown variable '%s'", ident or ""))
 	end
@@ -327,11 +327,11 @@ end
 
 --[[
   variable:
-  | ident  
+  | ident
 ]]--
 function BExpr:variable()
 	local ident = self:ident()
-	if not self.new_local_variables and not self:local_get(ident) 
+	if not self.new_local_variables and not self:local_get(ident)
 	and not self:is_global_var(ident) and not self:is_func(ident) then
 		self:error_msg(string.format("Unknown variable '%s'", ident or ""))
 	end

@@ -11,7 +11,7 @@
   Compiler API
 
   The compiler generates a list with tokens according to:
-  
+
   {<type>, <lineno>, <asm-code>}
   {"file", 0, "test.c"}         -- File info
   {"code", 2, "move A, #1"}     -- ASM code
@@ -21,14 +21,14 @@
   {"call", 7, "foo"}            -- Call of function 'foo' (debugging)
 
   And a table with local variable definitions:
-  
+
   {foo = {<name> = <offs>, ...} -- positive offs = parameter, negative offs = stack variable
- 
+
   The assembler adds address and opcode information:
-  
+
   {CTYPE,  LINENO,  CODESTR,      ADDRESS,  OPCODES}
   {"code",  2,     "move A, #1",   10,     {0x1020, 0x0001}}
- 
+
 --]]
 
 local version = "1.2"
@@ -97,12 +97,12 @@ local function gen_asm_code(pos, output, filename, readfile)
 			oldctype = nil
 			out[#out + 1] = ";##### " .. filename .. " #####"
 		end
-		
+
 		if oldctype ~= ctype and (ctype == "code" or ctype == "data" or ctype == "ctext") then
 			out[#out + 1] = "  ." .. ctype
 			oldctype = ctype
 		end
-		
+
 		if ctype == "code" then
 			if code == ".code" then
 				out[#out + 1] = "  " .. code
@@ -148,11 +148,11 @@ function vm16.assemble(pos, filename, readfile, debug)
 	if not sts then
 		return false, error_msg(res)
 	end
-	
+
 	if debug then
 		return true, a:listing(res)
 	end
-	
+
 	return true, {lCode = res, locals = {}}
 end
 
@@ -179,21 +179,21 @@ function vm16.compile(pos, filename, readfile, output_format)
 	if output_format == "dbg" then
 		return true, prs:gen_dbg_dump(output)
 	end
-	
+
 	if output_format == "asm" then
 		return true, gen_asm_code(pos, output, filename, readfile)
 	end
-	
+
 	local asm = vm16.Asm:new({})
 	sts, res = pcall(asm.assembler, asm, filename, output.lCode)
 	if not sts then
 		return false, error_msg(res)
 	end
-	
+
 	if output_format == "lst" then
 		return true, comp_code_listing(res, filename)
 	end
-	
+
 	return true, {lCode = res, locals = output.locals}
 end
 

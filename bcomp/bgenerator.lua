@@ -243,7 +243,7 @@ function BGen:gen_output()
 
 	-- "new file" line first
 	table.insert(out, table.remove(self.lCode, 1))
-	
+
 	if #self.lGlobal > 0 then
 		for _,name in ipairs(self.lGlobal) do
 			table.insert(out, {"code", 0, "global " .. name})
