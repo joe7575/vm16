@@ -61,6 +61,10 @@ function BPars:definition()
 		self:end_asm_code()
 	elseif tok.type == T_ASMCODE then
 		self:add_asm_token(tok)
+		if string.sub(tok.val, 1, 6) == "global" then
+			local funcname = string.trim(string.sub(tok.val, 8))
+			self:add_func(funcname)
+		end
 		self:tk_match(T_ASMCODE)
 	elseif tok.val ~= nil then
 		self:error_msg(string.format("Unexpected item '%s'", tok.val))

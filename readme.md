@@ -1,10 +1,12 @@
 # VM16 - 16-bit VM for Minetest mods
 
-The VM16 is a 16-bit virtual machine implemented in C.
-It enables simulation of computers in the game Minetest
-and is capable of executing real binary code at a remarkable speed.
+The VM16 is a 16-bit virtual machine and a development environment with
+compiler, assembler and debugger.
 
-**The mod is currently under construction. Not all files and documents are updated !!!**
+It enables simulation of computers in the game Minetest and is capable of
+executing real binary code at a remarkable speed.
+
+**The mod is currently under construction. Not all files and documents are always updated !!!**
 
 ![screenshot](https://github.com/joe7575/vm16/blob/master/screenshot.png)
 
@@ -14,16 +16,17 @@ Download: [GitHub](https://github.com/joe7575/vm16/archive/master.zip)
 
 Documentation: [GitHub](https://github.com/joe7575/vm16/wiki)
 
-This mod is not very useful on its own, but it can be used as learning system for VM16 assembler.
+This mod is not very useful on its own. The real purpose for VM16 is to provide
+a programming environment to be easily integrated into other mods.
 
-The real purpose for VM16 is to provide a VM with programming environment to be easily integrated into other mods.
-
-This mod has several parts:
+This mod consists of several parts:
 
 - C files to be compiled and installed as LuaRocks package (the core VM)
 - Lua files as API to the VM (low level interface)
-- Programmer and server blocks as develoment environment to be used to be used by other Minetest mods (high level interface)
-- Some demo blocks showing the usage of programmer and server. These blocks have to be enabled via `vm16_testblocks_enabled` (see `settingtypes.txt`)
+- Programmer and server blocks as development environment to be used to be used
+  by other Minetest mods (high level interface)
+- Some demo blocks showing the usage of programmer and server. These blocks have
+  to be enabled via `vm16_testblocks_enabled` (see `settingtypes.txt`)
 
 
 ## Installation
@@ -54,7 +57,8 @@ gcc -shared -o vm16lib.so src/vm16core.o src/vm16lua.o
 vm16 2.x-y is now installed in /usr/local (license: GPLv3)
 ```
 
-For the installation of 'luarocks' (if not already available), see [luarocks](https://luarocks.org/)
+For the installation of 'luarocks' (if not already available),
+see [luarocks](https://luarocks.org/)
 
 
 

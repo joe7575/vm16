@@ -126,7 +126,7 @@ function vm16.debug.init(pos, mem, obj)
 	mem.lut = vm16.Lut:new()
 	mem.lut:init(obj)
 
-	--print(vm16.dump_obj_code_listing(obj))
+	print(vm16.dump_obj_code_listing(obj))
 	mem.cpu_def = prog.get_cpu_def(mem.cpu_pos)
 	local mem_size = mem.cpu_def and mem.cpu_def.on_mem_size(mem.cpu_pos) or 3
 	vm16.create(mem.cpu_pos, mem_size)
@@ -254,7 +254,7 @@ function vm16.debug.on_receive_fields(pos, fields, mem)
 	elseif fields.stepout then
 		if vm16.is_loaded(mem.cpu_pos) and mem.lut then
 			local cpu = vm16.get_cpu_reg(mem.cpu_pos)
-			local addr = vm16.peek(mem.cpu_pos, cpu.BP) or 0
+			local addr = (vm16.peek(mem.cpu_pos, cpu.BP) or 2) - 2
 			addr = mem.lut:find_next_address(addr)
 			local item = loadfile_by_address(mem, addr)
 			if item then
