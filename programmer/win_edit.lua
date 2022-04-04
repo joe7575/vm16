@@ -50,7 +50,7 @@ local function fs_listing(pos, mem, fontsize, file, text, err)
 end
 
 function vm16.edit.formspec(pos, mem, textsize)
-	if mem.file_name and mem.file_text then
+	if mem.file_name and mem.file_text and mem.server_pos then
 		if mem.error then
 			-- Output listing + error
 			mem.status = "Error !!!"
@@ -60,12 +60,16 @@ function vm16.edit.formspec(pos, mem, textsize)
 		elseif mem.file_ext == "asm" then
 			mem.status = "Edit"
 			vm16.menubar.add_button("cancel", "Cancel")
-			vm16.menubar.add_button("save", "Save")
+			if not server.is_ro_file(mem.server_pos, mem.file_name) then
+				vm16.menubar.add_button("save", "Save")
+			end
 			vm16.menubar.add_button("asmdbg", "Debug")
 		elseif mem.file_ext == "c" then
 			mem.status = "Edit"
 			vm16.menubar.add_button("cancel", "Cancel")
-			vm16.menubar.add_button("save", "Save")
+			if not server.is_ro_file(mem.server_pos, mem.file_name) then
+				vm16.menubar.add_button("save", "Save")
+			end
 			vm16.menubar.add_button("compile", "Compile")
 			vm16.menubar.add_button("debug", "Debug")
 		end

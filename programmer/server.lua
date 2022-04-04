@@ -113,6 +113,12 @@ function vm16.server.add_ro_file(pos, filename, text)
 	mem.ro_files[filename] = text
 end
 
+function vm16.server.is_ro_file(pos, filename)
+	local mem = prog.get_mem(pos)
+	mem.ro_files = mem.ro_files or {}
+	return mem.ro_files[filename] ~= nil
+end
+
 local function after_place_node(pos, placer, itemstack, pointed_thing)
 	local meta = M(pos)
 	meta:set_string("owner", placer:get_player_name())
