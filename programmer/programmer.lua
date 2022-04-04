@@ -129,6 +129,7 @@ minetest.register_node("vm16:programmer", {
 	on_rightclick = on_rightclick,
 	on_receive_fields = on_receive_fields,
 	after_dig_node = after_dig_node,
+	on_init = init,
 	on_use = on_use,
 	preserve_metadata = preserve_metadata,
 	stack_max = 1,

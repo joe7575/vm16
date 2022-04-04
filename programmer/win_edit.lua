@@ -10,6 +10,8 @@
 	Editor window for the debugger
 ]]--
 
+local version = "1.0"
+
 -- for lazy programmers
 local M = minetest.get_meta
 local prog = vm16.prog
@@ -18,6 +20,26 @@ local file_ext = vm16.file_ext
 local file_base = vm16.file_base
 
 local EDIT_SIZE = "0.2,0.6;11.4, 9.6"
+
+local Splashscreen = string.format([[
+
+                 VM16 Programmer
+                 ===============
+
+A programming station with compiler, assembler,
+editor, debugger, file server and more.
+
+ - Debugger v%s
+ - Compiler v%s
+ - Assembler v%s
+ - vm16 API v%s
+
+Be inspired...
+
+
+
+(Double click on a file to start the editor)
+]], version, vm16.Comp.version, vm16.Asm.version, vm16.version)
 
 vm16.edit = {}
 
@@ -72,11 +94,14 @@ function vm16.edit.formspec(pos, mem, textsize)
 			end
 			vm16.menubar.add_button("compile", "Compile")
 			vm16.menubar.add_button("debug", "Debug")
+		else
+			vm16.menubar.add_button("info", "Info")
 		end
 		return fs_editor(pos, mem, textsize, mem.file_name, mem.file_text) ..
 			vm16.files.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize)
 	else
-		return fs_editor(pos, mem, textsize, "-", "<no file>") ..
+		vm16.menubar.add_button("info", "Info")
+		return fs_editor(pos, mem, textsize, "-", Splashscreen) ..
 			vm16.files.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize)
 	end
 end
@@ -99,6 +124,10 @@ function vm16.edit.on_receive_fields(pos, fields, mem)
 		mem.file_name = nil
 		mem.file_text = nil
 		mem.error = nil
+	elseif fields.info then
+		minetest.registered_nodes["vm16:programmer"].on_init(pos, mem)
+		local text = server.read_file(mem.server_pos, "info.txt") or "File error"
+		vm16.edit.on_load_file(mem, "info.txt", text)
 	elseif fields.edit then
 		mem.error = nil
 	elseif mem.file_name and mem.file_text then

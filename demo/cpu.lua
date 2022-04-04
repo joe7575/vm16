@@ -27,7 +27,17 @@ local IONodes = {}  -- Known I/O nodes
 -- Will be added to the programmer file system as read-only TXT-file.
 -- Can be used as CPU description.
 local Info = [[
-This is a demo CPU with 1024 words RAM.
+       VM16 Demo Computer
+       ==================
+
+VM16 Demo Computer is a demo CPU
+with 1024 words of RAM and two additional blocks
+for input and output examples.
+
+Learn more about vm16 on:
+https://github.com/joe7575/vm16/wiki
+
+The CPU is connected to:
 ]]
 
 local function find_io_nodes(cpu_pos)
@@ -84,6 +94,7 @@ local cpu_def = {
 		local prog_pos = S2P(M(pos):get_string("prog_pos"))
 		vm16.update_programmer(pos, prog_pos, resp)
 	end,
+	-- Called when the programmers info/splash screen is displayed
 	on_init = function(pos, prog_pos)
 		M(pos):set_string("prog_pos", P2S(prog_pos))
 		local s = find_io_nodes(pos)
