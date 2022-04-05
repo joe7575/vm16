@@ -215,12 +215,12 @@ end
 
 function BGen:get_label()
 	self.label_cnt = self.label_cnt + 1
-	return "lbl" .. self.label_cnt
+	return "@lbl" .. self.label_cnt
 end
 
 function BGen:get_string_lbl()
 	self.string_cnt = self.string_cnt + 1
-	return "s" .. self.string_cnt
+	return "@s" .. self.string_cnt
 end
 
 function BGen:add_string(ident, str)

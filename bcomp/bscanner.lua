@@ -158,6 +158,9 @@ function BScan:scanner(filename)
 	table.insert(lToken, {type = T_NEWFILE, val = filename, lineno = 0})
 
 	local text = self.readfile(self.pos, filename)
+	if not text then
+		self:error_msg(string.format("Can't open file '%s'", filename))
+	end
 	for lineno, line in ipairs(vm16.splitlines(text)) do
 		self.lineno = lineno
 		if self.is_asm_code then

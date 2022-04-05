@@ -14,23 +14,6 @@
 local M = minetest.get_meta
 local prog = vm16.prog
 
-function prog.fs_connect(mem)
-	local info = "Error: CPU or Server connection missing!"
-	if mem.cpu_pos and mem.server_pos then
-		local def = prog.get_cpu_def(mem.cpu_pos)
-		if def then
-			info = def.on_infotext(mem.cpu_pos) or ""
-			info = minetest.formspec_escape(info)
-		end
-	end
-	return "formspec_version[4]" ..
-		"size[18,12]" ..
-		"box[0.2,0.8;17.6,10;#000]" ..
-		"style_type[textarea;font=mono;textcolor=#FFF]" ..
-		"textarea[0.2,0.8;17.6,10;;CPU Info:;" .. info .. "]" ..
-		"button[8,11;2,0.8;ok;OK]"
-end
-
 function prog.formspec(pos, mem)
 	local textsize = M(pos):get_int("textsize")
 	if textsize >= 0 then
@@ -42,7 +25,10 @@ function prog.formspec(pos, mem)
 	vm16.menubar.init(0.2, 10.4, 2.0)
 
 	local windows
-	if mem.cpu_pos and vm16.is_loaded(mem.cpu_pos) then
+	if not mem.cpu_pos or not mem.server_pos then
+		mem.status = "Error: CPU or Server connection missing!"
+		windows = vm16.edit.formspec(pos, mem, textsize) or ""
+	elseif vm16.is_loaded(mem.cpu_pos) then
 		mem.status = "Debug"
 		windows = vm16.debug.formspec(pos, mem, textsize) or ""
 	else

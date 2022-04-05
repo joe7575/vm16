@@ -37,7 +37,7 @@ for input and output examples.
 Learn more about vm16 on:
 https://github.com/joe7575/vm16/wiki
 
-The CPU is connected to:
+The Computer is connected to:
 ]]
 
 local function find_io_nodes(cpu_pos)
@@ -103,8 +103,6 @@ local cpu_def = {
 		vm16.add_ro_file(prog_pos, "example3.c",   Files.example3_c)
 		vm16.add_ro_file(prog_pos, "example4.c",   Files.example4_c)
 		vm16.add_ro_file(prog_pos, "example1.asm", Files.example1_asm)
-		vm16.add_ro_file(prog_pos, "stdio.asm",    Files.stdio_asm)
-		vm16.add_ro_file(prog_pos, "mem.asm",      Files.mem_asm)
 		vm16.add_ro_file(prog_pos, "info.txt",     Info .. s)
 	end,
 	on_mem_size = function(pos)

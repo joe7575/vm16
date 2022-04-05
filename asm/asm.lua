@@ -25,7 +25,7 @@ local OPCODES = 5
 
 local tOpcodes = {}
 local tOperands = {}
-local IDENT  = "^[A-Za-z_][A-Za-z_0-9%.]+"
+local IDENT  = "^[@A-Za-z_][A-Za-z_0-9%.]*"
 local RIPLBL = "^PC%+[A-Za-z_][A-Za-z_0-9%.]+"
 
 --
@@ -204,7 +204,7 @@ end
 
 function Asm:address_label(tok)
 	local codestr = tok[CODESTR]
-	local _, pos, label = codestr:find("^([A-Za-z_][A-Za-z_0-9]*):( *)")
+	local _, pos, label = codestr:find("^([@A-Za-z_][A-Za-z_0-9]*):( *)")
 	if label then
 		if self.globals[label] == -1 then
 			self.globals[label] = self.address

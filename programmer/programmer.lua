@@ -14,7 +14,10 @@
 local M = minetest.get_meta
 local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
 local S2P = function(s) return minetest.string_to_pos(s) end
+local MP = minetest.get_modpath("vm16")
 local prog = vm16.prog
+
+local Libc = dofile(MP .. "/bcomp/libc.lua")
 
 local function cpu_server_pos(pos, mem)
 	mem.cpu_pos = mem.cpu_pos or S2P(M(pos):get_string("cpu_pos"))
@@ -40,6 +43,10 @@ local function init(pos, mem)
 			def.on_init(mem.cpu_pos, pos)
 		end
 	end
+	vm16.add_ro_file(pos, "stdio.asm",  Libc.stdio_asm)
+	vm16.add_ro_file(pos, "mem.asm",    Libc.mem_asm)
+	vm16.add_ro_file(pos, "string.asm", Libc.string_asm)
+	vm16.add_ro_file(pos, "math.asm",   Libc.math_asm)
 end
 
 local function after_place_node(pos, placer, itemstack, pointed_thing)
@@ -50,7 +57,7 @@ local function after_place_node(pos, placer, itemstack, pointed_thing)
 	if cpu_server_pos(pos, mem) then
 		init(pos, mem)
 	end
-	meta:set_string("formspec", prog.fs_connect(mem))
+	meta:set_string("formspec", prog.formspec(pos, mem))
 end
 
 local function on_rightclick(pos)

@@ -47,6 +47,7 @@ local function format_files(pos, mem)
 		end
 		return table.concat(out, ",")
 	end
+	return ""
 end
 
 -------------------------------------------------------------------------------
