@@ -223,20 +223,28 @@ global max
 ;===================================
 min:
   skgt [SP+2], [SP+1]
-  ret  [SP+1]
-  nop
-  ret  [SP+2]
+  jump else01
+  move A, [SP+1]
+  ret
+  
+else01:  
+  move A, [SP+2]
+  ret
 
 ;===================================
-; [01] min(a, b)
+; [02] max(a, b)
 ; a: [SP+2]
 ; b: [SP+1]
 ;===================================
-min:
+max:
   skgt [SP+2], [SP+1]
-  ret  [SP+2]
-  nop
-  ret  [SP+1]
+  jump else02
+  move A, [SP+2]
+  ret
+  
+else02:  
+  move A, [SP+1]
+  ret
 
 ]]
 
