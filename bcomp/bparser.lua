@@ -17,6 +17,7 @@ local T_NUMBER  = vm16.T_NUMBER
 local T_OPERAND = vm16.T_OPERAND
 local T_ASMCODE = vm16.T_ASMCODE
 local T_NEWFILE = vm16.T_NEWFILE
+local T_STRING  = vm16.T_STRING
 
 local BPars = vm16.BExpr:new({})
 
@@ -117,6 +118,7 @@ end
 --[[
 array_def:
     = '[' ']' '=' '{' const_list '}'
+   = '[' ']' '=' STRING
     = '[' number ']' '=' '{' const_list '}'
     = '[' number ']'
 ]]--
@@ -137,9 +139,17 @@ function BPars:array_def(ident)
 		return
 	end
 	self:tk_match("=")
-	self:tk_match("{")
-	self:const_list(ident, size)
-	self:tk_match("}")
+	if self:tk_peek().type == T_STRING then
+		if size ~= 0 then 
+			self:error_msg(string.format("Invalid string declaration near '%s'", ident))
+		end
+		local tok = self:tk_match(T_STRING)
+		self:add_string(ident, tok.val)
+	else
+		self:tk_match("{")
+		self:const_list(ident, size)
+		self:tk_match("}")
+	end
 end
 
 --[[
@@ -233,7 +243,7 @@ param_list:
 function BPars:param_list()
 	local cnt = 0
 	if self:tk_peek().type == T_IDENT then
-		self.new_local_variables = true
+		self.is_func_param = true
 		while true do
 			local val = self:expression()
 			self:param_add(val)
@@ -244,7 +254,7 @@ function BPars:param_list()
 				break
 			end
 		end
-		self.new_local_variables = nil
+		self.is_func_param = nil
 	end
 	return cnt
 end

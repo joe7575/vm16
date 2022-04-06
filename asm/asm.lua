@@ -331,8 +331,11 @@ function Asm:decode_data(tok)
 			append(tbl, value(word))
 		end
 	end
-	-- restore original label
-	tok = {"data", tok[LINENO], self.label, self.address, tbl}
+	if #tbl == 1 then
+		tok = {"data", tok[LINENO], self.label, self.address, tbl}
+	else
+		tok = {"data", tok[LINENO], self.label .. "[]", self.address, tbl}
+	end
 	self.address = self.address + #tbl
 	return tok
 end
@@ -351,7 +354,7 @@ function Asm:decode_text(tok)
 			for i = idx, math.min(idx + 7, ln) do
 				append(tbl, codestr:byte(i))
 			end
-			tok = {"text", tok[LINENO], codestr:sub(idx, idx + 7), self.address, tbl}
+			tok = {"text", tok[LINENO], self.label .. "[]", self.address, tbl}
 			self.address = self.address + #tbl
 			append(out, tok)
 		end
@@ -375,7 +378,7 @@ function Asm:decode_ctext(tok)
 			for i = idx, math.min(idx + 15, ln), 2 do
 				append(tbl, word_val(codestr, i))
 			end
-			tok = {"ctext", tok[LINENO], codestr:sub(idx, idx + 7), self.address, tbl}
+			tok = {"ctext", tok[LINENO], self.label .. "[]", self.address, tbl}
 			self.address = self.address + #tbl
 			append(out, tok)
 		end

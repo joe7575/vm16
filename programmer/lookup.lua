@@ -57,6 +57,8 @@ function Lut:init(obj)
 			address2 = address
 		elseif ctype == "data" then
 			self.globals[#self.globals + 1] = {name = scode, addr = address, type = "global"}
+		elseif ctype == "ctext" and scode:sub(1,1) ~= "@" then
+			self.globals[#self.globals + 1] = {name = scode, addr = address, type = "global"}
 		elseif ctype == "file" then
 			add(file, func, lineno1, lineno2, address1, address2)
 			file = scode

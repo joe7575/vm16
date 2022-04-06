@@ -100,7 +100,7 @@ import "mem.asm"
 
 var arr1[4] = {1, 2, 3, 4};
 var arr2[4];
-var str = "Hello world!";
+var str[] = "Hello world!";
 
 
 func main() {

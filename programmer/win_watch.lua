@@ -65,7 +65,7 @@ local function format_watch(pos, mem)
 			out[#out + 1] = "----------------:----------"
 		else
 			local val = vm16.peek(mem.cpu_pos, item.addr)
-			local s = string.format("%-16s: %04X %d", item.name, val, val)
+			local s = minetest.formspec_escape(string.format("%-16s: %04X %d", item.name, val, val))
 			out[#out + 1] = s
 		end
 	end
