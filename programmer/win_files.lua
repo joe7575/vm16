@@ -21,9 +21,13 @@ local function open_file(mem, index)
 	if mem.server_pos then
 		mem.file_cursor = index
 		local names = server.get_filelist(mem.server_pos)
-		local item = names[index] or names[1]
-		local text = server.read_file(mem.server_pos, item.name)
-		vm16.edit.on_load_file(mem, item.name, text)
+		if names then
+			local item = names[index] or names[1]
+			if item then
+				local text = server.read_file(mem.server_pos, item.name)
+				vm16.edit.on_load_file(mem, item.name, text)
+			end
+		end
 	end
 end
 

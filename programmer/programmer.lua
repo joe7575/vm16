@@ -35,18 +35,18 @@ local function preserve_cpu_server_pos(pos, itemstack)
 end
 
 local function init(pos, mem)
-	if mem.cpu_pos then
+	if mem.cpu_pos and mem.server_pos then
 		local def = prog.get_cpu_def(mem.cpu_pos)
 		if def then
 			vm16.server.init(mem.server_pos)
 			vm16.files.init(pos, mem)
 			def.on_init(mem.cpu_pos, pos)
 		end
+		vm16.add_ro_file(pos, "stdio.asm",  Libc.stdio_asm)
+		vm16.add_ro_file(pos, "mem.asm",    Libc.mem_asm)
+		vm16.add_ro_file(pos, "string.asm", Libc.string_asm)
+		vm16.add_ro_file(pos, "math.asm",   Libc.math_asm)
 	end
-	vm16.add_ro_file(pos, "stdio.asm",  Libc.stdio_asm)
-	vm16.add_ro_file(pos, "mem.asm",    Libc.mem_asm)
-	vm16.add_ro_file(pos, "string.asm", Libc.string_asm)
-	vm16.add_ro_file(pos, "math.asm",   Libc.math_asm)
 end
 
 local function after_place_node(pos, placer, itemstack, pointed_thing)

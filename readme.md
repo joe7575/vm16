@@ -74,6 +74,30 @@ secure.trusted_mods = vm16
 Open the tab Settings -> All Settings -> Mods -> vm16
 to enable the CPU/demo blocks or check settingtypes.txt.
 
+## Demo blocks
+
+The vm16 mod comes with the programmer, the file server, a computer, a lamp,
+and a switch block for training purposes.
+It can be used to get familiar with the programming environment.
+
+
+## First Steps
+
+- Craft the 5 blocks "VM16 Programmer", "VM16 File Server", "VM16 Demo Computer",
+  VM16 On/Off Switch" and "VM16 Color Lamp".
+- Place "VM16 Demo Computer", VM16 On/Off Switch" and "VM16 Color Lamp" next to each other.
+  The computer searches for I/O blocks in an area with a radius of 3 blocks.
+- The switch is used as input block for the computer, the lamp as output block.
+- Give lamp and switch an I/O address. For the provided example, address '1' is used for both blocks.
+- You can add further I/O blocks for you own programs with other addresses.
+- Place the server anywhere.
+- Connect the programmer with server and CPU by left-clicking with the wielded
+  programmer on server and CPU block.
+- Place the programmer anywhere.
+- Press the "Init" button to initialize the computer.
+- Now double-click on the file "example1.c" to open the edit.
+- Click on "Debug" to start the debugger.
+- Click on "Run" to execute the program. The lamp block should now change its color
 
 ## Dependencies
 

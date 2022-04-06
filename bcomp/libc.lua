@@ -226,8 +226,8 @@ min:
   jump else01
   move A, [SP+1]
   ret
-  
-else01:  
+
+else01:
   move A, [SP+2]
   ret
 
@@ -241,8 +241,8 @@ max:
   jump else02
   move A, [SP+2]
   ret
-  
-else02:  
+
+else02:
   move A, [SP+1]
   ret
 

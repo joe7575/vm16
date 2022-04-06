@@ -140,7 +140,7 @@ function BPars:array_def(ident)
 	end
 	self:tk_match("=")
 	if self:tk_peek().type == T_STRING then
-		if size ~= 0 then 
+		if size ~= 0 then
 			self:error_msg(string.format("Invalid string declaration near '%s'", ident))
 		end
 		local tok = self:tk_match(T_STRING)

@@ -49,8 +49,8 @@ local function find_io_nodes(cpu_pos)
 		local node = minetest.get_node(pos)
 		local ndef = minetest.registered_nodes[node.name]
 		if ndef and ndef.on_vm16_start_cpu then
-			ndef.on_vm16_start_cpu(pos, cpu_pos)
-			table.insert(out, string.format(" - %s at %s added", node.name, P2S(pos)))
+			local address = ndef.on_vm16_start_cpu(pos, cpu_pos)
+			table.insert(out, string.format(" - %s #%d at %s added", node.name, address, P2S(pos)))
 		end
 	end
 	return table.concat(out, "\n")

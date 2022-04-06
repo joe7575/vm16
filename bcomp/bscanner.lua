@@ -161,6 +161,9 @@ function BScan:scanner(filename)
 	if not text then
 		self:error_msg(string.format("Can't open file '%s'", filename))
 	end
+	text = text:gsub("\\0", "\0")
+	text = text:gsub("\\n", "\n")
+
 	for lineno, line in ipairs(vm16.splitlines(text)) do
 		self.lineno = lineno
 		if self.is_asm_code then

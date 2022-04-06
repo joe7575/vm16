@@ -38,7 +38,7 @@ Be inspired...
 
 
 
-(Double click on a file to start the editor)
+(First click on "Init", to initialize the computer, then double click on a file to start the editor)
 ]], version, vm16.Comp.version, vm16.Asm.version, vm16.version)
 
 vm16.edit = {}
@@ -95,12 +95,12 @@ function vm16.edit.formspec(pos, mem, textsize)
 			vm16.menubar.add_button("compile", "Compile")
 			vm16.menubar.add_button("debug", "Debug")
 		else
-			vm16.menubar.add_button("info", "Info")
+			vm16.menubar.add_button("cancel", "Cancel")
 		end
 		return fs_editor(pos, mem, textsize, mem.file_name, mem.file_text) ..
 			vm16.files.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize)
 	else
-		vm16.menubar.add_button("info", "Info")
+		vm16.menubar.add_button("init", "Init")
 		return fs_editor(pos, mem, textsize, "-", Splashscreen) ..
 			vm16.files.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize)
 	end
@@ -124,7 +124,7 @@ function vm16.edit.on_receive_fields(pos, fields, mem)
 		mem.file_name = nil
 		mem.file_text = nil
 		mem.error = nil
-	elseif fields.info then
+	elseif fields.init then
 		minetest.registered_nodes["vm16:programmer"].on_init(pos, mem)
 		local text = server.read_file(mem.server_pos, "info.txt") or "File error"
 		vm16.edit.on_load_file(mem, "info.txt", text)

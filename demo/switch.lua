@@ -72,6 +72,7 @@ local function on_vm16_start_cpu(pos, cpu_pos)
 			return Cache[hash][address]
 		end
 	)
+	return M(pos):get_int("address")
 end
 
 local function formspec()
