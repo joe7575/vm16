@@ -309,11 +309,13 @@ if_statement:
 function BPars:if_statement()
 	self:tk_match("if")
 	self:tk_match("(")
-	self:condition()
+	local lbl_then = self:get_label()
+	local lbl_else = self:get_label()
+	self:condition(lbl_then, lbl_else)
 	self:reset_reg_use()
 	self:tk_match(")")
-	local lbl1 = self:get_label()
-	self:add_instr("jump", lbl1)
+	self:add_instr("jump", lbl_else)
+	self:add_label(lbl_then)
 	self:tk_match("{")
 	self:add_then_label()
 	self:stmnt_list()
@@ -322,13 +324,13 @@ function BPars:if_statement()
 		self:tk_match("else")
 		local lbl2 = self:get_label()
 		self:add_instr("jump", lbl2)
-		self:add_label(lbl1)
+		self:add_label(lbl_else)
 		self:tk_match("{")
 		self:stmnt_list()
 		self:add_label(lbl2)
 		self:tk_match("}")
 	else
-		self:add_label(lbl1)
+		self:add_label(lbl_else)
 	end
 end
 
@@ -344,7 +346,7 @@ function BPars:for_statement()
 	local loop = self:get_label()
 	local lend = self:get_label()
 	self:add_label(loop)
-	self:condition()
+	self:condition(loop, lend)
 	self:reset_reg_use()
 	self:tk_match(";")
 	self:add_instr("jump", lend)
@@ -373,7 +375,7 @@ function BPars:while_statement()
 	local loop = self:get_label()
 	local lend = self:get_label()
 	self:add_label(loop)
-	self:condition()
+	self:condition(loop, lend)
 	self:reset_reg_use()
 	self:tk_match(")")
 	self:add_instr("jump", lend)
@@ -404,7 +406,6 @@ assignment:
     = left_value '=' expression
     | left_value '++'
     | left_value '--'
-	|
 ]]--
 function BPars:assignment()
 	if self:tk_peek().val == ";" then
@@ -435,21 +436,71 @@ end
 
 --[[
 condition:
+    = and_condition
+    | and_condition 'or' condition
+    | and_condition '||' condition
+]]--
+function BPars:condition(lbl_then, lbl_else)
+	local opnd1 = self:and_condition(lbl_else)
+	local val = self:tk_peek().val
+	if val == "or" then
+		self:tk_match()
+		self:add_instr("jump", "+4")
+		self:add_instr("jump", lbl_then)
+		self:condition(lbl_then, lbl_else)
+	elseif val == "||" then
+		self:tk_match()
+		self:add_instr("jump", "+4")
+		self:add_instr("jump", lbl_then)
+		self:condition(lbl_then, lbl_else)
+	end
+end
+
+
+--[[
+and_condition:
+    = comparison
+    | comparison 'and' and_condition
+    | comparison '&&' and_condition
+]]--
+function BPars:and_condition(lbl)
+	local opnd1 = self:comparison()
+	local val = self:tk_peek().val
+	if val == "and" then
+		self:tk_match()
+		self:add_instr("jump", lbl)
+		self:and_condition(lbl)
+	elseif val == "&&" then
+		self:tk_match()
+		self:add_instr("jump", lbl)
+		self:and_condition(lbl)
+	end
+end
+
+
+--[[
+comparison:
     = 'true'
     | 'false'
+    | '(' comparison ')'
     | expression '<' expression
     | expression '>' expression
     | expression '==' expression
     | expression '!=' expression
     | expression
 ]]--
-function BPars:condition()
+function BPars:comparison()
 	local val = self:tk_peek().val
 	if val == "true" then
 		self:add_instr("move", "A", "#1")
 		return
 	elseif val == "false" then
 		self:add_instr("move", "A", "#0")
+		return
+	elseif val == "(" then
+		self:tk_match("(")
+		self:comparison()
+		self:tk_match(")")
 		return
 	end
 	local left = self:expression()

@@ -192,7 +192,10 @@ function BScan:tk_match(ttype)
 	if not ttype or ttype == tok.type or ttype == tok.val then
 		return tok
 	end
-	self:error_msg(string.format("Syntax error: '%s' expected near '%s'", tok.val or "", ttype or ""))
+	
+	local detected = tok.val:gsub("\\0", "")
+	local expected = type(ttype) == "string" and ttype or lTypeString[ttype]
+	self:error_msg(string.format("Syntax error: '%s' expected near '%s'", expected, detected))
 end
 
 function BScan:tk_peek()
