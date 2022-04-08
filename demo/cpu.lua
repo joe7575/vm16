@@ -73,21 +73,21 @@ local cpu_def = {
 	end,
 	-- Called for each 'output' instruction.
 	on_output = function(pos, address, val1, val2)
-		if address == 0 then
-			local prog_pos = S2P(M(pos):get_string("prog_pos"))
-			vm16.putchar(prog_pos, val1)
-			return 500  -- number of instructions for putchar
-		else
-			local hash = H(pos)
-			local item = Outputs[hash] and Outputs[hash][address]
-			if item then
-				item.output(item.pos, address, val1, val2)
-			end
+		local hash = H(pos)
+		local item = Outputs[hash] and Outputs[hash][address]
+		if item then
+			item.output(item.pos, address, val1, val2)
 		end
 	end,
 	-- Called for each 'system' instruction.
 	on_system = function(pos, address, val1, val2)
-		print("on_system")
+		if address == 0 then
+			local prog_pos = S2P(M(pos):get_string("prog_pos"))
+			return vm16.putchar(prog_pos, val1)
+		else
+			-- Add your own system command here
+			print("on_system")
+		end
 	end,
 	-- Called when CPU stops.
 	on_update = function(pos, resp)
@@ -169,6 +169,8 @@ minetest.register_craft({
 		{"basic_materials:ic", "basic_materials:ic", "basic_materials:ic"},
 	},
 })
+
+vm16.register_sys_cycles(0, 500)  -- costs for putchar
 
 -------------------------------------------------------------------------------
 -- API for I/O nodes

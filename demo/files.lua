@@ -51,7 +51,7 @@ func main() {
 
 Files.example2_c = [[
 // Output some characters on the
-// programmer status line (output #0).
+// programmer status line (system #0).
 
 var max = 32;
 
@@ -63,7 +63,7 @@ func main() {
   var i;
 
   for(i = 0; i < max; i++) {
-    output(0, get_char(i));
+    system(0, get_char(i));
   }
 }
 ]]

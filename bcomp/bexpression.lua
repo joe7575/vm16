@@ -126,7 +126,6 @@ unary:
     = postfix
     | '-' postfix
     | '~' postfix
-    | 'not' postfix
     | '*' postfix
     | '&' postfix
 ]]--
@@ -137,7 +136,7 @@ function BExpr:unary()
 		local opnd = self:postfix()
 		opnd = self:add_instr("not", opnd)
 		return self:add_instr("add", opnd, "#1")
-	elseif val == "~" or val == "not" then
+	elseif val == "~" then
 		self:tk_match()
 		local opnd = self:postfix()
 		return self:add_instr("not", opnd)
@@ -231,10 +230,16 @@ function BExpr:buildin_call()
 		local opnd1 = self:expression()
 		self:tk_match(",")
 		local opnd2 = self:expression()
-		self:tk_match(",")
-		local opnd3 = self:expression()
-		self:add_instr("move", "A", opnd2)
-		self:add_instr("move", "B", opnd3)
+		if opnd2 ~= "A" then
+			self:add_instr("move", "A", opnd2)
+		end
+		if self:tk_peek().val == "," then
+			self:tk_match(",")
+			local opnd3 = self:expression()
+			if opnd3 ~= "B" then
+				self:add_instr("move", "B", opnd3)
+			end
+		end
 		self:add_instr("sys", opnd1)
 	elseif ident == "sleep" then
 		local opnd = self:expression()

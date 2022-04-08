@@ -37,7 +37,7 @@ global puthex
 ;===================================
 putchar:
   move A, [SP+1]
-  out  #0, A
+  sys  #0
   ret
 
 ;===================================
@@ -54,7 +54,8 @@ loop02:
   dec  A
   bze  A, exit02
 
-  out #0, B
+  move A, B
+  sys #0
   inc X
   jump loop02
 
@@ -82,7 +83,8 @@ loop03:
 output03:
   pop  B
   bze  B, exit03
-  out  #0, B
+  move A, B
+  sys  #0
   jump output03
 
 exit03:
@@ -111,7 +113,8 @@ loop04:
 output04:
   pop  B
   bze  B, exit04
-  out  #0, B
+  move A, B
+  sys  #0
   jump output04
 
 exit04:
