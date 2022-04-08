@@ -124,6 +124,13 @@ Licensed under the GNU GPLv3 (See LICENSE.txt)
 
 ## History
 
+### API v3.3/Core v2.6.5/asm v2.3/Compiler v1.3 (2022-04-08)
+
+- Change stdout from output(0,...) to system(0,...)
+- Add logical 'and' and 'or' operators
+- Add 's[]' type for strings
+- Fix some bugs and improve demo CPU
+
 ### API v3.3/Core v2.6.5/asm v2.3/Compiler v1.2 (2022-04-03)
 
 **Work in progress!**
