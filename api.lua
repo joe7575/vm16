@@ -56,12 +56,12 @@ local function store_breakpoint_addr(pos, vm, breakpoints)
 	end
 end
 
-local function skip_break_instr(pos, vm, breakpoints)
+local function skip_break_instr(pos, vm, cpu_def, breakpoints)
 	local addr = vm16lib.get_pc(vm)
 	if breakpoints then
 		if breakpoints.address == addr then
 			if breakpoints[addr] then
-				vm16lib.run(vm, 1)
+				vm16.run(pos, cpu_def, nil, 1)
 				vm16lib.poke(vm, addr, 0x0400)
 				breakpoints.address = nil
 				return true
@@ -283,7 +283,7 @@ function vm16.run(pos, cpu_def, breakpoints, steps)
 	local ran
 
 	local cycles = steps or cpu_def.instr_per_cycle
-	if skip_break_instr(pos, vm, breakpoints) then
+	if skip_break_instr(pos, vm, cpu_def, breakpoints) then
 		return VM16_OK
 	end
 

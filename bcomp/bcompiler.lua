@@ -93,8 +93,6 @@ local function gen_asm_code(pos, output, filename, readfile)
 			filename = code
 			text = readfile(pos, filename)
 			sourcecode = vm16.splitlines(text)
-			is_asm_file = vm16.file_ext(filename) == "asm"
-			oldlineno = 0
 			oldctype = nil
 			out[#out + 1] = ";##### " .. filename .. " #####"
 		end

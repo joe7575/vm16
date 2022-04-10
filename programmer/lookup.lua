@@ -12,7 +12,7 @@
 
 -- for lazy programmers
 local M = minetest.get_meta
-
+local DBG = function() end --print
 local Lut = {}
 
 function Lut:new()
@@ -31,7 +31,7 @@ end
 
 
 function Lut:init(obj)
-	print("Lut:init")
+	DBG("Lut:init")
 	local func = ""
 	local file = ""
 	local lineno1, lineno2
@@ -80,23 +80,23 @@ function Lut:init(obj)
 end
 
 function Lut:get_globals()
-	print("Lut:get_globals")
+	DBG("Lut:get_globals")
 	return self.globals
 end
 
 function Lut:get_locals(address)
-	print("Lut:get_locals", address)
+	DBG("Lut:get_locals", address)
 	if address then
 		local item = self:get_item(address or 0)
 		if item and self.locals[item.func] then
 			return self.locals[item.func]
 		end
 	end
-	print("Lut:get_locals", "oops")
+	DBG("Lut:get_locals", "oops")
 end
 
 function Lut:get_item(address)
-	print("Lut:get_item", address)
+	DBG("Lut:get_item", address)
 	if address then
 		for _, item in ipairs(self.items) do
 			if address >= item.addresses[1] and address <= item.addresses[2] then
@@ -104,11 +104,11 @@ function Lut:get_item(address)
 			end
 		end
 	end
-	print("Lut:get_item", "oops")
+	DBG("Lut:get_item", "oops")
 end
 
 function Lut:get_item_by_lineno(lineno)
-	print("Lut:get_item_by_lineno", lineno)
+	DBG("Lut:get_item_by_lineno", lineno)
 	if lineno then
 		for _, item in ipairs(self.items) do
 			if lineno >= item.lines[1] and lineno <= item.lines[2] then
@@ -116,27 +116,25 @@ function Lut:get_item_by_lineno(lineno)
 			end
 		end
 	end
-	print("Lut:get_item_by_lineno", "oops")
+	DBG("Lut:get_item_by_lineno", "oops")
 end
 
 function Lut:get_line(address)
-	print("Lut:get_line", address)
+	DBG("Lut:get_line", address)
 	if address and self.addr2lineno[address] then
 		return self.addr2lineno[address]
 	end
-	print("Lut:get_line", "oops")
+	DBG("Lut:get_line", "oops")
 end
 
 function Lut:get_address(file, lineno)
-	--print("Lut:get_address", file, lineno)
 	if file and lineno and self.lineno2addr[file] and self.lineno2addr[file][lineno] then
 		return self.lineno2addr[file][lineno]
 	end
-	--print("Lut:get_address", "oops")
 end
 
 function Lut:find_next_address(address)
-	print("Lut:find_next_address", address)
+	DBG("Lut:find_next_address", address)
 	if address then
 		local item = self:get_item(address)
 		local lineno = self.addr2lineno[address]
@@ -148,11 +146,11 @@ function Lut:find_next_address(address)
 			end
 		end
 	end
-	print("Lut:find_next_address", "oops")
+	DBG("Lut:find_next_address", "oops")
 end
 
 function Lut:get_next_line(address)
-	print("Lut:get_next_line", address)
+	DBG("Lut:get_next_line", address)
 	if address then
 		local item = self:get_item(address)
 		local lineno = self.addr2lineno[address]
@@ -162,28 +160,28 @@ function Lut:get_next_line(address)
 					return no
 				end
 			end
-			print("Lut:get_next_line", "oops", item.file, lineno)
+			DBG("Lut:get_next_line", "oops", item.file, lineno)
 		end
 	end
-	print("Lut:get_next_line", "oops")
+	DBG("Lut:get_next_line", "oops")
 end
 
 function Lut:get_stepin_address(file, lineno)
-	print("Lut:get_stepin_address", file, lineno)
+	DBG("Lut:get_stepin_address", file, lineno)
 	if file and lineno and self.step_in[file][lineno] and self.step_in[file][lineno] then
 		return self.step_in[file][lineno]
 	end
-	print("Lut:get_stepin_address", "oops")
+	DBG("Lut:get_stepin_address", "oops")
 end
 
 function Lut:get_function_address(func)
-	print("Lut:get_function_address", func)
+	DBG("Lut:get_function_address", func)
 	for _, item in ipairs(self.items) do
 		if item.func == func then
 			return item.addresses[1]
 		end
 	end
-	print("Lut:get_function_address", "oops")
+	DBG("Lut:get_function_address", "oops")
 end
 
 function Lut:get_program_size()

@@ -128,9 +128,11 @@ Files.mem_asm = [[
 ;===================================
 ; mem v1.0
 ; - memcpy(dst, src, num)
+; - memcmp(ptr1, ptr2, num)
 ;===================================
 
 global memcpy
+global memcmp
 
   .code
 
@@ -146,14 +148,40 @@ memcpy:
   move A, [SP+1]
 
   skgt A, #0
-  jump return
+  jump exit01
 
 loop01:
   move [X]+, [Y]+
   dbnz A, loop01
 
-return:
+exit01:
   ret
+
+;===================================
+; [02] memcmp(ptr1, ptr2, num)
+; ptr1: [SP+3]
+; ptr2: [SP+2]
+; num:  [SP+1]
+;===================================
+memcmp:
+  move X, [SP+3]
+  move Y, [SP+2]
+  move A, [SP+1]
+
+  skgt A, #0
+  jump exit02
+
+loop02:
+  skne [X]+, [Y]+
+  dbnz A, loop02
+
+    dec X
+    dec Y
+
+exit02:
+    move A, [X]
+    sub  A, [Y]
+    ret
 ]]
 
 -------------------------------------------------------------------------------
@@ -161,13 +189,15 @@ return:
 -------------------------------------------------------------------------------
 Files.string_asm = [[
 ;===================================
-; [20] string v1.0
+; string v1.1
 ; - strcpy(dst, src)
 ; - strlen(s)
+; - strcmp(str1, str2)
 ;===================================
 
 global strcpy
 global strlen
+global strcmp
 
   .code
 
@@ -202,6 +232,29 @@ loop02:
 
   ret
 
+;===================================
+; [03] strcmp(str1, str2)
+; str1: [SP+2]
+; str2: [SP+1]
+; returns 0 if equal
+;===================================
+strcmp:
+  move X, [SP+2]
+  move Y, [SP+1]
+  move A, X
+
+loop03:
+    bze   [X], exit03
+    skne  [X]+, [Y]+
+    jump  loop03
+
+    dec X
+    dec Y
+
+exit03:
+    move A, [X]
+    sub  A, [Y]
+    ret
 ]]
 
 -------------------------------------------------------------------------------

@@ -225,14 +225,18 @@ function Asm:address_label(tok)
 end
 
 function Asm:global_def(tok)
-	local codestr = tok[CODESTR]
-	local _, pos, label = codestr:find("^ *global +([A-Za-z_][A-Za-z_0-9]*)( *)")
-	if label then
-		if self.globals[label] then
-			self:err_msg("Redefinition of global " .. label)
+	local kewword, value = unpack(strsplit(tok[CODESTR]))
+	if kewword and value then
+		if kewword == "global" then
+			if self.globals[value] then
+				self:err_msg("Redefinition of global " .. value)
+			end
+			self.globals[value] = -1
+			tok[CODESTR] = ""
+		elseif kewword == "newfile" then
+			tok[CTYPE] = "file"
+			tok[CODESTR] = value
 		end
-		self.globals[label] = -1
-		tok[CODESTR] = ""
 	end
 	return tok
 end
