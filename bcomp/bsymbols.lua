@@ -59,7 +59,7 @@ function BSym:local_get(ident)
 	end
 end
 
-function BSym:func_return(ident)
+function BSym:func_return(ident, end_of_func)
 	if self:get_last_instr() ~= "ret" then
 		if self.num_auto > 0 then
 			self:add_instr("add", "SP", "#" .. self.num_auto)
@@ -68,7 +68,7 @@ function BSym:func_return(ident)
 	end
 
 	-- Generate a table with BS relative addresses of function local variables
-	if next(self.locals) then
+	if end_of_func then
 		local base
 		for k,v in pairs(self.locals) do
 			if k == "func" then
