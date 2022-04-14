@@ -41,8 +41,9 @@ local T_BRACE   = 4
 local T_STRING  = 5
 local T_ASMCODE = 6
 local T_NEWFILE = 7
+local T_ENDFILE = 8
 
-local lTypeString = {"ident", "number", "operand", "brace", "string", "asm code", "new file"}
+local lTypeString = {"ident", "number", "operand", "brace", "string", "asm code", "new file", "end file"}
 local lToken = {}
 local tScannedFiles = {}
 
@@ -85,7 +86,8 @@ function  BScan:import_file(filename)
 		nested_calls = self.nested_calls + 1
 	})
 	i:bscan_init()
-	i:scanner(filename)
+	local last_lineno = i:scanner(filename)
+	table.insert(lToken, {type = T_ENDFILE, val = filename, lineno = last_lineno})
 	table.insert(lToken, {type = T_NEWFILE, val = self.filename, lineno = 0})
 end
 
@@ -183,6 +185,7 @@ function BScan:scanner(filename)
 		lToken = {}
 		self.tk_idx = 1
 	end
+	return self.lineno
 end
 
 function BScan:tk_match(ttype)
@@ -237,3 +240,4 @@ vm16.T_BRACE   = T_BRACE
 vm16.T_STRING  = T_STRING
 vm16.T_ASMCODE = T_ASMCODE
 vm16.T_NEWFILE = T_NEWFILE
+vm16.T_ENDFILE = T_ENDFILE
