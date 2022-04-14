@@ -18,6 +18,7 @@ local T_OPERAND = vm16.T_OPERAND
 local T_ASMCODE = vm16.T_ASMCODE
 local T_NEWFILE = vm16.T_NEWFILE
 local T_STRING  = vm16.T_STRING
+local T_ENDFILE = vm16.T_ENDFILE
 
 local BPars = vm16.BExpr:new({})
 
@@ -76,11 +77,15 @@ function BPars:definition()
 		self:tk_match(T_NEWFILE)
 		self:end_asm_code()
 		self:next_file_for_local_vars()
+	elseif tok.type == T_ENDFILE then
+		self:add_debugger_info("endf", tok.lineno, tok.val)
+		self:tk_match(T_ENDFILE)
 	elseif tok.type == T_ASMCODE then
 		self:add_asm_token(tok)
 		if string.sub(tok.val, 1, 6) == "global" then
 			local funcname = string.trim(string.sub(tok.val, 8))
 			self:add_func(funcname)
+			self:add_debugger_info("func", tok.lineno, funcname)
 		end
 		self:tk_match(T_ASMCODE)
 	elseif tok.val ~= nil then
@@ -225,7 +230,7 @@ function BPars:func_def(static)
 	self:tk_match("{")
 	self:lvar_def_list();
 	self:stmnt_list()
-	self:func_return(ident)
+	self:func_return(ident, true)
 	self:tk_match("}")
 end
 
