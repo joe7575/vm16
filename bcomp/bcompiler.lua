@@ -157,6 +157,7 @@ function vm16.compile(pos, filename, readfile, output_format)
 		return true, prs:scan_dbg_dump()
 	end
 
+	--sts, res = true, prs:main()
 	sts, res = pcall(prs.main, prs)
 	if not sts then
 		return false, error_msg(res)
@@ -173,6 +174,7 @@ function vm16.compile(pos, filename, readfile, output_format)
 	end
 
 	local asm = vm16.Asm:new({})
+	--sts, output = true, asm:assembler(filename, output)
 	sts, output = pcall(asm.assembler, asm, filename, output)
 	if not sts then
 		return false, error_msg(res)
