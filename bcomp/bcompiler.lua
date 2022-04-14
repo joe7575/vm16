@@ -42,27 +42,6 @@ local function error_msg(err)
 	return err
 end
 
-local function comp_code_listing(lCode, filename)
-	local mydump = function(tbl)
-		local t = {}
-		for _,e in ipairs(tbl or {}) do
-			if type(e) == "number" then
-				table.insert(t, string.format("%04X", e))
-			else
-				table.insert(t, "'"..e.."'")
-			end
-		end
-		return table.concat(t, " ")
-	end
-
-	local out = {"##### " .. vm16.file_base(filename) .. ".lst" .. " #####"}
-	for _,item in ipairs(lCode) do
-		local ctype, lineno, scode, address, opcodes = unpack(item)
-		table.insert(out, string.format("%5s %3d %04X: %-15s %s", ctype, lineno, address or 0, scode, mydump(opcodes)))
-	end
-	return table.concat(out, "\n")
-end
-
 local function gen_asm_code(pos, output, filename, readfile)
 	local out = {}
 	local oldlineno = 0
@@ -95,6 +74,7 @@ local function gen_asm_code(pos, output, filename, readfile)
 			sourcecode = vm16.splitlines(text)
 			oldctype = nil
 			out[#out + 1] = ";##### " .. filename .. " #####"
+			out[#out + 1] = "newfile " .. filename
 		end
 
 		if oldctype ~= ctype and (ctype == "code" or ctype == "data" or ctype == "ctext") then
@@ -133,7 +113,7 @@ end
 ------------------------------------------------------------------------------
 -- API
 ------------------------------------------------------------------------------
-function vm16.assemble(pos, filename, readfile, debug)
+function vm16.assemble(pos, filename, readfile, asmdbg, debug)
 	local code = readfile(pos, filename)
 	code = code:gsub("\t", "  ")
 
@@ -152,6 +132,15 @@ function vm16.assemble(pos, filename, readfile, debug)
 		return true, a:listing(res)
 	end
 
+	-- Debugger uses "out.asm" and needs therefore the correct file references
+	if asmdbg then
+		for _,item in ipairs(res) do
+			if item[1] == "file" then
+				item[3] = "out.asm"
+			end
+		end
+	end
+	
 	return true, {lCode = res, locals = {}}
 end
 
@@ -164,7 +153,7 @@ function vm16.compile(pos, filename, readfile, output_format)
 		return false, error_msg(res)
 	end
 
-	if output_format == "tok" then
+	if output_format == "token" then
 		return true, prs:scan_dbg_dump()
 	end
 
@@ -175,24 +164,20 @@ function vm16.compile(pos, filename, readfile, output_format)
 
 	local output = prs:gen_output()
 
-	if output_format == "dbg" then
-		return true, prs:gen_dbg_dump(output)
+	if output_format == "parser_output" then
+		return true, output
 	end
 
-	if output_format == "asm" then
+	if output_format == "asm_code" then
 		return true, gen_asm_code(pos, output, filename, readfile)
 	end
 
 	local asm = vm16.Asm:new({})
-	sts, res = pcall(asm.assembler, asm, filename, output.lCode)
+	sts, output = pcall(asm.assembler, asm, filename, output)
 	if not sts then
 		return false, error_msg(res)
 	end
 
-	if output_format == "lst" then
-		return true, comp_code_listing(res, filename)
-	end
-
-	return true, {lCode = res, locals = output.locals}
+	return true, output
 end
 

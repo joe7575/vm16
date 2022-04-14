@@ -132,7 +132,7 @@ function vm16.edit.on_receive_fields(pos, fields, mem)
 		mem.error = nil
 	elseif mem.file_name and mem.file_text then
 		if fields.compile then
-			local sts, res = vm16.compile(mem.server_pos, mem.file_name, server.read_file, "asm")
+			local sts, res = vm16.compile(mem.server_pos, mem.file_name, server.read_file, "asm_code")
 			if sts then
 				mem.file_text = res
 				mem.file_name = "out.asm"
@@ -163,7 +163,7 @@ function vm16.edit.on_receive_fields(pos, fields, mem)
 			if def then
 				local prog_pos = def.on_check_connection(mem.cpu_pos)
 				if vector.equals(pos, prog_pos) then
-					local sts, res = vm16.assemble(mem.server_pos, mem.file_name, server.read_file)
+					local sts, res = vm16.assemble(mem.server_pos, mem.file_name, server.read_file, true)
 					if sts then
 						vm16.debug.init(pos, mem, res)
 						vm16.memory.init(pos, mem, res)

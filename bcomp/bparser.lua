@@ -40,8 +40,10 @@ end
 --[[
 definition:
     = 'var' var_def
+    | 'static' 'var' var_def
     | 'const' const_def
     | 'func' func_def
+    | 'static' 'func' func_def
     | T_NEWFILE
     | T_ASMCODE
 ]]--
@@ -50,6 +52,18 @@ function BPars:definition()
 	if tok.val == "var" then
 		self:tk_match("var")
 		self:var_def()
+	elseif tok.val == "static" then
+		self:tk_match("static")
+		local tok = self:tk_peek()
+		if tok.val == "var" then
+			self:tk_match("var")
+			self:var_def(true)
+		elseif tok.val == "func" then
+			self:tk_match("func")
+			self:func_def(true)
+		else
+			self:error_msg(string.format("Unexpected item '%s'", tok.val))
+		end
 	elseif tok.val == "const" then
 		self:tk_match("const")
 		self:const_def()
@@ -58,8 +72,10 @@ function BPars:definition()
 		self:func_def()
 	elseif tok.type == T_NEWFILE then
 		self:add_item("file", tok.lineno, tok.val)
+		self:add_debugger_info("file", tok.lineno, tok.val)
 		self:tk_match(T_NEWFILE)
 		self:end_asm_code()
+		self:next_file_for_local_vars()
 	elseif tok.type == T_ASMCODE then
 		self:add_asm_token(tok)
 		if string.sub(tok.val, 1, 6) == "global" then
@@ -77,11 +93,22 @@ var_def:
     = ident [ '=' expression ] ';
     | array_def ';'
 ]]--
-function BPars:var_def()
-	self:switch_to_var_def()
+function BPars:var_def(static)
 	local ident = self:ident()
+	local val = self:tk_peek().val
+	local is_array = val == "["
+	if static then
+		local old_ident = ident
+		local postfix = is_array and "[]" or ""
+		ident = self:set_file_local(ident)
+		self:add_debugger_info("lvar", self.lineno, ident, old_ident .. postfix)
+	else
+		local postfix = is_array and "[]" or ""
+		self:add_debugger_info("gvar", self.lineno, ident, ident .. postfix)
+	end
+	self:switch_to_var_def()
 	self:set_global(ident)
-	if self:tk_peek().val == "[" then
+	if is_array then
 		self:add_global(ident, true, true)
 		self:array_def(ident)
 		self:tk_match(";")
@@ -177,9 +204,13 @@ end
 func_def:
     = ident '(' param_list ')' '{' lvar_def_list stmnt_list '}'
 ]]--
-function BPars:func_def()
+function BPars:func_def(static)
 	local ident = self:ident()
-	self:set_global(ident)
+	if not static then
+		self:set_global(ident)
+	end
+	-- TODO: static functions
+	self:add_debugger_info("func", self.lineno, ident)
 	self:add_func(ident)
 	self.func_name = ident
 	self:add_label(ident)

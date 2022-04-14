@@ -27,8 +27,9 @@ function BSym:bsym_init()
 	self.globals = {}
 	self.functions = {}
 	self.arrays = {}
-	self.locals = {}
-	self.all_locals = {}
+	self.file_locals = {}  -- file local variables
+	self.locals = {}       -- function local variables
+	self.file_locals_cnt = 1
 end
 
 -------------------------------------------------------------------------------
@@ -67,23 +68,25 @@ function BSym:func_return(ident)
 	end
 
 	-- Generate a table with BS relative addresses of function local variables
-	local base
-	for k,v in pairs(self.locals) do
-		if k == "func" then
-			base = v
-			break
+	if next(self.locals) then
+		local base
+		for k,v in pairs(self.locals) do
+			if k == "func" then
+				base = v
+				break
+			end
 		end
-	end
 
-	local num_stack_var = 0
-	self.all_locals[ident] = {}
-	for k,v in pairs(self.locals) do
-		if k ~= "func" then
-			self.all_locals[ident][k] = base - v
-			num_stack_var = math.min(num_stack_var, base - v)
+		local num_stack_var = 0
+		for k,v in pairs(self.locals) do
+			if k ~= "func" then
+				self:add_debugger_info("svar", self.lineno, k, base - v)
+				num_stack_var = math.min(num_stack_var, base - v)
+			end
 		end
+		self:add_debugger_info("svar", self.lineno, "@num_stack_var@", -num_stack_var)
+		self.locals = {}
 	end
-	self.all_locals[ident]["@nsv@"] = -num_stack_var
 end
 
 -------------------------------------------------------------------------------
@@ -107,6 +110,23 @@ function BSym:is_global_var(val)
 	if self.globals[val] and self.globals[val] == true then
 		return val
 	end
+end
+
+-- Because of ASM limitations, file local variables (static) have to be declared
+-- as global variables. To be able to distinguish local variables with the same name,
+-- add a prefix to the variable name.
+function BSym:next_file_for_local_vars()
+	self.file_locals_cnt = self.file_locals_cnt + 1
+	self.file_locals = {}
+end
+
+function BSym:set_file_local(ident)
+	self.file_locals[ident] = ident .. "@" .. self.file_locals_cnt
+	return self.file_locals[ident]
+end
+
+function BSym:get_file_local(ident)
+	return self.file_locals[ident] or ident
 end
 
 function BSym:is_array(val)

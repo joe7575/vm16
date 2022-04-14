@@ -200,7 +200,7 @@ function BExpr:factor()
 		if BUILDIN[ident] then
 			return self:buildin_call()
 		else
-			return self:func_call()
+			return self:func_call(ident)
 		end
 	elseif tok.type == T_IDENT then
 		return self:variable()
@@ -270,7 +270,7 @@ func_call:
     | address '(' ')'
     | address '(' expression { ',' expression } ')'
 ]]--
-function BExpr:func_call()
+function BExpr:func_call(ident)
 	self:push_regs()
 	-- A function call as parameter is a recursive call to 'func_call'
 	table.insert(self.num_param_stack, self.num_param)
@@ -290,7 +290,8 @@ function BExpr:func_call()
 		end
 	end
 	self:tk_match(")")
-	self:add_item("call", self.lineno, addr)
+	-- TODO: static functions
+	self:add_debugger_info("call", self.lineno, ident, ident)
 	self:add_instr("call", addr)
 	if self.num_param > 0 then
 		self:add_instr("add", "SP", "#" .. self.num_param)
@@ -346,7 +347,8 @@ function BExpr:variable()
 end
 
 function BExpr:ident()
-	return (self:tk_match(T_IDENT) or {}).val
+	local ident = (self:tk_match(T_IDENT) or {}).val
+	return self:get_file_local(ident)
 end
 
 vm16.BExpr = BExpr

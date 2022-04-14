@@ -41,6 +41,7 @@ function BGen:new(o)
 	o.lCode = {}
 	o.lData = {}
 	o.lText = {}
+	o.lDebug = {}
 	o.lGlobal = {}
 	setmetatable(o, self)
 	self.__index = self
@@ -197,6 +198,10 @@ function BGen:add_item(ctype, lineno, val)
 	table.insert(self.lCode, {ctype, lineno, val})
 end
 
+function BGen:add_debugger_info(ctype, lineno, ident, add_info)
+	table.insert(self.lDebug, {ctype, lineno, ident, add_info})
+end
+
 -- For functions and Variables to be declared as global
 function BGen:set_global(name)
 	table.insert(self.lGlobal, name)
@@ -274,33 +279,8 @@ function BGen:gen_output()
 			table.insert(out, item)
 		end
 	end
-	return {locals = self.all_locals, lCode = out}
-end
 
-function BGen:gen_dbg_dump(output)
-	local out = {}
-
-	out[#out + 1] = "#### Code ####"
-	for idx,tok in ipairs(output.lCode) do
-		local ctype, lineno, code = tok[1], tok[2], tok[3]
-		out[#out + 1] = string.format('%5s: (%d) "%s"', ctype, lineno, code)
-	end
-
-	out[#out + 1] = "#### Locals ####"
-	for func, item in pairs(output.locals) do
-		out[#out + 1] = string.format('function %s (%d):', func, item["@nsv@"]) -- number of variables
-		for id, offs in pairs(item) do
-			if id ~= "@nsv@" then
-				if offs > 0 then
-					out[#out + 1] = string.format('  parameter %-12s: %d', id, offs)
-				else
-					out[#out + 1] = string.format('  variable  %-12s: %d', id, offs)
-				end
-			end
-		end
-	end
-
-	return table.concat(out, "\n")
+	return {lCode = out, lDebug = self.lDebug}
 end
 
 vm16.BGen = BGen

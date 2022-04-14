@@ -19,6 +19,9 @@ local prog = vm16.prog
 
 local Libc = dofile(MP .. "/bcomp/libc.lua")
 
+local CpuTime = 0
+local RunTime = 0
+
 local function cpu_server_pos(pos, mem)
 	mem.cpu_pos = mem.cpu_pos or S2P(M(pos):get_string("cpu_pos"))
 	mem.server_pos = mem.server_pos or S2P(M(pos):get_string("server_pos"))
@@ -206,7 +209,15 @@ function vm16.keep_running(cpu_pos, prog_pos, cpu_def)
 
 	if vm16.is_loaded(cpu_pos) then
 		mem.running = true
-		return vm16.run(cpu_pos, cpu_def, mem.breakpoints) < vm16.HALT
+		local t = minetest.get_us_time()
+		local resp = vm16.run(cpu_pos, cpu_def, mem.breakpoints)
+		CpuTime = CpuTime + (minetest.get_us_time() - t)
+		if RunTime < minetest.get_gametime() then
+			minetest.log("action", "[vm16] Generated CPU load = " .. math.floor(CpuTime/1000000) .. "s/h")
+			RunTime = minetest.get_gametime() + 3600
+			CpuTime = 0
+		end
+		return resp < vm16.HALT
 	end
 end
 

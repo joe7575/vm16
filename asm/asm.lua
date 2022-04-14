@@ -10,8 +10,13 @@
 
   The Assembler accepts a list with following code items:
 
-  {CTYPE,  LINENO,  CODESTR,      ADDRESS,  OPCODES}
-  {"code",  2,     "move A, #1",   10,     {0x1020, 0x0001}}
+  {CTYPE,  LINENO,  CODESTR}
+  {"code",  2,     "move A, #1"}
+  
+  And returns  :
+  
+  {CTYPE,  LINENO,  ADDRESS,  OPCODES}
+  {"code",  2,      10,      {0x1020, 0x0001}}
 
 ]]--
 
@@ -20,12 +25,12 @@ local version = "2.3"
 local CTYPE   = 1
 local LINENO  = 2
 local CODESTR = 3
-local ADDRESS = 4
-local OPCODES = 5
+local ADDRESS = 3
+local OPCODES = 4
 
 local tOpcodes = {}
 local tOperands = {}
-local IDENT  = "^[@A-Za-z_][A-Za-z_0-9%.]*"
+local IDENT  = "^[@A-Za-z_][@A-Za-z_0-9%.]*"
 local RIPLBL = "^PC%+[A-Za-z_][A-Za-z_0-9%.]+"
 
 --
@@ -165,9 +170,9 @@ local Asm = {}
 function Asm:new(o)
 	o = o or {}
 	o.address = o.address or 0
-	o.support_namespaces = o.support_namespaces
-	o.globals = {}
+	self.symbols = {}
 	o.all_symbols = {}
+	o.globals = {}
 	setmetatable(o, self)
 	self.__index = self
 	return o
@@ -199,19 +204,15 @@ function Asm:scanner(text, filename)
 			append(lOut, {self.ctype, lineno, codestr})
 		end
 	end
-	return lOut
+	return {lCode = lOut, lDebug = {}}
 end
 
 function Asm:address_label(tok)
 	local codestr = tok[CODESTR]
-	local _, pos, label = codestr:find("^([@A-Za-z_][A-Za-z_0-9]*):( *)")
+	local _, pos, label = codestr:find("^([@A-Za-z_][@A-Za-z_0-9]*):( *)")
 	if label then
 		if self.globals[label] == -1 then
 			self.globals[label] = self.address
-			-- Add 'func' line to the output stream
-			if tok[CTYPE] == "code" then
-				self.set_func = label
-			end
 		else
 			if self.symbols[label] then
 				self:err_msg("Redefinition of label " .. label)
@@ -321,7 +322,7 @@ function Asm:decode_code(tok)
 	if val1 then tbl[#tbl+1] = val1 end
 	if val2 then tbl[#tbl+1] = val2 end
 
-	tok = {"code", tok[LINENO], tok[CODESTR], self.address, tbl}
+	tok = {"code", tok[LINENO], self.address, tbl}
 	self.address = self.address + #tbl
 	return tok
 end
@@ -336,9 +337,9 @@ function Asm:decode_data(tok)
 		end
 	end
 	if #tbl == 1 then
-		tok = {"data", tok[LINENO], self.label, self.address, tbl}
+		tok = {"code", tok[LINENO], self.address, tbl}
 	else
-		tok = {"data", tok[LINENO], self.label .. "[]", self.address, tbl}
+		tok = {"code", tok[LINENO], self.address, tbl}
 	end
 	self.address = self.address + #tbl
 	return tok
@@ -358,7 +359,7 @@ function Asm:decode_text(tok)
 			for i = idx, math.min(idx + 7, ln) do
 				append(tbl, codestr:byte(i))
 			end
-			tok = {"text", tok[LINENO], self.label .. "[]", self.address, tbl}
+			tok = {"code", tok[LINENO], self.address, tbl}
 			self.address = self.address + #tbl
 			append(out, tok)
 		end
@@ -382,7 +383,7 @@ function Asm:decode_ctext(tok)
 			for i = idx, math.min(idx + 15, ln), 2 do
 				append(tbl, word_val(codestr, i))
 			end
-			tok = {"ctext", tok[LINENO], self.label .. "[]", self.address, tbl}
+			tok = {"code", tok[LINENO], self.address, tbl}
 			self.address = self.address + #tbl
 			append(out, tok)
 		end
@@ -400,7 +401,7 @@ function Asm:handle_rip_label(tok, i, opc)
 		elseif self.globals[label] then
 			tok[OPCODES][i] = self.globals[label] - (tok[ADDRESS] or 0)
 		else
-			self:err_msg("Unknown label " .. label)
+			self:err_msg("Unknown RIP label " .. label)
 		end
 		return true
 	end
@@ -416,28 +417,17 @@ function Asm:handle_label(tok, i, label)
 	end
 end
 
-function Asm:assembler(filename, lToken)
+function Asm:assembler(filename, output)
 	local lOut = {}
-	-- pass 1
 	self.filename = filename
-	self.all_symbols[self.filename] = {}
-	self.symbols = self.all_symbols[self.filename]
 
-	for _,tok in ipairs(lToken or {}) do
+	-- pass 1
+	for _,tok in ipairs(output.lCode or {}) do
 		self.lineno = tok[LINENO]
 		tok = self:global_def(tok)
 		tok = self:org_directive(tok)
 		tok = self:address_label(tok)
 		self.ctype = tok[CTYPE]
-
-		if self.set_global then
-			append(lOut, {"code", self.lineno, "global " .. self.set_global})
-			self.set_global = nil
-		end
-		if self.set_func then
-			append(lOut, {"func", self.lineno, self.set_func})
-			self.set_func = nil
-		end
 
 		if tok[CODESTR] ~= "" then
 			if self.ctype == "code" then
@@ -449,27 +439,20 @@ function Asm:assembler(filename, lToken)
 			elseif self.ctype == "ctext" then
 				extend(lOut, self:decode_ctext(tok))
 			elseif self.ctype == "file" then
+				self.all_symbols[self.filename] = self.symbols
+				self.symbols = {}
 				self.filename = tok[CODESTR]
-				append(lOut, tok)
-				self.all_symbols[self.filename] = {}
-				self.symbols = self.all_symbols[self.filename]
-			else
-				append(lOut, tok)
+				append(lOut, {"file", self.lineno, self.address, self.filename})
 			end
 		end
 	end
+	self.all_symbols[self.filename] = self.symbols
 
 	-- pass 2
 	for _,tok in ipairs(lOut) do
 		self.lineno = tok[LINENO]
-		if tok[CTYPE] == "file" then
-			self.filename = tok[CODESTR]
-			self.symbols = self.all_symbols[self.filename]
-		elseif tok[CTYPE] == "func" then
-			tok[ADDRESS] = self.globals[tok[CODESTR]] or 0
-		elseif tok[CTYPE] == "call" then
-			tok[ADDRESS] = self.globals[tok[CODESTR]] or 0
-		else
+		local ctype = tok[CTYPE]
+		if ctype == "code" then
 			for i, opc in ipairs(tok[OPCODES] or {}) do
 				if type(opc) == "string" then
 					if not self:handle_rip_label(tok, i, opc) then
@@ -477,30 +460,32 @@ function Asm:assembler(filename, lToken)
 					end
 				end
 			end
+		elseif ctype == "file" then
+			self.filename = tok[4]
+			self.symbols = self.all_symbols[self.filename]
+		end
+	end
+	
+	local lOut2 = {}
+	for _,tok in ipairs(output.lDebug) do
+		local ctype, lineno, ident, add_info = tok[1], tok[2], tok[3], tok[4]
+		if ctype == "gvar" then
+			append(lOut2, {ctype, lineno, self.globals[ident], add_info or ident})
+		elseif ctype == "lvar" then
+			append(lOut2, {ctype, lineno, self.globals[ident], add_info})
+		elseif ctype == "svar" then
+			append(lOut2, {ctype, lineno, add_info, ident})
+		elseif ctype == "func" or ctype == "call" then
+			local addr = self.globals[ident] or self.symbols[ident] or 0
+			append(lOut2, {ctype, lineno, addr, ident})
+		elseif ctype == "file" then
+			append(lOut2, {ctype, lineno, 0, ident})
+		else
+			self:err_msg("Unknown token ctype " .. ctype)
 		end
 	end
 
-	return lOut
-end
-
-function Asm:listing(lToken)
-	local mydump = function(tbl)
-		local t = {}
-		for _,e in ipairs(tbl or {}) do
-			if type(e) == "number" then
-				table.insert(t, string.format("%04X", e))
-			else
-				table.insert(t, "'"..e.."'")
-			end
-		end
-		return table.concat(t, " ")
-	end
-
-	local out = {}
-	for _,tok in ipairs(lToken) do
-		append(out, string.format("%5s %3d %04X: %-15s %s", tok[CTYPE], tok[LINENO] or 0, tok[ADDRESS] or 0, tok[CODESTR], mydump(tok[OPCODES])))
-	end
-	return table.concat(out, "\n")
+	return {lCode = lOut, lDebug = lOut2}
 end
 
 vm16.Asm = Asm

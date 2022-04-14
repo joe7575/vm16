@@ -15,13 +15,15 @@ local M = minetest.get_meta
 local DBG = function() end --print
 local Lut = {}
 
-function Lut:new()
+function Lut:new(o)
 	o = {}
 	o.items = {}
 	o.addr2lineno = {}
 	o.lineno2addr = {}
 	o.step_in = {}
 	o.globals = {}
+	o.func_locals = {}
+	o.file_locals = {}
 	o.last_lineno = 0  -- source file size in lines
 	o.last_used_mem_addr = 0
 	setmetatable(o, self)
@@ -46,7 +48,7 @@ function Lut:init(obj)
 	end
 
 	for _, item in ipairs(obj.lCode) do
-		local ctype, lineno, scode, address, opcodes = unpack(item)
+		local ctype, lineno, address, opcodes = item[1], item[2], item[3],item[4]
 		self.last_used_mem_addr = math.max(self.last_used_mem_addr, address or 0)
 		if ctype == "code" and #opcodes > 0 then
 			self.lineno2addr[file] = self.lineno2addr[file] or {}
@@ -55,33 +57,47 @@ function Lut:init(obj)
 			self.last_lineno = math.max(self.last_lineno, lineno)
 			lineno2 = lineno
 			address2 = address
-		elseif ctype == "data" then
-			self.globals[#self.globals + 1] = {name = scode, addr = address, type = "global"}
-		elseif ctype == "ctext" and scode:sub(1,1) ~= "@" then
-			self.globals[#self.globals + 1] = {name = scode, addr = address, type = "global"}
-		elseif ctype == "file" then
+		end
+	end
+	
+	for _, item in ipairs(obj.lDebug) do
+		local ctype, lineno, address, ident, info = item[1], item[2], item[3], item[4], item[5]
+		self.last_used_mem_addr = math.max(self.last_used_mem_addr, address or 0)
+		if ctype == "file" then
 			add(file, func, lineno1, lineno2, address1, address2)
-			file = scode
+			file = ident
 			address1 = nil
+			self.file_locals[file] = {}
 		elseif ctype == "func" then
 			add(file, func, lineno1, lineno, address1, address - 1)
-			func = scode
+			func = ident
 			lineno1 = lineno
 			address1 = address
 		elseif ctype == "call" then
 			self.step_in[file] = self.step_in[file] or {}
 			self.step_in[file][lineno] = address
+		elseif ctype == "gvar" then
+			self.globals[#self.globals + 1] = {name = ident, addr = address, type = "global"}
+		elseif ctype == "lvar" then
+			self.file_locals[file][#self.file_locals + 1] = {name = ident, addr = address, type = "global"}
+		elseif ctype == "svar" then
+			self.func_locals[func] = self.func_locals[func] or {}
+			self.func_locals[func][ident] = address
 		end
 	end
 	add(file, func, lineno1, lineno2, address1, address2)
 
-	self.locals = obj.locals
 	table.sort(self.globals, function(a,b) return a.name < b.name end)
 end
 
 function Lut:get_globals()
 	DBG("Lut:get_globals")
 	return self.globals
+end
+
+function Lut:get_file_locals(filename)
+	DBG("Lut:get_file_locals")
+	return self.file_locals[filename]
 end
 
 function Lut:get_locals(address)
