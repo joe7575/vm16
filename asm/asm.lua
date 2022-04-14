@@ -419,6 +419,7 @@ end
 
 function Asm:assembler(filename, output)
 	local lOut = {}
+	local files = {}
 	self.filename = filename
 
 	-- pass 1
@@ -443,6 +444,7 @@ function Asm:assembler(filename, output)
 				self.symbols = {}
 				self.filename = tok[CODESTR]
 				append(lOut, {"file", self.lineno, self.address, self.filename})
+				files[self.filename] = self.address
 			end
 		end
 	end
@@ -467,6 +469,7 @@ function Asm:assembler(filename, output)
 	end
 	
 	local lOut2 = {}
+	local ref_to_post_add
 	for _,tok in ipairs(output.lDebug) do
 		local ctype, lineno, ident, add_info = tok[1], tok[2], tok[3], tok[4]
 		if ctype == "gvar" then
@@ -479,7 +482,14 @@ function Asm:assembler(filename, output)
 			local addr = self.globals[ident] or self.symbols[ident] or 0
 			append(lOut2, {ctype, lineno, addr, ident})
 		elseif ctype == "file" then
+			append(lOut2, {ctype, lineno, files[self.filename], ident})
+			if ref_to_post_add then
+				ref_to_post_add[3] = files[self.filename] - 1
+				ref_to_post_add = nil
+			end
+		elseif ctype == "endf" then
 			append(lOut2, {ctype, lineno, 0, ident})
+			ref_to_post_add = lOut2[#lOut2]
 		else
 			self:err_msg("Unknown token ctype " .. ctype)
 		end
