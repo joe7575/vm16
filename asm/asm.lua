@@ -8,16 +8,6 @@
   AGPL v3
   See LICENSE.txt for more information
 
-  The Assembler accepts a list with following code items:
-
-  {CTYPE,  LINENO,  CODESTR}
-  {"code",  2,     "move A, #1"}
-  
-  And returns  :
-  
-  {CTYPE,  LINENO,  ADDRESS,  OPCODES}
-  {"code",  2,      10,      {0x1020, 0x0001}}
-
 ]]--
 
 local version = "2.3"

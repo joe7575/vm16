@@ -11,16 +11,6 @@
   Scanner/Tokenizer
 
   The Scanner is called recursive to handle import files.
-  It generates a list with tokens according to:
-
-  {type = T_IDENT, val = "while", lineno = 5}
-  {type = T_BRACE, val = "(", lineno = 5}
-  {type = T_NUMBER, val = 1, lineno = 5}
-  {type = T_BRACE, val = ")", lineno = 5}
-
-  {type = T_ASMSRC, val = "move A, #1", lineno = 7}
-
-  {type = T_NEWFILE, val = "test.c", lineno = 8}
 
 ]]--
 
