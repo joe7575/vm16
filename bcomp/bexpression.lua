@@ -290,7 +290,6 @@ function BExpr:func_call(ident)
 		end
 	end
 	self:tk_match(")")
-	-- TODO: static functions
 	self:add_debugger_info("call", self.lineno, ident, ident)
 	self:add_instr("call", addr)
 	if self.num_param > 0 then

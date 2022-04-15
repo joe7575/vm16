@@ -216,7 +216,6 @@ function BPars:func_def(static)
 	if not static then
 		self:set_global(ident)
 	end
-	-- TODO: static functions
 	self:add_debugger_info("func", self.lineno, ident)
 	self:add_func(ident)
 	self.func_name = ident

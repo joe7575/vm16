@@ -220,7 +220,6 @@ function Asm:address_label(tok)
 			self.symbols[label] = self.address
 		end
 		tok[CODESTR] = codestr:sub(pos+1, -1)
-		self.label = label
 	end
 	return tok
 end
@@ -487,6 +486,7 @@ function Asm:assembler(filename, output)
 				ref_to_post_add[3] = files[ident] - 1
 				ref_to_post_add = nil
 			end
+			self.symbols = self.all_symbols[ident]
 		elseif ctype == "endf" then
 			append(lOut2, {ctype, lineno, self.address, ident})
 			ref_to_post_add = lOut2[#lOut2]
