@@ -39,41 +39,42 @@ function Lut:init(obj)
 	local lineno1, lineno2
 	local address1, address2
 	local file1
+	local file_start_address = {}
 
-	local add = function(_file, _func, l1, l2, a1, a2)
+	local add = function(_file, _func, a1, a2)
 		if a1 then
 			self.items[#self.items + 1] =
-				{file = _file, func = _func, lines = {l1, l2}, addresses = {a1, a2}}
+				{file = _file, func = _func, addresses = {a1, a2}}
 		end
 	end
 
 	for _, item in ipairs(obj.lCode) do
-		local ctype, lineno, address, opcodes = item[1], item[2], item[3],item[4]
+		local ctype, lineno, address, ident = item[1], item[2], item[3],item[4]
 		self.last_used_mem_addr = math.max(self.last_used_mem_addr, address or 0)
-		if ctype == "code" and #opcodes > 0 then
+		if ctype == "file" then
+			file = ident
+		elseif ctype == "code" then
 			self.lineno2addr[file] = self.lineno2addr[file] or {}
 			self.lineno2addr[file][lineno] = self.lineno2addr[file][lineno] or address
 			self.addr2lineno[address] = lineno
 			self.last_lineno = math.max(self.last_lineno, lineno)
-			lineno2 = lineno
-			address2 = address
 		end
 	end
 	
 	for _, item in ipairs(obj.lDebug) do
-		local ctype, lineno, address, ident, info = item[1], item[2], item[3], item[4], item[5]
+		local ctype, lineno, address, ident = item[1], item[2], item[3], item[4]
 		self.last_used_mem_addr = math.max(self.last_used_mem_addr, address or 0)
 		if ctype == "file" then
-			add(file, func, lineno1, lineno2, address1, address2)
 			file = ident
-			address1 = nil
+			file_start_address[file] = address
 			self.file_locals[file] = {}
+		elseif ctype == "endf" then
+			add(file, "", file_start_address[ident], address)
 		elseif ctype == "func" then
-			add(file, func, lineno1, lineno, address1, address - 1)
-			func = ident
-			lineno1 = lineno
-			address1 = address
-		elseif ctype == "call" then
+			add(file, ident, address, 0)
+		end
+		
+		if ctype == "call" then
 			self.step_in[file] = self.step_in[file] or {}
 			self.step_in[file][lineno] = address
 		elseif ctype == "gvar" then
@@ -85,7 +86,6 @@ function Lut:init(obj)
 			self.func_locals[func][ident] = address
 		end
 	end
-	add(file, func, lineno1, lineno2, address1, address2)
 
 	table.sort(self.globals, function(a,b) return a.name < b.name end)
 end
@@ -104,8 +104,8 @@ function Lut:get_locals(address)
 	DBG("Lut:get_locals", address)
 	if address then
 		local item = self:get_item(address or 0)
-		if item and self.locals[item.func] then
-			return self.locals[item.func]
+		if item and self.func_locals[item.func] then
+			return self.func_locals[item.func]
 		end
 	end
 	DBG("Lut:get_locals", "oops")
@@ -123,17 +123,6 @@ function Lut:get_item(address)
 	DBG("Lut:get_item", "oops")
 end
 
-function Lut:get_item_by_lineno(lineno)
-	DBG("Lut:get_item_by_lineno", lineno)
-	if lineno then
-		for _, item in ipairs(self.items) do
-			if lineno >= item.lines[1] and lineno <= item.lines[2] then
-				return item
-			end
-		end
-	end
-	DBG("Lut:get_item_by_lineno", "oops")
-end
 
 function Lut:get_line(address)
 	DBG("Lut:get_line", address)
@@ -184,7 +173,7 @@ end
 
 function Lut:get_stepin_address(file, lineno)
 	DBG("Lut:get_stepin_address", file, lineno)
-	if file and lineno and self.step_in[file][lineno] and self.step_in[file][lineno] then
+	if file and lineno and self.step_in[file] and self.step_in[file][lineno] then
 		return self.step_in[file][lineno]
 	end
 	DBG("Lut:get_stepin_address", "oops")

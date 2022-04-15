@@ -123,18 +123,20 @@ function vm16.debug.init(pos, mem, obj)
 	mem.breakpoints = {}
 	mem.breakpoint_lines = {}
 	mem.output = ""
+	--print(vm16.dump_compiler_output(obj))
 	mem.lut = vm16.Lut:new()
 	mem.lut:init(obj)
 
-	--print(vm16.dump_obj_code_listing(obj))
 	mem.cpu_def = prog.get_cpu_def(mem.cpu_pos)
 	local mem_size = mem.cpu_def and mem.cpu_def.on_mem_size(mem.cpu_pos) or 3
 	vm16.create(mem.cpu_pos, mem_size)
 
 	for _, item in ipairs(obj.lCode) do
-		local ctype, lineno, scode, address, opcodes = unpack(item)
-		for i, opc in pairs(opcodes or {}) do
-			vm16.poke(mem.cpu_pos, address + i - 1, opc)
+		local ctype, lineno, address, opcodes = unpack(item)
+		if ctype == "code" then
+			for i, opc in pairs(opcodes or {}) do
+				vm16.poke(mem.cpu_pos, address + i - 1, opc)
+			end
 		end
 	end
 

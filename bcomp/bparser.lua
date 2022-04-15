@@ -72,8 +72,10 @@ function BPars:definition()
 		self:tk_match("func")
 		self:func_def()
 	elseif tok.type == T_NEWFILE then
-		self:add_item("file", tok.lineno, tok.val)
-		self:add_debugger_info("file", tok.lineno, tok.val)
+		if self:tk_next().type ~= T_NEWFILE or tok.lineno == 0 then
+			self:add_item("file", tok.lineno, tok.val)
+			self:add_debugger_info("file", tok.lineno, tok.val)
+		end
 		self:tk_match(T_NEWFILE)
 		self:end_asm_code()
 		self:next_file_for_local_vars()

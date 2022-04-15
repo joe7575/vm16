@@ -87,8 +87,7 @@ function  BScan:import_file(filename)
 	})
 	i:bscan_init()
 	local last_lineno = i:scanner(filename)
-	table.insert(lToken, {type = T_ENDFILE, val = filename, lineno = last_lineno})
-	table.insert(lToken, {type = T_NEWFILE, val = self.filename, lineno = 0})
+	table.insert(lToken, {type = T_NEWFILE, val = self.filename, lineno = self.lineno})
 end
 
 function BScan:tokenize(text)
@@ -180,6 +179,8 @@ function BScan:scanner(filename)
 		end
 	end
 
+	table.insert(lToken, {type = T_ENDFILE, val = filename, lineno = self.lineno})
+	
 	if self.nested_calls == 0 then
 		self.lTok = lToken
 		lToken = {}

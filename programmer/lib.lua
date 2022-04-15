@@ -61,25 +61,42 @@ function vm16.prog.get_cpu_def(cpu_pos)
 	end
 end
 
-function vm16.dump_obj_code_listing(obj)
+function vm16.dump_compiler_output(output)
 	local mydump = function(tbl)
 		local t = {}
-		for _,e in ipairs(tbl or {}) do
-			if type(e) == "number" then
-				table.insert(t, string.format("%04X", e))
-			else
-				table.insert(t, "'"..e.."'")
+		if type(tbl) == "table" then
+			for _,e in ipairs(tbl) do
+				if type(e) == "number" then
+					table.insert(t, string.format("%04X", e))
+				else
+					table.insert(t, "'"..e.."'")
+				end
 			end
+			return table.concat(t, " ")
 		end
-		return table.concat(t, " ")
+		return tostring(tbl)
 	end
 
-	local out = {"##### VM16 Object Code #####"}
-	if obj and obj.lCode then
-		for _,item in ipairs(obj.lCode) do
-			local ctype, lineno, scode, address, opcodes = unpack(item)
-			table.insert(out, string.format("%5s %3d %04X: %-15s %s", ctype, lineno, address or 0, scode, mydump(opcodes)))
+	local out = {}
+	out[#out + 1] = "#### Code ####"
+	for idx,tok in ipairs(output.lCode) do
+		local ctype, lineno, address, info = tok[1], tok[2], tok[3],tok[4]
+		if ctype == "file" then
+			out[#out + 1] = string.format("%5s %3d %04X: %s", ctype, lineno, address, info)
+		else
+			out[#out + 1] = string.format("%5s %3d %04X: %s", ctype, lineno, address or -1000, mydump(info) or "uups")
 		end
 	end
+
+	out[#out + 1] = "#### Debug ####"
+	for idx,tok in ipairs(output.lDebug) do
+		local ctype, lineno, address, ident = tok[1], tok[2], tok[3], tok[4]
+		if ctype == "svar" then
+			out[#out + 1] = string.format('%5s %3d  %3d: "%s"', ctype, lineno, address or -1000, ident or "oops")
+		else
+			out[#out + 1] = string.format('%5s %3d %04X: "%s"', ctype, lineno, address or -1000, ident or "oops")
+		end
+	end
+
 	return table.concat(out, "\n")
 end

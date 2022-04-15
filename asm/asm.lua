@@ -482,13 +482,13 @@ function Asm:assembler(filename, output)
 			local addr = self.globals[ident] or self.symbols[ident] or 0
 			append(lOut2, {ctype, lineno, addr, ident})
 		elseif ctype == "file" then
-			append(lOut2, {ctype, lineno, files[self.filename], ident})
+			append(lOut2, {ctype, lineno, files[ident], ident})
 			if ref_to_post_add then
-				ref_to_post_add[3] = files[self.filename] - 1
+				ref_to_post_add[3] = files[ident] - 1
 				ref_to_post_add = nil
 			end
 		elseif ctype == "endf" then
-			append(lOut2, {ctype, lineno, 0, ident})
+			append(lOut2, {ctype, lineno, self.address, ident})
 			ref_to_post_add = lOut2[#lOut2]
 		else
 			self:err_msg("Unknown token ctype " .. ctype)

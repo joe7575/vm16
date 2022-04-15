@@ -44,15 +44,15 @@ local function gen_varlist(pos, mem)
 		for _, item in ipairs(mem.lut:get_globals() or {}) do
 			out[#out + 1] = item
 		end
-		for _, item in ipairs(mem.lut:get_file_locals(self.file_name) or {}) do
+		for _, item in ipairs(mem.lut:get_file_locals(mem.file_name) or {}) do
 			out[#out + 1] = item
 		end
 		out[#out + 1] = {name = "", addr = 0}
 		-- Locals
 		local locals = mem.lut:get_locals(cpu.PC) or {}
 		for var, offs in pairs(locals) do
-			if var ~= "@nsv@" then
-				local addr = var_address(cpu, offs, locals["@nsv@"])
+			if var ~= "@num_stack_var@" then
+				local addr = var_address(cpu, offs, locals["@num_stack_var@"])
 				out[#out + 1] = {name = var, addr = addr, type = "local"}
 			end
 		end
