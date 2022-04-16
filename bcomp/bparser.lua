@@ -76,6 +76,7 @@ function BPars:definition()
 			self:add_item("file", tok.lineno, tok.val)
 			self:add_debugger_info("file", tok.lineno, tok.val)
 		end
+		self.filename = tok.val
 		self:tk_match(T_NEWFILE)
 		self:end_asm_code()
 		self:next_file_for_local_vars()

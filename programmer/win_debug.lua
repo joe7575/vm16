@@ -14,6 +14,7 @@
 local M = minetest.get_meta
 local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
 local S2P = function(s) return minetest.string_to_pos(s) end
+local hex = function(val) return string.format("%04X", val) end
 local prog = vm16.prog
 local server = vm16.server
 local file_ext = vm16.file_ext
@@ -254,7 +255,7 @@ function vm16.debug.on_receive_fields(pos, fields, mem)
 			local addr = mem.lut:get_stepin_address(mem.file_name, mem.curr_lineno) or 0
 			local item = loadfile_by_address(mem, addr)
 			if item then
-				local lineno = mem.lut:get_line(item.addresses[1])
+				local lineno = mem.lut:get_line(addr)
 				set_temp_breakpoint(pos, mem, lineno)
 				start_cpu(mem)
 			end

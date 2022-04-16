@@ -114,13 +114,13 @@ function vm16.assemble(pos, filename, readfile, asmdbg, debug)
 	end
 
 	-- Debugger uses "out.asm" and needs therefore the correct file references
---	if asmdbg then
---		for _,item in ipairs(res.lCode) do
---			if item[1] == "file" then
---				item[4] = "out.asm"
---			end
---		end
---	end
+	if asmdbg then
+		for _,item in ipairs(res.lCode) do
+			if item[1] == "file" then
+				item[4] = "out.asm"
+			end
+		end
+	end
 	
 	return true, res
 end
