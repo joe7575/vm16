@@ -124,6 +124,12 @@ Licensed under the GNU GPLv3 (See LICENSE.txt)
 
 ## History
 
+### API v3.3/Core v2.6.5/asm v2.4/Compiler v1.4 (2022-04-16)
+
+- Add static variables and functions
+- Add strcmp and memcmp functions
+- Fix some bugs
+
 ### API v3.3/Core v2.6.5/asm v2.3/Compiler v1.3 (2022-04-08)
 
 - Change stdout from output(0,...) to system(0,...)

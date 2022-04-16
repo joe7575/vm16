@@ -10,7 +10,7 @@
 	Editor window for the debugger
 ]]--
 
-local version = "1.0"
+local version = "1.1"
 
 -- for lazy programmers
 local M = minetest.get_meta

@@ -10,7 +10,7 @@
 
 ]]--
 
-local version = "2.3"
+local version = "2.4"
 
 local CTYPE   = 1
 local LINENO  = 2
