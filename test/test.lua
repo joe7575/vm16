@@ -12,19 +12,19 @@ dofile(MP.."/meta.lua")
 minetest = core
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
-
 local MP = "/home/joachim/minetest5/mods/vm16"
 vm16 = {}
 local vm16lib = require("vm16lib")
-print(vm16lib.version())
+print("vm16 version = " .. vm16lib.version())
 assert(loadfile(MP.."/api.lua"))(vm16lib)
 dofile(MP.."/lib.lua")
+dofile(MP.."/asm/asm.lua")
 
 print("Do some tests...")
 
 for i = 1,10 do
 
-	local vm = vm16lib.init(3)
+	local vm = vm16lib.init(6)
 	assert(vm16lib.mem_size(vm) == 4096)
 
 	assert(vm16lib.set_pc(vm, 0x1234) == true)
@@ -38,7 +38,8 @@ for i = 1,10 do
 	assert(vm16lib.get_pc(vm) == 4)
 
 	local s = vm16lib.get_vm(vm)
-	assert(#s == (8*1024 + 46) * 2)
+	print(#s, (8*1024 + 54) * 2)
+	assert(#s == (8*1024 + 54) * 2)
 	assert(vm16lib.set_vm(vm, s) == true)
 
 	local tbl = vm16lib.read_mem(vm, 0 ,4)
@@ -148,32 +149,59 @@ local Code = {
 local pos = {x=0, y=0, z=0}
 local cnt = 0
 
-local function on_input(pos, address)
-	cnt = cnt + 1
-	print("input", cnt)
-	return address
-end
+-- CPU definition
+local cpu_def = {
+	cycle_time = 0.1, -- timer cycle time
+	instr_per_cycle = 10000,
+	input_costs = 1000,  -- number of instructions
+	output_costs = 5000, -- number of instructions
+	system_costs = 2000, -- number of instructions
+	-- Called for each 'input' instruction.
+	on_input = function(pos, address)
+		cnt = cnt + 1
+		print("input", cnt)
+		return address
+	end,
+	-- Called for each 'output' instruction.
+	on_output = function(pos, address, val1, val2)
+		cnt = cnt + 1
+		print("output", cnt)
+		return 100
+	end,
+	-- Called for each 'system' instruction.
+	on_system = function(pos, address, val1, val2)
+		print("on_system", address, val1, val2)
+		return 0x55
+	end,
+	-- Called when CPU stops.
+	on_update = function(pos, resp)
+	end,
+	-- Called when the programmers info/splash screen is displayed
+	on_init = function(pos, prog_pos)
+	end,
+	on_mem_size = function(pos)
+		return 4  -- 1024 words
+	end,
+	on_start = function(pos)
+	end,
+	on_stop = function(pos)
+	end,
+	on_check_connection = function(pos)
+	end,
+	on_infotext = function(pos)
+		return ""
+	end,
+}
 
-local function on_output(pos, address, value)
-	cnt = cnt + 1
-	print("output", cnt)
-	return true
-	--return false
-end
 
-local function on_system(pos, address, val1, val2)
-	print("on_system", address, val1, val2)
-	return 0x55
-end
 
 vm16.create(pos, 1)
-vm16.register_callbacks(on_input, on_output, on_system)
 vm16.write_mem(pos, 0, Code)
-print(vm16.CallResults[vm16.run(pos)])  -- 1. nop
-print(vm16.CallResults[vm16.run(pos)])  -- 2. nop
-print(vm16.CallResults[vm16.run(pos)])  -- in/out loop
-print(vm16.CallResults[vm16.run(pos)])  -- in/out loop
-print(vm16.CallResults[vm16.run(pos)])  -- sys loop
+print(vm16.CallResults[vm16.run(pos, cpu_def)])  -- 1. nop
+print(vm16.CallResults[vm16.run(pos, cpu_def)])  -- 2. nop
+print(vm16.CallResults[vm16.run(pos, cpu_def)])  -- in/out loop
+print(vm16.CallResults[vm16.run(pos, cpu_def)])  -- in/out loop
+print(vm16.CallResults[vm16.run(pos, cpu_def)])  -- sys loop
 
 local s2 = vm16.read_h16(pos)
 print(s2, vm16.write_h16(pos, s2))
@@ -181,51 +209,11 @@ print(s2, vm16.write_h16(pos, s2))
 -- illegal opcode
 vm16.write_mem(pos, 0, {0xff00, 0xff00, 0xff00, 0xff00})
 assert(vm16.set_pc(pos, 0) == true)
-assert(vm16.run(pos) == vm16.ERROR)
+assert(vm16.run(pos, cpu_def) == vm16.ERROR)
 
--------------------------------------------------------------------------------
--- Breakpoint test
--------------------------------------------------------------------------------
-
-Code = {
-	0x1200, 0x0002,  -- jump, #2
-	0x1200, 0x0004,  -- jump, #4
-	0x1200, 0x0006,  -- jump, #6
-	0x1200, 0x0000,  -- jump, #0
-}
-
-local Breakpoints = {}
-
-local function hexdump(tbl)
-	local t = {}
-	for i,val in ipairs(tbl) do
-		t[i] = string.format("%04X", val)
-	end
-	print(table.concat(t, " "))
-end
-
-vm16.write_mem(pos, 0, Code)
-local s = vm16.read_mem_bin(pos, 0, 8)
-assert(#s == 16)
-vm16.write_mem_bin(pos, 0, s)
-
-assert(vm16.set_pc(pos, 0) == true)
-assert(vm16.run(pos, 100) == vm16.OK)
-hexdump(vm16.read_mem(pos, 0, 8))
-
-local opc = vm16.set_breakpoint(pos, 4, Breakpoints)
-assert(vm16.run(pos, 8, nil, Breakpoints) == vm16.BREAK)
-assert(vm16.get_pc(pos) == 4)
-hexdump(vm16.read_mem(pos, 0, 8))
-assert(vm16.run(pos, 1, nil, Breakpoints) == vm16.OK)
-hexdump(vm16.read_mem(pos, 0, 8))
-assert(vm16.run(pos, 8, nil, Breakpoints) == vm16.BREAK)
-assert(vm16.get_pc(pos) == 4)
-hexdump(vm16.read_mem(pos, 0, 8))
-vm16.reset_breakpoint(pos, 4, Breakpoints)
-hexdump(vm16.read_mem(pos, 0, 8))
-assert(vm16.run(pos, 100) == vm16.OK)
-
+vm16.write_mem_as_str(pos, 0x100, "111122223333444455AAEEFF")
+local buff = vm16.read_mem_as_str(pos, 0x100, 6)
+print(buff)
 
 
 print("finished.")

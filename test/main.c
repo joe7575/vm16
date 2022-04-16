@@ -168,10 +168,51 @@ void test4(void) {
     free(C);
 }
 
+void test5(void) {
+    char buffer[BUFF_SIZE];
+    uint32_t num;
+    uint16_t val;
+
+    uint32_t ran;
+    uint32_t size = vm16_calc_size(5);
+    vm16_t *C = (vm16_t *)malloc(size);
+    vm16_init(C, size);
+
+    vm16_poke(C, 0x0100, 0x1111);
+    vm16_poke(C, 0x0101, 0x2222);
+    vm16_poke(C, 0x0102, 0x3333);
+    vm16_poke(C, 0x0103, 0x4444);
+
+    num = vm16_read_mem_as_str(C, 0x100, 4, buffer);
+    printf("%s\n", buffer);
+    num = vm16_write_mem_as_str(C, 0x100, 4, buffer);
+    num = vm16_read_mem_as_str(C, 0x100, 4, buffer);
+    printf("%s\n", buffer);
+
+    assert(vm16_peek(C, 0x0100) == 0x1111);
+    assert(vm16_peek(C, 0x0101) == 0x2222);
+    assert(vm16_peek(C, 0x0102) == 0x3333);
+    assert(vm16_peek(C, 0x0103) == 0x4444);
+
+    num = vm16_write_mem_as_str(C, 0x100, 4, "1234567855AAEEFF");
+    num = vm16_read_mem_as_str(C, 0x100, 4, buffer);
+    printf("%s\n", buffer);
+
+    assert(vm16_peek(C, 0x0100) == 0x1234);
+    assert(vm16_peek(C, 0x0101) == 0x5678);
+    assert(vm16_peek(C, 0x0102) == 0x55aa);
+    assert(vm16_peek(C, 0x0103) == 0xeeff);
+
+    printf("ok\n");
+
+    free(C);
+}
+
 int main() {
-    test1();
-    test2();
+    //test1();
+    //test2();
     //test3();
-    test4();
+    //test4();
+    test5();
     return 0;
 }

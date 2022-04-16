@@ -351,6 +351,54 @@ uint32_t vm16_read_mem(vm16_t *C, uint16_t addr, uint16_t num, uint16_t *p_buffe
     return 0;
 }
 
+uint32_t vm16_write_mem(vm16_t *C, uint16_t addr, uint16_t num, uint16_t *p_buffer) {
+    if(VM_VALID(C)) {
+        if((p_buffer != NULL) && (num > 0) && (num <= C->mem_size)) {
+            for(int i=0; i<num; i++) {
+                *ADDR_DST(C, addr) = *p_buffer++;
+                addr++;
+            }
+            return num;
+        }
+    }
+    return 0;
+}
+
+uint32_t vm16_read_mem_as_str(vm16_t *C, uint16_t addr, uint16_t num, char *p_buffer) {
+    if(VM_VALID(C)) {
+        if((p_buffer != NULL) && (num > 0) && (num <= C->mem_size)) {
+            for(int i=0; i<num; i++) {
+                uint16_t val = *ADDR_SRC(C, addr);
+                *p_buffer++ = NTOA((val >> 12) & 0x0f);
+                *p_buffer++ = NTOA((val >>  8) & 0x0f);
+                *p_buffer++ = NTOA((val >>  4) & 0x0f);
+                *p_buffer++ = NTOA((val >>  0) & 0x0f);
+                addr++;
+            }
+            return num;
+        }
+    }
+    return 0;
+}
+
+uint32_t vm16_write_mem_as_str(vm16_t *C, uint16_t addr, uint16_t num, char *p_buffer) {
+    if(VM_VALID(C)) {
+        if((p_buffer != NULL) && (num > 0) && (num <= C->mem_size)) {
+            for(int i=0; i<num; i++) {
+                char c1 = *p_buffer++;
+                char c2 = *p_buffer++;
+                char c3 = *p_buffer++;
+                char c4 = *p_buffer++;
+                *ADDR_DST(C, addr) = (ATON(c1) << 12) + (ATON(c2) <<  8) +
+                                     (ATON(c3) <<  4) + ATON(c4);
+                addr++;
+            }
+            return num;
+        }
+    }
+    return 0;
+}
+
 uint16_t vm16_read_ascii(vm16_t *C, uint16_t addr, uint16_t num, char *p_buffer) {
     if(VM_VALID(C)) {
         if((p_buffer != NULL) && (num > 0) && (num <= C->mem_size)) {
@@ -380,19 +428,6 @@ uint16_t vm16_read_ascii(vm16_t *C, uint16_t addr, uint16_t num, char *p_buffer)
 }
 
 uint32_t vm16_write_ascii(vm16_t *C, uint16_t addr, uint16_t num, char *p_buffer) {
-    if(VM_VALID(C)) {
-        if((p_buffer != NULL) && (num > 0) && (num <= C->mem_size)) {
-            for(int i=0; i<num; i++) {
-                *ADDR_DST(C, addr) = *p_buffer++;
-                addr++;
-            }
-            return num;
-        }
-    }
-    return 0;
-}
-
-uint32_t vm16_write_mem(vm16_t *C, uint16_t addr, uint16_t num, uint16_t *p_buffer) {
     if(VM_VALID(C)) {
         if((p_buffer != NULL) && (num > 0) && (num <= C->mem_size)) {
             for(int i=0; i<num; i++) {

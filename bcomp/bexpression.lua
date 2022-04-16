@@ -148,6 +148,12 @@ function BExpr:unary()
 		return "[" .. reg .. "]"
 	elseif val == "&" then
 		self:tk_match("&")
+		local opnd = self:postfix()
+		if opnd == "[X]" then
+			return "X"
+		elseif opnd == "[Y]" then
+			return "Y"
+		end
 		return "#" .. self:postfix() -- TODO
 	end
 	return self:postfix()

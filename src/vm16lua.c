@@ -200,6 +200,35 @@ static int write_mem_bin(lua_State *L) {
     return 0;
 }
 
+static int read_mem_as_str(lua_State *L) {
+    vm16_t *C = check_vm(L);
+    lua_Integer addr = luaL_checkinteger(L, 2);
+    lua_Integer num = luaL_checkinteger(L, 3);
+    char *p_data = (char*)malloc(num * 4);
+    if((C != NULL) && (p_data != NULL) && (num > 0)) {
+        uint16_t words = vm16_read_mem_as_str(C, addr, num, p_data);
+        lua_pushlstring(L, (const char *)p_data, words*4);
+        free(p_data);
+        return 1;
+    }
+    return 0;
+}
+
+static int write_mem_as_str(lua_State *L) {
+    vm16_t *C = check_vm(L);
+    uint16_t addr = (uint16_t)luaL_checkinteger(L, 2);
+    if(lua_isstring(L, 3)) {
+        size_t size;
+        char *p_data = (char*)lua_tolstring(L, 3, &size);
+        if((C != NULL) && (p_data != NULL) && (size > 0)) {
+            uint16_t words = vm16_write_mem_as_str(C, addr, size, p_data);
+            lua_pushboolean(L, words/4 == size);
+            return 1;
+        }
+    }
+    return 0;
+}
+
 static int read_ascii(lua_State *L) {
     vm16_t *C = check_vm(L);
     lua_Integer addr = luaL_checkinteger(L, 2);
@@ -417,31 +446,33 @@ static int testbit(lua_State *L) {
 }
 
 static const luaL_Reg R[] = {
-    {"version",         version},
-    {"init",            init},
-    {"mem_size",        mem_size},
-    {"set_pc",          set_pc},
-    {"get_pc",          get_pc},
-    {"deposit",         deposit},
-    {"get_vm",          get_vm},
-    {"set_vm",          set_vm},
-    {"read_mem",        read_mem},
-    {"write_mem_bin",   write_mem_bin},
-    {"read_mem_bin",    read_mem_bin},
-    {"write_mem",       write_mem},
-    {"read_ascii",      read_ascii},
-    {"write_ascii",     write_ascii},
-    {"peek",            peek},
-    {"poke",            poke},
-    {"get_cpu_reg",     get_cpu_reg},
-    {"set_cpu_reg",     set_cpu_reg},
-    {"run",             run},
-    {"get_io_reg",      get_io_reg},
-    {"set_io_reg",      set_io_reg},
-    {"read_h16",        read_h16},
-    {"write_h16",       write_h16},
-    {"is_ascii",        is_ascii},
-    {"testbit",         testbit},
+    {"version",          version},
+    {"init",             init},
+    {"mem_size",         mem_size},
+    {"set_pc",           set_pc},
+    {"get_pc",           get_pc},
+    {"deposit",          deposit},
+    {"get_vm",           get_vm},
+    {"set_vm",           set_vm},
+    {"read_mem",         read_mem},
+    {"write_mem",        write_mem},
+    {"write_mem_bin",    write_mem_bin},
+    {"read_mem_bin",     read_mem_bin},
+    {"write_mem_as_str", write_mem_as_str},
+    {"read_mem_as_str",  read_mem_as_str},
+    {"read_ascii",       read_ascii},
+    {"write_ascii",      write_ascii},
+    {"peek",             peek},
+    {"poke",             poke},
+    {"get_cpu_reg",      get_cpu_reg},
+    {"set_cpu_reg",      set_cpu_reg},
+    {"run",              run},
+    {"get_io_reg",       get_io_reg},
+    {"set_io_reg",       set_io_reg},
+    {"read_h16",         read_h16},
+    {"write_h16",        write_h16},
+    {"is_ascii",         is_ascii},
+    {"testbit",          testbit},
     {NULL, NULL}
 };
 

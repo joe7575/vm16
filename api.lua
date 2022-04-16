@@ -11,8 +11,8 @@
 ]]--
 
 local vm16lib = ...
-if vm16lib.version() ~= "2.6.5" then
-	minetest.log("error", "[vm16] Install Lua library v2.6.4 (see readme.md)!")
+if vm16lib.version() ~= "2.7.0" then
+	minetest.log("error", "[vm16] Install Lua library v2.7.0 (see readme.md)!")
 end
 
 local M = minetest.get_meta
@@ -43,8 +43,6 @@ vm16.version  = VERSION
 vm16.testbit  = vm16lib.testbit
 vm16.is_ascii = vm16lib.is_ascii
 vm16.CallResults = {[0]="OK", "NOP", "IN", "OUT", "SYS", "HALT", "BREAK", "ERROR"}
-
-local SpecialCycles = {} -- for sys calls with reduced/increased cycles
 
 local function store_breakpoint_addr(pos, vm, breakpoints)
 	local addr = vm16lib.get_pc(vm)
@@ -212,6 +210,18 @@ function vm16.write_mem_bin(pos, addr, s)
 	return vm and vm16lib.write_mem_bin(vm, addr, s)
 end
 
+function vm16.read_mem_as_str(pos, addr, num)
+	local hash = minetest.hash_node_position(pos)
+	local vm = VMList[hash]
+	return vm and vm16lib.read_mem_as_str(vm, addr, num)
+end
+
+function vm16.write_mem_as_str(pos, addr, s)
+	local hash = minetest.hash_node_position(pos)
+	local vm = VMList[hash]
+	return vm and vm16lib.write_mem_as_str(vm, addr, s)
+end
+
 function vm16.read_ascii(pos, addr, num)
 	local hash = minetest.hash_node_position(pos)
 	local vm = VMList[hash]
@@ -280,7 +290,7 @@ function vm16.run(pos, cpu_def, breakpoints, steps)
 	local hash = minetest.hash_node_position(pos)
 	local vm = VMList[hash]
 	local resp = VM16_ERROR
-	local ran
+	local ran, costs
 
 	local cycles = steps or cpu_def.instr_per_cycle
 	if skip_break_instr(pos, vm, cpu_def, breakpoints) then
@@ -300,18 +310,18 @@ function vm16.run(pos, cpu_def, breakpoints, steps)
 			return VM16_BREAK
 		elseif resp == VM16_IN then
 			local io = vm16lib.get_io_reg(vm)
-			io.data = cpu_def.on_input(pos, io.addr) or 0xFFFF
+			io.data, costs = cpu_def.on_input(pos, io.addr)
 			vm16lib.set_io_reg(vm, io)
-			cycles = cycles - cpu_def.input_costs
+			cycles = cycles - (costs or cpu_def.input_costs)
 		elseif resp == VM16_OUT then
 			local io = vm16lib.get_io_reg(vm)
-			local costs = cpu_def.on_output(pos, io.addr, io.data, io.B)
+			costs = cpu_def.on_output(pos, io.addr, io.data, io.B)
 			cycles = cycles - (costs or cpu_def.output_costs)
 		elseif resp == VM16_SYS then
 			local io = vm16lib.get_io_reg(vm)
-			io.data = cpu_def.on_system(pos, io.addr, io.A, io.B) or 0xFFFF
+			io.data, costs = cpu_def.on_system(pos, io.addr, io.A, io.B)
 			vm16lib.set_io_reg(vm, io)
-			cycles = cycles - (SpecialCycles[io.addr] or cpu_def.system_costs)
+			cycles = cycles - (costs or cpu_def.system_costs)
 		elseif resp == VM16_HALT then
 			local cpu = vm16lib.get_cpu_reg(vm)
 			cpu_def.on_update(pos, resp, cpu)
@@ -323,10 +333,6 @@ function vm16.run(pos, cpu_def, breakpoints, steps)
 		end
 	end
 	return resp
-end
-
-function vm16.register_sys_cycles(address, cycles)
-	SpecialCycles[address] = cycles
 end
 
 minetest.register_on_shutdown(function()

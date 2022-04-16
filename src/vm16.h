@@ -37,7 +37,7 @@ LUALIB_API int luaopen_vm16(lua_State *L);
 
 #define IDENT           (0x36314D56)
 #define VERSION         (2)    // VM compatibility
-#define SVERSION        "2.6.5"
+#define SVERSION        "2.7.0"
 #define VM16_WORD_SIZE  (16)
 
 /*
@@ -131,6 +131,18 @@ uint32_t vm16_read_mem(vm16_t *C, uint16_t addr, uint16_t num, uint16_t *p_buffe
 ** Write memory block from external drives / storage mediums
 */
 uint32_t vm16_write_mem(vm16_t *C, uint16_t addr, uint16_t num, uint16_t *p_buffer);
+
+/*
+** Read memory block as ASCII string for storage purposes.
+** `num` is the memory block size in words.
+*/
+uint32_t vm16_read_mem_as_str(vm16_t *C, uint16_t addr, uint16_t num, char *p_buffer);
+
+/*
+** Write memory block from ASCII string.
+** `num` is the memory block size in words.
+*/
+uint32_t vm16_write_mem_as_str(vm16_t *C, uint16_t addr, uint16_t num, char *p_buffer);
 
 /*
 ** Read memory block and convert the data to ASCII characters (screen memory)

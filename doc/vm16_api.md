@@ -110,10 +110,28 @@ num = vm16.write_mem(pos, addr, tbl)
 Write a memory block with values from `tbl` starting at the given `addr`. 
 Function returns the number of written values.
 
+## read_mem_as_str
+
+```lua
+tbl = vm16.read_mem_as_str(pos, addr, num)
+```
+
+Read a memory block starting at the given `addr` with `num` number of words.
+Function returns the read values as ASCII string for storage purposes.
+
+## write_mem_as_str
+
+```lua
+res = vm16.write_mem_as_str(pos, addr, s)
+```
+
+Write a memory block provided as ASCII string, starting at the given `addr` . 
+Function returns true if successful.
+
 ## read_mem_bin
 
 ```lua
-tbl = vm16.read_mem(pos, addr, num)
+tbl = vm16.read_mem_bin(pos, addr, num)
 ```
 
 Read a memory block starting at the given `addr` with `num` number of words.
@@ -122,7 +140,7 @@ Function returns the read values as binary string.
 ## write_mem_bin
 
 ```lua
-res = vm16.write_mem(pos, addr, s)
+res = vm16.write_mem_bin(pos, addr, s)
 ```
 
 Write a memory block provided as binary string, starting at the given `addr` . 

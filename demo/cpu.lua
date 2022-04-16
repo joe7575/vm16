@@ -70,6 +70,7 @@ local cpu_def = {
 		if item then
 			return item.input(item.pos, address) or 0
 		end
+		return 0xffff
 	end,
 	-- Called for each 'output' instruction.
 	on_output = function(pos, address, val1, val2)
@@ -83,10 +84,11 @@ local cpu_def = {
 	on_system = function(pos, address, val1, val2)
 		if address == 0 then
 			local prog_pos = S2P(M(pos):get_string("prog_pos"))
-			return vm16.putchar(prog_pos, val1)
+			return vm16.putchar(prog_pos, val1) or 0xffff, 500  -- costs for putchar
 		else
 			-- Add your own system command here
 			print("on_system")
+			return 0xffff
 		end
 	end,
 	-- Called when CPU stops.
@@ -169,8 +171,6 @@ minetest.register_craft({
 		{"basic_materials:ic", "basic_materials:ic", "basic_materials:ic"},
 	},
 })
-
-vm16.register_sys_cycles(0, 500)  -- costs for putchar
 
 -------------------------------------------------------------------------------
 -- API for I/O nodes
