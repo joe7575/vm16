@@ -132,23 +132,36 @@ function vm16.edit.on_receive_fields(pos, fields, mem)
 		mem.error = nil
 	elseif mem.file_name and mem.file_text then
 		if fields.compile then
-			local sts, res = vm16.compile(mem.server_pos, mem.file_name, server.read_file, "asm_code")
-			if sts then
-				mem.file_text = res
-				mem.file_name = "out.asm"
-				mem.file_ext = "asm"
-				server.write_file(mem.server_pos, mem.file_name, mem.file_text)
-				vm16.files.init(pos, mem)
-				mem.error = nil
-			else
-				mem.error = res
+			local def = prog.get_cpu_def(mem.cpu_pos)
+			if def then
+				local prog_pos = def.on_check_connection(mem.cpu_pos)
+				if vector.equals(pos, prog_pos) then
+					local options = {
+						gen_asm_code = true,
+						startup_code = def.startup_code
+					}
+					local sts, res = vm16.compile(mem.server_pos, mem.file_name, server.read_file, options)
+					if sts then
+						mem.file_text = res
+						mem.file_name = "out.asm"
+						mem.file_ext = "asm"
+						server.write_file(mem.server_pos, mem.file_name, mem.file_text)
+						vm16.files.init(pos, mem)
+						mem.error = nil
+					else
+						mem.error = res
+					end
+				end
 			end
 		elseif fields.debug then
 			local def = prog.get_cpu_def(mem.cpu_pos)
 			if def then
 				local prog_pos = def.on_check_connection(mem.cpu_pos)
 				if vector.equals(pos, prog_pos) then
-					local sts, res = vm16.compile(mem.server_pos, mem.file_name, server.read_file)
+					local options = {
+						startup_code = def.startup_code
+					}
+					local sts, res = vm16.compile(mem.server_pos, mem.file_name, server.read_file, options)
 					if sts then
 						vm16.debug.init(pos, mem, res)
 						vm16.watch.init(pos, mem, res)

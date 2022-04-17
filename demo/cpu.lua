@@ -63,6 +63,10 @@ local cpu_def = {
 	input_costs = 1000,  -- number of instructions
 	output_costs = 5000, -- number of instructions
 	system_costs = 2000, -- number of instructions
+	startup_code = {
+		"call main",
+		"halt",
+	},
 	-- Called for each 'input' instruction.
 	on_input = function(pos, address)
 		local hash = H(pos)
@@ -159,6 +163,7 @@ minetest.register_lbm({
 		local prog_pos = S2P(M(pos):get_string("prog_pos"))
 		if M(pos):get_int("running") == 1 then
 			vm16.load_cpu(pos, prog_pos, cpu_def)
+			cpu_def.on_init(pos, prog_pos)
 		end
 	end
 })

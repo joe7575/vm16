@@ -261,8 +261,9 @@ function BGen:gen_output()
 		end
 	end
 
-	table.insert(out, {"code", 0, "call main"})
-	table.insert(out, {"code", 0, "halt"})
+	for _, code in ipairs(self.options.startup_code) do
+		table.insert(out, {"code", 0, code})
+	end
 
 	if #self.lCode > 0 then
 		for _,item in ipairs(self.lCode) do

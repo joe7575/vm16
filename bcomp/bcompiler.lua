@@ -125,8 +125,9 @@ function vm16.assemble(pos, filename, readfile, asmdbg, debug)
 	return true, res
 end
 
-function vm16.compile(pos, filename, readfile, output_format)
-	local prs =  vm16.BPars:new({pos = pos, readfile = readfile})
+function vm16.compile(pos, filename, readfile, options)
+	options = options or {}
+	local prs =  vm16.BPars:new({pos = pos, readfile = readfile, options = options})
 	prs:bpars_init()
 
 	local sts, res = pcall(prs.scanner, prs, filename)
@@ -134,7 +135,7 @@ function vm16.compile(pos, filename, readfile, output_format)
 		return false, error_msg(res)
 	end
 
-	if output_format == "token" then
+	if options.gen_token_list then
 		return true, prs:scan_dbg_dump()
 	end
 
@@ -146,21 +147,21 @@ function vm16.compile(pos, filename, readfile, output_format)
 
 	local output = prs:gen_output()
 
-	if output_format == "parser_output" then
+	if options.gen_parser_output then
 		return true, output
 	end
 
-	if output_format == "asm_code" then
+	if options.gen_asm_code then
 		return true, gen_asm_code(pos, output, filename, readfile)
 	end
 
 	local asm = vm16.Asm:new({})
 	--sts, output = true, asm:assembler(filename, output)
-	sts, output = pcall(asm.assembler, asm, filename, output)
+	sts, res = pcall(asm.assembler, asm, filename, output)
 	if not sts then
 		return false, error_msg(res)
 	end
 
-	return true, output
+	return true, res
 end
 

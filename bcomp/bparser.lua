@@ -573,7 +573,7 @@ left_value:
 function BPars:left_value()
 	if self:tk_peek().val == '*' then
 		self:tk_match("*")
-		local ident = self:tk_match(T_IDENT).val
+		local ident = self:ident()
 		local lval = self:local_get(ident) or (self.globals[ident] and ident)
 		if not lval then
 			self:error_msg(string.format("Unknown identifier '%s'", ident))
@@ -586,7 +586,7 @@ function BPars:left_value()
 	else
 		local val = self:tk_next().val
 		if val == "=" or val == "++" or val == "--" then
-			local ident = self:tk_match(T_IDENT).val
+			local ident = self:ident()
 			local lval = self:local_get(ident) or (self.globals[ident] and ident)
 			if not lval then
 				self:error_msg(string.format("Unknown identifier '%s'", ident))
