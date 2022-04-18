@@ -96,8 +96,8 @@ brk #1
 ### sys - System call
 
 System call. It allows to use some higher level of functionality autside the CPU. System calls are mod/computer dependent.
-Valid numbers are 0 - 1023. Additional system call parameters a passed with registers A and B. 
-The result is return in register A.
+Valid numbers are 0 - 1023. Additional system call parameters can be passed via registers if necessary. 
+The result is returned in register A.
 
 ```
 sys #0

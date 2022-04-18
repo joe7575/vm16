@@ -38,6 +38,7 @@ dofile(MP.."/bcomp/bsymbols.lua")
 dofile(MP.."/bcomp/bexpression.lua")
 dofile(MP.."/bcomp/bparser.lua")
 dofile(MP.."/bcomp/bcompiler.lua")
+dofile(MP.."/bcomp/libc.lua")
 
 dofile(MP.."/programmer/lib.lua")
 dofile(MP.."/programmer/lookup.lua")
@@ -50,6 +51,7 @@ dofile(MP.."/programmer/win_watch.lua")
 dofile(MP.."/programmer/win_memory.lua")
 dofile(MP.."/programmer/formspec.lua")
 dofile(MP.."/programmer/programmer.lua")
+dofile(MP.."/demo/files.lua")
 
 -- for testing purposes
 if minetest.settings:get_bool("vm16_testblocks_enabled") == true and

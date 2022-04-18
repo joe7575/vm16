@@ -14,10 +14,8 @@
 local M = minetest.get_meta
 local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
 local S2P = function(s) return minetest.string_to_pos(s) end
-local MP = minetest.get_modpath("vm16")
-local prog = vm16.prog
 
-local Libc = dofile(MP .. "/bcomp/libc.lua")
+local prog = vm16.prog
 
 local CpuTime = 0
 local RunTime = 0
@@ -41,14 +39,10 @@ local function init(pos, mem)
 	if mem.cpu_pos and mem.server_pos then
 		local def = prog.get_cpu_def(mem.cpu_pos)
 		if def then
-			vm16.server.init(mem.server_pos)
+			vm16.server.init(mem.server_pos, def.cpu_type)
 			vm16.files.init(pos, mem)
-			def.on_init(mem.cpu_pos, pos)
+			def.on_init(mem.cpu_pos, pos, mem.server_pos)
 		end
-		vm16.add_ro_file(pos, "stdio.asm",  Libc.stdio_asm)
-		vm16.add_ro_file(pos, "mem.asm",    Libc.mem_asm)
-		vm16.add_ro_file(pos, "string.asm", Libc.string_asm)
-		vm16.add_ro_file(pos, "math.asm",   Libc.math_asm)
 	end
 end
 
@@ -196,10 +190,13 @@ function vm16.load_cpu(cpu_pos, prog_pos, cpu_def)
 	end
 end
 
-function vm16.add_ro_file(pos, filename, text)
-	local mem = prog.get_mem(pos)
-	if cpu_server_pos(pos, mem) then
-		vm16.server.add_ro_file(mem.server_pos, filename, text)
+function vm16.register_ro_file(cpu_type, filename, text)
+	vm16.server.register_ro_file(cpu_type, filename, text)
+end
+
+function vm16.write_file(pos, filename, text)
+	if pos and filename and text then
+		vm16.server.write_file(pos, filename, text)
 	end
 end
 

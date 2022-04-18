@@ -13,13 +13,10 @@
 -- for lazy programmers
 local M = minetest.get_meta
 local H = minetest.hash_node_position
-local MP = minetest.get_modpath("vm16")
 local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
 local S2P = function(s) return minetest.string_to_pos(s) end
 
-local Files = dofile(MP .. "/demo/files.lua")
 local RADIUS = 3    -- for I/O nodes
-
 local Inputs = {}   -- [hash] = {addr = value}
 local Outputs = {}  -- [hash] = {addr = pos}
 local IONodes = {}  -- Known I/O nodes
@@ -58,6 +55,7 @@ end
 
 -- CPU definition
 local cpu_def = {
+	cpu_type = "vm16",
 	cycle_time = 0.1, -- timer cycle time
 	instr_per_cycle = 10000,
 	input_costs = 1000,  -- number of instructions
@@ -85,7 +83,7 @@ local cpu_def = {
 		end
 	end,
 	-- Called for each 'system' instruction.
-	on_system = function(pos, address, val1, val2)
+	on_system = function(pos, address, val1, val2, val3)
 		if address == 0 then
 			local prog_pos = S2P(M(pos):get_string("prog_pos"))
 			return vm16.putchar(prog_pos, val1) or 0xffff, 500  -- costs for putchar
@@ -101,15 +99,12 @@ local cpu_def = {
 		vm16.update_programmer(pos, prog_pos, resp)
 	end,
 	-- Called when the programmers info/splash screen is displayed
-	on_init = function(pos, prog_pos)
+	on_init = function(pos, prog_pos, server_pos)
 		M(pos):set_string("prog_pos", P2S(prog_pos))
-		local s = find_io_nodes(pos)
-		vm16.add_ro_file(prog_pos, "example1.c",   Files.example1_c)
-		vm16.add_ro_file(prog_pos, "example2.c",   Files.example2_c)
-		vm16.add_ro_file(prog_pos, "example3.c",   Files.example3_c)
-		vm16.add_ro_file(prog_pos, "example4.c",   Files.example4_c)
-		vm16.add_ro_file(prog_pos, "example1.asm", Files.example1_asm)
-		vm16.add_ro_file(prog_pos, "info.txt",     Info .. s)
+		if server_pos then
+			local s = find_io_nodes(pos)
+			vm16.write_file(server_pos, "info.txt", Info .. s)
+		end
 	end,
 	on_mem_size = function(pos)
 		return 4  -- 1024 words

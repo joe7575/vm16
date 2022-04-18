@@ -223,7 +223,7 @@ end
 
 --[[
 buildin_call:
-    = system '(' expression ',' expression  ',' expression ')'
+    = system '(' expression ',' expression  { ',' expression { ',' expression } } ')'
     | sleep '(' expression ')'
     | input '(' expression ')'
     | output '(' expression ',' expression { ',' expression } ')'
@@ -244,6 +244,13 @@ function BExpr:buildin_call()
 			local opnd3 = self:expression()
 			if opnd3 ~= "B" then
 				self:add_instr("move", "B", opnd3)
+			end
+		end
+		if self:tk_peek().val == "," then
+			self:tk_match(",")
+			local opnd4 = self:expression()
+			if opnd4 ~= "C" then
+				self:add_instr("move", "C", opnd4)
 			end
 		end
 		self:add_instr("sys", opnd1)

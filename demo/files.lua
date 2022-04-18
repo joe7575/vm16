@@ -10,10 +10,8 @@
 	Progamming examples
 ]]--
 
-local Files = {}
-
 -- Examples will be added to the programmer file system as read-only files.
-Files.example1_asm = [[
+Example1_asm = [[
 ; Read button on input #1 and
 ; control demo lamp on output #1.
 
@@ -30,7 +28,7 @@ loop:
   jump loop
 ]]
 
-Files.example1_c = [[
+Example1_c = [[
 // Read button on input #1 and
 // control demo lamp on output #1.
 
@@ -49,7 +47,7 @@ func main() {
 }
 ]]
 
-Files.example2_c = [[
+Example2_c = [[
 // Output some characters on the
 // programmer status line (system #0).
 
@@ -70,7 +68,7 @@ func main() {
 ]]
 
 -- Will be added to the programmer file system as read-only C-file.
-Files.example3_c = [[
+Example3_c = [[
 // Example with inline assembler
 
 func main() {
@@ -93,7 +91,7 @@ func main() {
 
 ]]
 
-Files.example4_c = [[
+Example4_c = [[
 // Show the use of library functions
 
 import "stdio.asm"
@@ -121,4 +119,13 @@ func main() {
 }
 ]]
 
-return Files
+vm16.register_ro_file("vm16", "example1.c",   Example1_c)
+vm16.register_ro_file("vm16", "example2.c",   Example2_c)
+vm16.register_ro_file("vm16", "example3.c",   Example3_c)
+vm16.register_ro_file("vm16", "example4.c",   Example4_c)
+vm16.register_ro_file("vm16", "example1.asm", Example1_asm)
+
+vm16.register_ro_file("vm16", "stdio.asm",  vm16.libc.stdio_asm)
+vm16.register_ro_file("vm16", "mem.asm",    vm16.libc.mem_asm)
+vm16.register_ro_file("vm16", "string.asm", vm16.libc.string_asm)
+vm16.register_ro_file("vm16", "math.asm",   vm16.libc.math_asm)

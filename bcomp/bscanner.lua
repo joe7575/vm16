@@ -22,7 +22,7 @@ local OPERAND  = "[%+%-/%*%%=<>!;,&|!~%^][%+%-/=<>&|]*"
 local BRACE    = "[{}%(%)%[%]]"
 local SPACE    = "[%s]"
 local CHAR     = "'([^'][^']?)'"
-local STRING   = '"[^"]+"'
+local STRING   = '"[^"]*"'
 
 local T_IDENT   = 1
 local T_NUMBER  = 2

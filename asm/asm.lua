@@ -430,7 +430,7 @@ function Asm:assembler(filename, output)
 				extend(lOut, self:decode_ctext(tok))
 			elseif self.ctype == "file" then
 				self.all_symbols[self.filename] = self.symbols
-				self.symbols = {}
+				self.symbols = self.all_symbols[tok[CODESTR]] or {}
 				self.filename = tok[CODESTR]
 				append(lOut, {"file", self.lineno, self.address, self.filename})
 				files[self.filename] = self.address

@@ -261,7 +261,7 @@ function BGen:gen_output()
 		end
 	end
 
-	for _, code in ipairs(self.options.startup_code) do
+	for _, code in ipairs(self.options.startup_code or {}) do
 		table.insert(out, {"code", 0, code})
 	end
 

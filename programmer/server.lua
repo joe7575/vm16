@@ -28,19 +28,25 @@ local function order(a, b)
 	end
 end
 
-local function get_filelist(pos, files)
-	if not files then
-		local s = M(pos):get_string("files")
-		files = minetest.deserialize(s) or {}
-	end
+local ReadOnlyFiles = {}   -- [cpu_type][file_name] = text
+
+local function get_ro_files(pos)
+	local cpu_type = M(pos):get_string("cpu_type")
+	return ReadOnlyFiles[cpu_type] or {}
+end
+
+local function get_filelist(pos)
+	local meta = M(pos)
+	local cpu_type = meta:get_string("cpu_type")
+	local s = meta:get_string("files")
+	local files = minetest.deserialize(s) or {}
 	local out = {}
-	local mem = prog.get_mem(pos)
-	mem.ro_files = mem.ro_files or {}
-	for name, text in pairs(mem.ro_files) do
+	local ro_files = get_ro_files(pos)
+	for name, text in pairs(ro_files) do
 		out[#out + 1] = {name = name, attr = "ro"}
 	end
 	for name, text in pairs(files) do
-		if not mem.ro_files[name] then
+		if not ro_files[name] then
 			out[#out + 1] = {name = name, attr = "rw"}
 		end
 	end
@@ -53,10 +59,10 @@ end
 -------------------------------------------------------------------------------
 vm16.server = {}
 
-function vm16.server.init(pos)
+function vm16.server.init(pos, cpu_type)
+	M(pos):set_string("cpu_type", cpu_type)
 	if minetest.get_node(pos).name == "vm16:server" then
 		local mem = prog.get_mem(pos)
-		mem.ro_files = {}
 		mem.filelist = get_filelist(pos)
 	end
 end
@@ -72,10 +78,9 @@ end
 
 function vm16.server.read_file(pos, filename)
 	if minetest.get_node(pos).name == "vm16:server" then
-		local mem = prog.get_mem(pos)
-		mem.ro_files = mem.ro_files or {}
-		if mem.ro_files[filename] then
-			return mem.ro_files[filename]
+		local ro_files = get_ro_files(pos)
+		if ro_files[filename] then
+			return ro_files[filename]
 		end
 		local s = M(pos):get_string("files")
 		local files = minetest.deserialize(s) or {}
@@ -87,7 +92,8 @@ end
 function vm16.server.write_file(pos, filename, text)
 	if minetest.get_node(pos).name == "vm16:server" then
 		local mem = prog.get_mem(pos)
-		if not mem.ro_files[filename] then
+		local ro_files = get_ro_files(pos)
+		if not ro_files[filename] then
 			local s = M(pos):get_string("files")
 			local files = minetest.deserialize(s) or {}
 			if text ~= "" then
@@ -105,7 +111,8 @@ end
 function vm16.server.rename_file(pos, files, old_name, new_name)
 	if minetest.get_node(pos).name == "vm16:server" then
 		local mem = prog.get_mem(pos)
-		if not mem.ro_files[new_name] then
+		local ro_files = get_ro_files(pos)
+		if not ro_files[new_name] then
 			local s = M(pos):get_string("files")
 			local files = minetest.deserialize(s) or {}
 			files[new_name] = files[old_name]
@@ -117,22 +124,14 @@ function vm16.server.rename_file(pos, files, old_name, new_name)
 	end
 end
 
-function vm16.server.add_ro_file(pos, filename, text)
-	if minetest.get_node(pos).name == "vm16:server" then
-		local mem = prog.get_mem(pos)
-		mem.filelist = mem.filelist or get_filelist(pos)
-		table.insert(mem.filelist, {name = filename, attr = "ro"})
-		table.sort(mem.filelist, order)
-		mem.ro_files[filename] = text
-	end
+function vm16.server.register_ro_file(cpu_type, filename, text)
+	ReadOnlyFiles[cpu_type] = ReadOnlyFiles[cpu_type] or {}
+	ReadOnlyFiles[cpu_type][filename] = text
 end
 
 function vm16.server.is_ro_file(pos, filename)
-	if minetest.get_node(pos).name == "vm16:server" then
-		local mem = prog.get_mem(pos)
-		mem.ro_files = mem.ro_files or {}
-		return mem.ro_files[filename] ~= nil
-	end
+	local ro_files = get_ro_files(pos)
+	return ro_files[filename] ~= nil
 end
 
 local function after_place_node(pos, placer, itemstack, pointed_thing)
