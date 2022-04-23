@@ -355,6 +355,7 @@ static int get_io_reg(lua_State *L) {
         lua_newtable(L);               /* creates a table */
         setfield(L, "A", C->areg);
         setfield(L, "B", C->breg);
+        setfield(L, "C", C->creg);
         setfield(L, "addr", C->l_addr);
         setfield(L, "data", C->l_data);
         return 1;
