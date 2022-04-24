@@ -19,7 +19,9 @@ local prog = vm16.prog
 local function order(a, b)
 	local name1, ext1 = unpack(string.split(a.name, ".", true, 1))
 	local name2, ext2 = unpack(string.split(b.name, ".", true, 1))
-	if ext1 and ext2 then
+	if a.attr ~= b.attr then
+		return a.attr > b.attr
+	elseif ext1 and ext2 then
 		if ext1 == ext2 then
 			return name1 < name2
 		else
