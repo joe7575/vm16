@@ -124,6 +124,12 @@ Licensed under the GNU GPLv3 (See LICENSE.txt)
 
 ## History
 
+### API v3.4/Core v2.7.1/asm v2.4/Compiler v1.4 (2022-04-24)
+
+- Add 'if ... else if' functionality to the compiler
+- Add branch detection to compiler and debugger
+- Fix some debugger bugs
+
 ### API v3.4/Core v2.7.1/asm v2.4/Compiler v1.4 (2022-04-23)
 
 - Add core functions `vm16_read_mem_as_str` and `vm16_write_mem_as_str`

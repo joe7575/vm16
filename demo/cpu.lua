@@ -62,6 +62,7 @@ local cpu_def = {
 	output_costs = 5000, -- number of instructions
 	system_costs = 2000, -- number of instructions
 	startup_code = {
+		"call @init",
 		"call main",
 		"halt",
 	},

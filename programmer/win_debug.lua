@@ -98,27 +98,42 @@ local function set_temp_breakpoint(pos, mem, lineno)
 	local addr = mem.lut:get_address(mem.file_name, lineno)
 	if addr and not mem.breakpoint_lines[lineno] then
 		vm16.set_breakpoint(mem.cpu_pos, addr, mem.breakpoints)
-		mem.temp_breakpoint = addr
+		mem.temp_breakpoint1 = addr
+	end
+end
+
+local function set_branch_breakpoint(pos, mem, addr)
+	local lineno = mem.lut:get_line(addr)
+	addr = mem.lut:get_branch_address(lineno)
+	if addr then
+		lineno = mem.lut:get_line(addr) or 1
+		if not mem.breakpoint_lines[lineno] then
+			vm16.set_breakpoint(mem.cpu_pos, addr, mem.breakpoints)
+			mem.temp_breakpoint2 = addr
+		end
 	end
 end
 
 local function reset_temp_breakpoint(pos, mem)
-	if mem.temp_breakpoint then
-		vm16.reset_breakpoint(mem.cpu_pos, mem.temp_breakpoint, mem.breakpoints)
-		mem.temp_breakpoint = nil
+	if mem.temp_breakpoint1 then
+		vm16.reset_breakpoint(mem.cpu_pos, mem.temp_breakpoint1, mem.breakpoints)
+		mem.temp_breakpoint1 = nil
+	end
+	if mem.temp_breakpoint2 then
+		vm16.reset_breakpoint(mem.cpu_pos, mem.temp_breakpoint2, mem.breakpoints)
+		mem.temp_breakpoint2 = nil
 	end
 end
 
 local function loadfile_by_address(mem, addr)
-	local item = mem.lut:get_item(addr)
-	if item then
-		mem.file_name = item.file
+	local filename = (mem.lut:get_item(addr) or {}).file or mem.lut.main_file
+	if filename then
+		mem.file_name = filename
 		mem.file_ext = file_ext(mem.file_name)
 		mem.file_text = server.read_file(mem.server_pos, mem.file_name)
+		return true
 	end
-	return item
 end
-
 
 function vm16.debug.init(pos, mem, obj)
 	mem.breakpoints = {}
@@ -147,7 +162,7 @@ function vm16.debug.init(pos, mem, obj)
 
 	mem.main_filename = mem.file_name
 	if mem.file_ext == "c" then
-		local address = mem.lut:get_function_address("main")
+		local address = mem.lut:get_function_address("main") or mem.lut:get_function_address("init")
 		if address then
 			local lineno = mem.lut:get_line(address)
 			set_temp_breakpoint(pos, mem, lineno)
@@ -247,14 +262,14 @@ function vm16.debug.on_receive_fields(pos, fields, mem)
 				local addr = vm16.get_pc(mem.cpu_pos)
 				local lineno = mem.lut:get_next_line(addr)
 				set_temp_breakpoint(pos, mem, lineno)
+				set_branch_breakpoint(pos, mem, addr)
 				start_cpu(mem)
 			end
 		end
 	elseif fields.stepin then
 		if vm16.is_loaded(mem.cpu_pos) and mem.lut then
 			local addr = mem.lut:get_stepin_address(mem.file_name, mem.curr_lineno) or 0
-			local item = loadfile_by_address(mem, addr)
-			if item then
+			if loadfile_by_address(mem, addr) then
 				local lineno = mem.lut:get_line(addr)
 				set_temp_breakpoint(pos, mem, lineno)
 				start_cpu(mem)
@@ -265,8 +280,7 @@ function vm16.debug.on_receive_fields(pos, fields, mem)
 			local cpu = vm16.get_cpu_reg(mem.cpu_pos)
 			local addr = (vm16.peek(mem.cpu_pos, cpu.BP) or 2) - 2
 			addr = mem.lut:find_next_address(addr)
-			local item = loadfile_by_address(mem, addr)
-			if item then
+			if loadfile_by_address(mem, addr) then
 				local lineno = mem.lut:get_line(addr)
 				set_temp_breakpoint(pos, mem, lineno)
 				start_cpu(mem)
@@ -285,11 +299,10 @@ function vm16.debug.on_receive_fields(pos, fields, mem)
 		if vm16.is_loaded(mem.cpu_pos) and mem.lut then
 			vm16.set_cpu_reg(mem.cpu_pos, {A=0, B=0, C=0, D=0, X=0, Y=0, SP=0, PC=0})
 			mem.output = ""
-			local address = mem.lut:get_function_address("main")
-			if address then
-				local item = loadfile_by_address(mem, address)
-				if item then
-					local lineno = mem.lut:get_line(address)
+			local addr = mem.lut:get_function_address("main") or mem.lut:get_function_address("init")
+			if addr then
+				if loadfile_by_address(mem, addr) then
+					local lineno = mem.lut:get_line(addr)
 					reset_temp_breakpoint(pos, mem)
 					set_temp_breakpoint(pos, mem, lineno)
 					start_cpu(mem)
@@ -303,6 +316,8 @@ function vm16.debug.on_receive_fields(pos, fields, mem)
 	elseif fields.stop then
 		if mem.running then
 			stop_cpu(mem)
+			local addr = vm16.get_pc(mem.cpu_pos)
+			loadfile_by_address(mem, addr)
 		end
 		if not mem.lut then
 			vm16.destroy(mem.cpu_pos)

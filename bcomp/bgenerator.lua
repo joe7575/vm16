@@ -117,6 +117,9 @@ function BGen:add_instr(instr, opnd1, opnd2)
 		table.insert(self.lCode, {"code", self.lineno, instr})
 	end
 	self.last_instr = instr
+	if instr == "jump" then
+		self:add_debugger_info("brnch", self.lineno, opnd1)
+	end
 	return opnd1
 end
 
@@ -254,16 +257,16 @@ function BGen:gen_output()
 			table.insert(out, {"code", 0, "global " .. name})
 		end
 	end
-
-	if #self.lInit > 0 then
-		for _,item in ipairs(self.lInit) do
-			table.insert(out, item)
-		end
-	end
-
+	
 	for _, code in ipairs(self.options.startup_code or {}) do
 		table.insert(out, {"code", 0, code})
 	end
+
+	table.insert(out, {"code", 0, "@init:"})
+	for _,item in ipairs(self.lInit or {}) do
+		table.insert(out, item)
+	end
+	table.insert(out, {"code", 0, "ret"})
 
 	if #self.lCode > 0 then
 		for _,item in ipairs(self.lCode) do

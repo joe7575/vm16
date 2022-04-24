@@ -343,6 +343,7 @@ end
 --[[
 if_statement:
     = 'if' '(' condition ')' '{' stmnt_list '}' [ 'else' '{' stmnt_list '}' ]
+    | 'if' '(' condition ')' '{' stmnt_list '}' 'else' if_statement
 ]]--
 function BPars:if_statement()
 	self:tk_match("if")
@@ -363,10 +364,15 @@ function BPars:if_statement()
 		local lbl2 = self:get_label()
 		self:add_instr("jump", lbl2)
 		self:add_label(lbl_else)
-		self:tk_match("{")
-		self:stmnt_list()
-		self:add_label(lbl2)
-		self:tk_match("}")
+		if self:tk_peek().val == 'if' then
+			self:if_statement()
+			self:add_label(lbl2)
+		else
+			self:tk_match("{")
+			self:stmnt_list()
+			self:add_label(lbl2)
+			self:tk_match("}")
+		end
 	else
 		self:add_label(lbl_else)
 	end

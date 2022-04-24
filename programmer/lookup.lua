@@ -22,6 +22,7 @@ function Lut:new(o)
 	o.lineno2addr = {}
 	o.step_in = {}
 	o.globals = {}
+	o.branches = {}
 	o.func_locals = {}
 	o.file_locals = {}
 	o.last_lineno = 0  -- source file size in lines
@@ -36,8 +37,7 @@ function Lut:init(obj)
 	DBG("Lut:init")
 	local func = ""
 	local file = ""
-	local lineno1, lineno2
-	local address1, address2
+	local address1
 	local file1
 	local file_start_address = {}
 
@@ -53,6 +53,9 @@ function Lut:init(obj)
 		self.last_used_mem_addr = math.max(self.last_used_mem_addr, address or 0)
 		if ctype == "file" then
 			file = ident
+			if not self.main_file then
+				self.main_file = file
+			end
 		elseif ctype == "code" then
 			self.lineno2addr[file] = self.lineno2addr[file] or {}
 			self.lineno2addr[file][lineno] = self.lineno2addr[file][lineno] or address
@@ -66,24 +69,35 @@ function Lut:init(obj)
 		self.last_used_mem_addr = math.max(self.last_used_mem_addr, address or 0)
 		if ctype == "file" then
 			file = ident
+			address1 = nil
 			file_start_address[file] = address
 			self.file_locals[file] = {}
 		elseif ctype == "endf" then
 			add(file, "", file_start_address[ident], address)
+			if address1 then
+				add(file, func, address1, address)
+			end
+			address1 = address
 		elseif ctype == "func" then
-			add(file, ident, address, 0)
+			if address1 then
+				add(file, func, address1, address - 1)
+			end
+			address1 = address
+			func = ident
 		end
 		
 		if ctype == "call" then
 			self.step_in[file] = self.step_in[file] or {}
 			self.step_in[file][lineno] = address
 		elseif ctype == "gvar" then
-			self.globals[#self.globals + 1] = {name = ident, addr = address, type = "global"}
+			table.insert(self.globals, {name = ident, addr = address, type = "global"})
 		elseif ctype == "lvar" then
-			self.file_locals[file][#self.file_locals + 1] = {name = ident, addr = address, type = "global"}
+			table.insert(self.file_locals[file], {name = ident, addr = address, type = "global"})
 		elseif ctype == "svar" then
 			self.func_locals[func] = self.func_locals[func] or {}
 			self.func_locals[func][ident] = address
+		elseif ctype == "brnch" then
+			self.branches[lineno] = address
 		end
 	end
 
@@ -103,7 +117,7 @@ end
 function Lut:get_locals(address)
 	DBG("Lut:get_locals", address)
 	if address then
-		local item = self:get_item(address or 0)
+		local item = self:get_func_item(address)
 		if item and self.func_locals[item.func] then
 			return self.func_locals[item.func]
 		end
@@ -123,6 +137,17 @@ function Lut:get_item(address)
 	DBG("Lut:get_item", "oops")
 end
 
+function Lut:get_func_item(address)
+	DBG("Lut:get_item", address)
+	if address then
+		for _, item in ipairs(self.items) do
+			if item.func ~= "" and address >= item.addresses[1] and address <= item.addresses[2] then
+				return item
+			end
+		end
+	end
+	DBG("Lut:get_item", "oops")
+end
 
 function Lut:get_line(address)
 	DBG("Lut:get_line", address)
@@ -187,6 +212,10 @@ function Lut:get_function_address(func)
 		end
 	end
 	DBG("Lut:get_function_address", "oops")
+end
+
+function Lut:get_branch_address(lineno)
+	return self.branches[lineno]
 end
 
 function Lut:get_program_size()

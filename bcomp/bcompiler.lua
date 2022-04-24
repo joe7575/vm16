@@ -50,6 +50,7 @@ local function gen_asm_code(pos, output, filename, readfile)
 		elseif ctype == "data" then
 			add_src_code(#sourcecode)
 		elseif ctype == "file" then
+			oldlineno = 0
 			filename = code
 			text = readfile(pos, filename)
 			sourcecode = vm16.splitlines(text)
