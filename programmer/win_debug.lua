@@ -103,13 +103,15 @@ local function set_temp_breakpoint(pos, mem, lineno)
 end
 
 local function set_branch_breakpoint(pos, mem, addr)
-	local lineno = mem.lut:get_line(addr)
-	addr = mem.lut:get_branch_address(lineno)
-	if addr then
-		lineno = mem.lut:get_line(addr) or 1
-		if not mem.breakpoint_lines[lineno] then
-			vm16.set_breakpoint(mem.cpu_pos, addr, mem.breakpoints)
-			mem.temp_breakpoint2 = addr
+	if mem.lut then
+		local lineno = mem.lut:get_line(addr)
+		addr = mem.lut:get_branch_address(lineno)
+		if addr then
+			lineno = mem.lut:get_line(addr) or 1
+			if not mem.breakpoint_lines[lineno] then
+				vm16.set_breakpoint(mem.cpu_pos, addr, mem.breakpoints)
+				mem.temp_breakpoint2 = addr
+			end
 		end
 	end
 end
@@ -126,12 +128,14 @@ local function reset_temp_breakpoint(pos, mem)
 end
 
 local function loadfile_by_address(mem, addr)
-	local filename = (mem.lut:get_item(addr) or {}).file or mem.lut.main_file
-	if filename then
-		mem.file_name = filename
-		mem.file_ext = file_ext(mem.file_name)
-		mem.file_text = server.read_file(mem.server_pos, mem.file_name)
-		return true
+	if mem.lut then
+		local filename = (mem.lut:get_item(addr) or {}).file or mem.lut.main_file
+		if filename then
+			mem.file_name = filename
+			mem.file_ext = file_ext(mem.file_name)
+			mem.file_text = server.read_file(mem.server_pos, mem.file_name)
+			return true
+		end
 	end
 end
 
@@ -218,8 +222,10 @@ function vm16.debug.formspec(pos, mem, textsize)
 		vm16.menubar.add_button("edit", "Edit")
 		if mem.lut then
 			vm16.menubar.add_button("step", "Step")
-			vm16.menubar.add_button("stepin", "Step in")
-			vm16.menubar.add_button("stepout", "Step out")
+			if mem.file_ext ~= "asm" then
+				vm16.menubar.add_button("stepin", "Step in")
+				vm16.menubar.add_button("stepout", "Step out")
+			end
 			vm16.menubar.add_button("runto", "Run to C")
 			vm16.menubar.add_button("run", "Run")
 			vm16.menubar.add_button("reset", "Reset")

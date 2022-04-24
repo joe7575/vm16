@@ -23,7 +23,6 @@ local BExpr = vm16.BSym
 
 function BExpr:bexpr_init()
 	self:bsym_init()
-	self.num_param_stack = {}
 end
 
 --[[
@@ -286,8 +285,7 @@ func_call:
 function BExpr:func_call(ident)
 	self:push_regs()
 	-- A function call as parameter is a recursive call to 'func_call'
-	table.insert(self.num_param_stack, self.num_param)
-	self.num_param = 0
+	local base_val = self.num_param
 	local addr = self:address()
 	self:tk_match("(")
 	if self:tk_peek().val ~= ")" then
@@ -305,13 +303,13 @@ function BExpr:func_call(ident)
 	self:tk_match(")")
 	self:add_debugger_info("call", self.lineno, ident, ident)
 	self:add_instr("call", addr)
-	if self.num_param > 0 then
-		self:add_instr("add", "SP", "#" .. self.num_param)
+	if self.num_param > base_val then
+		self:add_instr("add", "SP", "#" .. (self.num_param - base_val))
 	end
 	if self:is_func(ident) then
-		self:add_global(ident, self.num_param)
+		self:add_global(ident, self.num_param - base_val)
 	end
-	self.num_param = table.remove(self.num_param_stack)
+	self.num_param = base_val
 	local opnd = self:pop_regs()
 	return opnd
 end

@@ -168,9 +168,13 @@ function Asm:new(o)
 	return o
 end
 
-function Asm:err_msg(err)
+function Asm:err_msg(err, info)
 	--print(string.format("%s(%d): %s!", self.filename, self.lineno or 0, err))
-	error(string.format("\001%s(%d): %s!", self.filename, self.lineno or 0, err))
+	if self.lineno and self.lineno > 0 then
+		error(string.format("\001%s(%d): %s!", self.filename, self.lineno or 0, err))
+	else
+		error(string.format("\001%s: %s in '%s'!", self.filename, err, info))
+	end
 end
 
 function Asm:scanner(text, filename)
@@ -277,7 +281,7 @@ function Asm:decode_code(tok)
 			end
 			self.symbols[label] = value(words[3])
 		else
-			self:err_msg("Invalid left value")
+			self:err_msg("Invalid left value", codestr)
 		end
 		return
 	end
@@ -287,7 +291,7 @@ function Asm:decode_code(tok)
 
 	opcode = tOpcodes[words[1]]
 	if not opcode then
-		self:err_msg("Syntax error")
+		self:err_msg("Syntax error", codestr)
 	end
 	if #words == 2 and opcode < 4 then
 		local num = constant(words[2]) % 1024
@@ -299,7 +303,7 @@ function Asm:decode_code(tok)
 	end
 	-- some checks
 	if not opnd1 and not opnd2 then
-		self:err_msg("Syntax error")
+		self:err_msg("Syntax error", codestr)
 	end
 	-- code correction for all jump/branch opcodes: from '0' to '#0'
 	if JumpInst[words[1]] then
@@ -354,7 +358,7 @@ function Asm:decode_text(tok)
 		end
 		return out
 	else
-		self:err_msg("Invalid string")
+		self:err_msg("Invalid string", codestr)
 	end
 end
 
@@ -378,7 +382,7 @@ function Asm:decode_ctext(tok)
 		end
 		return out
 	else
-		self:err_msg("Invalid string")
+		self:err_msg("Invalid string", codestr)
 	end
 end
 
