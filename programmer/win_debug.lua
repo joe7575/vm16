@@ -192,7 +192,7 @@ function vm16.debug.on_update(pos, mem, resp)
 	elseif mem.cpu_pos then
 		stop_cpu(mem)
 		local addr = vm16.get_pc(mem.cpu_pos)
-		mem.cursorline = mem.lut:get_line(addr) or 1
+		mem.cursorline = mem.lut and mem.lut:get_line(addr) or 1
 		mem.curr_lineno = mem.cursorline
 		reset_temp_breakpoint(pos, mem)
 	end

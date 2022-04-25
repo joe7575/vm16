@@ -170,7 +170,7 @@ end
 
 function Asm:err_msg(err, info)
 	--print(string.format("%s(%d): %s!", self.filename, self.lineno or 0, err))
-	if self.lineno and self.lineno > 0 then
+	if self.lineno and self.lineno > 0 or not info then
 		error(string.format("\001%s(%d): %s!", self.filename, self.lineno or 0, err))
 	else
 		error(string.format("\001%s: %s in '%s'!", self.filename, err, info))
@@ -406,7 +406,7 @@ function Asm:handle_label(tok, i, label)
 	elseif self.globals[label] then
 		tok[OPCODES][i] = self.globals[label]
 	else
-		self:err_msg("Unknown label " .. label)
+		self:err_msg("Function '" .. label .. "' is mssing")
 	end
 end
 

@@ -53,8 +53,8 @@ local function after_place_node(pos, placer, itemstack, pointed_thing)
 	meta:set_string("infotext", "VM16 Programmer")
 	if cpu_server_pos(pos, mem) then
 		init(pos, mem)
+		meta:set_string("formspec", prog.formspec(pos, mem))
 	end
-	meta:set_string("formspec", prog.formspec(pos, mem))
 end
 
 local function on_rightclick(pos)
