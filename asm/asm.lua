@@ -460,7 +460,7 @@ function Asm:assembler(filename, output)
 			self.symbols = self.all_symbols[self.filename]
 		end
 	end
-	
+
 	local lOut2 = {}
 	local ref_to_post_add
 	for _,tok in ipairs(output.lDebug) do

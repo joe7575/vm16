@@ -122,7 +122,7 @@ function vm16.assemble(pos, filename, readfile, asmdbg, debug)
 			end
 		end
 	end
-	
+
 	return true, res
 end
 

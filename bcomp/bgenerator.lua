@@ -257,7 +257,7 @@ function BGen:gen_output()
 			table.insert(out, {"code", 0, "global " .. name})
 		end
 	end
-	
+
 	for _, code in ipairs(self.options.startup_code or {}) do
 		table.insert(out, {"code", 0, code})
 	end

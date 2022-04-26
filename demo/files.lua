@@ -63,7 +63,7 @@ func main() {
   for(i = 0; i < max; i++) {
     system(0, get_char(i));
   }
-  return;  
+  return;
 }
 ]]
 

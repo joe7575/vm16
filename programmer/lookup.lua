@@ -63,7 +63,7 @@ function Lut:init(obj)
 			self.last_lineno = math.max(self.last_lineno, lineno)
 		end
 	end
-	
+
 	for _, item in ipairs(obj.lDebug) do
 		local ctype, lineno, address, ident = item[1], item[2], item[3], item[4]
 		self.last_used_mem_addr = math.max(self.last_used_mem_addr, address or 0)
@@ -85,7 +85,7 @@ function Lut:init(obj)
 			address1 = address
 			func = ident
 		end
-		
+
 		if ctype == "call" then
 			self.step_in[file] = self.step_in[file] or {}
 			self.step_in[file][lineno] = address

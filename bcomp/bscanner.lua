@@ -170,7 +170,7 @@ function BScan:scanner(filename)
 	end
 
 	table.insert(lToken, {type = T_ENDFILE, val = filename, lineno = self.lineno})
-	
+
 	if self.nested_calls == 0 then
 		self.lTok = lToken
 		lToken = {}
