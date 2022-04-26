@@ -161,8 +161,7 @@ function BPars:array_def(ident)
 	self:tk_match("[")
 	local size = 0
 	if self:tk_peek().val ~= ']' then
-		local tok = self:tk_match(T_NUMBER)
-		size = tok.val
+		size = self:number()
 	end
 	self:tk_match("]")
 	if self:tk_peek().val ~= '=' and size > 0 then
@@ -192,12 +191,12 @@ const_list:
     number { ',' const_list }
 ]]--
 function BPars:const_list(ident, size)
-	local tok = self:tk_match(T_NUMBER)
-	self:add_data(ident, tok.val)
+	local num = self:number()
+	self:add_data(ident, num)
 	size = size - 1
 	while self:tk_peek().val == ',' do
 		self:tk_match(",")
-		tok = self:tk_match(T_NUMBER)
+		local tok = self:tk_match(T_NUMBER)
 		self:append_val(tok.val)
 		size = size - 1
 	end

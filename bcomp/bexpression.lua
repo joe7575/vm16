@@ -356,6 +356,15 @@ function BExpr:variable()
 	return self:local_get(ident) or ident or ""
 end
 
+function BExpr:number()
+	local tok = self:tk_match()
+	if self:is_const(tok.val) then
+		local val = self:get_const(tok.val)
+		return tonumber(val:sub(2)) or 0
+	end
+	return tok.val
+end
+
 function BExpr:ident()
 	local ident = (self:tk_match(T_IDENT) or {}).val
 	return self:get_file_local(ident)
