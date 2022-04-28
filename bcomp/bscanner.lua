@@ -43,7 +43,17 @@ local function file_ext(filename)
 end
 
 local function char_to_val(char)
-	if #char == 2 then
+	if char == "\\0" then
+		return 0
+	elseif char == "\\a" then
+		return 7
+	elseif char == "\\b" then
+		return 8
+	elseif char == "\\t" then
+		return 9
+	elseif char == "\\n" then
+		return 10
+	elseif #char == 2 then
 		return char:byte(1) * 256 + char:byte(2)
 	else
 		return char:byte(1)
@@ -152,8 +162,6 @@ function BScan:scanner(filename)
 	if not text then
 		self:error_msg(string.format("Can't open file '%s'", filename))
 	end
-	text = text:gsub("\\0", "\0")
-	text = text:gsub("\\n", "\n")
 
 	for lineno, line in ipairs(vm16.splitlines(text)) do
 		self.lineno = lineno

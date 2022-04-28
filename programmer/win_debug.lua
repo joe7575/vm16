@@ -218,6 +218,7 @@ end
 function vm16.debug.formspec(pos, mem, textsize)
 	if mem.running then
 		vm16.menubar.add_button("stop", "Stop")
+		vm16.menubar.add_button("term", "Terminal", 2.4)
 	else
 		vm16.menubar.add_button("edit", "Edit")
 		if mem.lut then
@@ -231,7 +232,7 @@ function vm16.debug.formspec(pos, mem, textsize)
 			vm16.menubar.add_button("reset", "Reset")
 		end
 	end
-	mem.status = mem.running and "Running..." or minetest.formspec_escape("Debug  |  Out[0]: " .. (mem.output or ""))
+	mem.status = mem.running and "Running..." or minetest.formspec_escape("Debug  |  Output: " .. (mem.output or ""))
 	if mem.file_text then
 		if mem.file_ext == "asm" then
 			return fs_window(pos, mem, 0.2, 0.6, 8.4, 9.6, textsize, mem.file_text) ..
@@ -328,6 +329,8 @@ function vm16.debug.on_receive_fields(pos, fields, mem)
 		if not mem.lut then
 			vm16.destroy(mem.cpu_pos)
 		end
+	elseif fields.term then
+		mem.term_active = true
 	elseif fields.inc then
 		mem.startaddr = math.min(mem.startaddr + 64, (mem.mem_size or 64) - 64)
 	elseif fields.dec then

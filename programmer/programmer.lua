@@ -16,6 +16,8 @@ local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
 local S2P = function(s) return minetest.string_to_pos(s) end
 
 local prog = vm16.prog
+local debug = vm16.debug
+local term = vm16.term
 
 local CpuTime = 0
 local RunTime = 0
@@ -221,13 +223,17 @@ end
 function vm16.update_programmer(cpu_pos, prog_pos, resp)
 	if cpu_pos and prog_pos then
 		local mem = prog.get_mem(prog_pos)
-		vm16.debug.on_update(prog_pos, mem, resp)
+		debug.on_update(prog_pos, mem, resp)
 		M(prog_pos):set_string("formspec", prog.formspec(prog_pos, mem))
 	end
 end
 
 function vm16.putchar(prog_pos, val)
 	local mem = prog.get_mem(prog_pos)
+	if mem.term_active then
+		term.putchar(prog_pos, val)
+		return
+	end
 	if val == 0 then
 		mem.output = ""
 	elseif mem.output and #mem.output < 80 then

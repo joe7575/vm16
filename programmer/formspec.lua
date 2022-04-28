@@ -14,6 +14,8 @@
 local M = minetest.get_meta
 local prog = vm16.prog
 
+local SCREENSAVER_TIME = 60 * 5
+
 function prog.formspec(pos, mem)
 	local textsize = M(pos):get_int("textsize")
 	if textsize >= 0 then
@@ -28,6 +30,9 @@ function prog.formspec(pos, mem)
 	if not mem.cpu_pos or not mem.server_pos then
 		mem.status = "Error: CPU or Server connection missing!"
 		windows = vm16.edit.formspec(pos, mem, textsize) or ""
+	elseif mem.term_active then
+		mem.status = "Running..."
+		windows = vm16.term.formspec(pos, mem, textsize) or ""
 	elseif vm16.is_loaded(mem.cpu_pos) then
 		mem.status = "Debug"
 		windows = vm16.debug.formspec(pos, mem, textsize) or ""
@@ -54,10 +59,13 @@ function prog.on_receive_fields(pos, formname, fields, player)
 	end
 
 	local mem = prog.get_mem(pos)
+	mem.ttl = minetest.get_gametime() + SCREENSAVER_TIME
 	if fields.larger then
 		M(pos):set_int("textsize", math.min(M(pos):get_int("textsize") + 1, 8))
 	elseif fields.smaller then
 		M(pos):set_int("textsize", math.max(M(pos):get_int("textsize") - 1, -8))
+	elseif mem.term_active then
+		vm16.term.on_receive_fields(pos, fields, mem)
 	elseif mem.cpu_pos and vm16.is_loaded(mem.cpu_pos) then
 		vm16.debug.on_receive_fields(pos, fields, mem)
 		vm16.watch.on_receive_fields(pos, fields, mem)
