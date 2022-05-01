@@ -63,14 +63,16 @@ vm16.server = {}
 
 function vm16.server.init(pos, cpu_type)
 	M(pos):set_string("cpu_type", cpu_type)
-	if minetest.get_node(pos).name == "vm16:server" then
+	local name = minetest.get_node(pos).name
+	if name == "vm16:server" or name == "vm16:server2" then
 		local mem = prog.get_mem(pos)
 		mem.filelist = get_filelist(pos)
 	end
 end
 
 function vm16.server.get_filelist(pos)
-	if minetest.get_node(pos).name == "vm16:server" then
+	local name = minetest.get_node(pos).name
+	if name == "vm16:server" or name == "vm16:server2" then
 		local mem = prog.get_mem(pos)
 		mem.filelist = mem.filelist or get_filelist(pos)
 		return mem.filelist
@@ -79,7 +81,8 @@ function vm16.server.get_filelist(pos)
 end
 
 function vm16.server.read_file(pos, filename)
-	if minetest.get_node(pos).name == "vm16:server" then
+	local name = minetest.get_node(pos).name
+	if name == "vm16:server" or name == "vm16:server2" then
 		local ro_files = get_ro_files(pos)
 		if ro_files[filename] then
 			return ro_files[filename]
@@ -92,7 +95,8 @@ function vm16.server.read_file(pos, filename)
 end
 
 function vm16.server.write_file(pos, filename, text)
-	if minetest.get_node(pos).name == "vm16:server" then
+	local name = minetest.get_node(pos).name
+	if name == "vm16:server" or name == "vm16:server2" then
 		local mem = prog.get_mem(pos)
 		local ro_files = get_ro_files(pos)
 		if not ro_files[filename] then
@@ -111,7 +115,8 @@ function vm16.server.write_file(pos, filename, text)
 end
 
 function vm16.server.rename_file(pos, files, old_name, new_name)
-	if minetest.get_node(pos).name == "vm16:server" then
+	local name = minetest.get_node(pos).name
+	if name == "vm16:server" or name == "vm16:server2" then
 		local mem = prog.get_mem(pos)
 		local ro_files = get_ro_files(pos)
 		if not ro_files[new_name] then

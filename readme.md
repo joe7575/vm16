@@ -124,6 +124,10 @@ Licensed under the GNU GPLv3 (See LICENSE.txt)
 
 ## History
 
+### API v3.5/Core v2.7.2/ASM v2.4/Compiler v1.4/Debugger v1.2 (2022-05-01)
+
+- Add storage compatible `hash_node_position`/`get_position_from_hash` functions
+
 ### API v3.4/Core v2.7.1/ASM v2.4/Compiler v1.4/Debugger v1.2 (2022-04-28)
 
 - Add terminal mode to the debugger

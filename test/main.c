@@ -208,11 +208,35 @@ void test5(void) {
     free(C);
 }
 
+char *hash_uint16(uint16_t val, char *s) {
+    *s++ = 48 + (val % 64);
+    val = val / 64;
+    *s++ = 48 + (val % 64);
+    val = val / 64;
+    *s++ = 48 + val;
+    return s;
+}
+
+
+
+char *hash_node_position(int16_t x, int16_t y, int16_t z, char *s) {
+    s = hash_uint16(x, s);
+    s = hash_uint16(y, s);
+    s = hash_uint16(z, s);
+    *s = '\0';
+}
+
+
 int main() {
+    char buffer[80];
+
     //test1();
     //test2();
     //test3();
     //test4();
-    test5();
+    //test5();
+
+    hash_node_position(10000, 20000, 30000, buffer);
+    printf("%s", buffer);
     return 0;
 }

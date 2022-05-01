@@ -11,16 +11,21 @@
 ]]--
 
 local vm16lib = ...
-if vm16lib.version() ~= "2.7.1" then
-	minetest.log("error", "[vm16] Install Lua library v2.7.1 (see readme.md)!")
+if vm16lib.version() ~= "2.7.2" then
+	minetest.log("error", "[vm16] Install Lua library v2.7.2 (see readme.md)!")
 end
 
 local M = minetest.get_meta
 local VMList = {}
 local storage = minetest.get_mod_storage()
+if storage:get_int("version") ~= 2 then
+	storage:from_table()
+	-- Use position hashed based on `vm16lib.hash_node_position`
+	storage:set_int("version", 2)
+end
 
 -------------------------------------------------------------------------------
-local VERSION     = 3.4  -- See readme.md
+local VERSION     = 3.5  -- See readme.md
 -------------------------------------------------------------------------------
 local VM16_OK     = 0  -- run to the end
 local VM16_NOP    = 1  -- nop command
@@ -43,6 +48,16 @@ vm16.version  = VERSION
 vm16.testbit  = vm16lib.testbit
 vm16.is_ascii = vm16lib.is_ascii
 vm16.CallResults = {[0]="OK", "NOP", "IN", "OUT", "SYS", "HALT", "BREAK", "ERROR"}
+
+function vm16.get_position_from_hash(hash)
+	local x = (hash:byte(1) - 48) + (hash:byte(2) - 48) * 64 + (hash:byte(3) - 48) * 4096
+	local y = (hash:byte(4) - 48) + (hash:byte(5) - 48) * 64 + (hash:byte(6) - 48) * 4096
+	local z = (hash:byte(7) - 48) + (hash:byte(8) - 48) * 64 + (hash:byte(9) - 48) * 4096
+	return {x = x - 32768, y = y - 32768, z = z - 32768}
+end
+
+-- Implemented in C
+vm16.hash_node_position = vm16lib.hash_node_position
 
 local function store_breakpoint_addr(pos, vm, breakpoints)
 	local addr = vm16lib.get_pc(vm)
@@ -91,7 +106,7 @@ end
 -- ram_size is from 0 for 64 words, 1 for 128 words, up to 10 for 64 Kwords
 function vm16.create(pos, ram_size)
 	print("vm_create")
-	local hash = minetest.hash_node_position(pos)
+	local hash = vm16lib.hash_node_position(pos)
 	VMList[hash] = vm16lib.init(ram_size)
 	local meta = minetest.get_meta(pos)
 	meta:set_string("vm16", "")
@@ -103,12 +118,12 @@ end
 function vm16.destroy(pos)
 	print("vm_destroy")
 	minetest.get_meta(pos):set_string("vm16", "")
-	local hash = minetest.hash_node_position(pos)
+	local hash = vm16lib.hash_node_position(pos)
 	VMList[hash] = nil
 end
 
 function vm16.is_loaded(pos)
-	local hash = minetest.hash_node_position(pos)
+	local hash = vm16lib.hash_node_position(pos)
 	return VMList[hash] ~= nil
 end
 
@@ -116,7 +131,7 @@ end
 function vm16.vm_restore(pos)
 	print("vm_restore")
 	local meta = minetest.get_meta(pos)
-	local hash = minetest.hash_node_position(pos)
+	local hash = vm16lib.hash_node_position(pos)
 	if not VMList[hash] then
 		local s = storage:get_string(hash)
 		local size = meta:get_int("vm16size")
@@ -130,7 +145,7 @@ end
 -- move VM from active to storage string
 local function vm_store(pos, vm)
 	print("vm_store")
-	local hash = minetest.hash_node_position(pos)
+	local hash = vm16lib.hash_node_position(pos)
 	local s = vm16lib.get_vm(vm)
 	storage:set_string(hash, s)
 end
@@ -162,124 +177,124 @@ end
 
 -- returns size in words
 function vm16.mem_size(pos)
-	local hash = minetest.hash_node_position(pos)
+	local hash = vm16lib.hash_node_position(pos)
 	local vm = VMList[hash]
 	return vm and vm16lib.mem_size(vm)
 end
 
 -- load PC with given address
 function vm16.set_pc(pos, addr)
-	local hash = minetest.hash_node_position(pos)
+	local hash = vm16lib.hash_node_position(pos)
 	local vm = VMList[hash]
 	return vm and vm16lib.set_pc(vm, addr)
 end
 
 function vm16.get_pc(pos)
-	local hash = minetest.hash_node_position(pos)
+	local hash = vm16lib.hash_node_position(pos)
 	local vm = VMList[hash]
 	return vm and vm16lib.get_pc(vm)
 end
 
 function vm16.deposit(pos, value)
-	local hash = minetest.hash_node_position(pos)
+	local hash = vm16lib.hash_node_position(pos)
 	local vm = VMList[hash]
 	return vm and vm16lib.deposit(vm, value)
 end
 
 function vm16.read_mem(pos, addr, num)
-	local hash = minetest.hash_node_position(pos)
+	local hash = vm16lib.hash_node_position(pos)
 	local vm = VMList[hash]
 	return vm and vm16lib.read_mem(vm, addr, num)
 end
 
 function vm16.write_mem(pos, addr, tbl)
-	local hash = minetest.hash_node_position(pos)
+	local hash = vm16lib.hash_node_position(pos)
 	local vm = VMList[hash]
 	return vm and vm16lib.write_mem(vm, addr, tbl)
 end
 
 function vm16.read_mem_bin(pos, addr, num)
-	local hash = minetest.hash_node_position(pos)
+	local hash = vm16lib.hash_node_position(pos)
 	local vm = VMList[hash]
 	return vm and vm16lib.read_mem_bin(vm, addr, num)
 end
 
 function vm16.write_mem_bin(pos, addr, s)
-	local hash = minetest.hash_node_position(pos)
+	local hash = vm16lib.hash_node_position(pos)
 	local vm = VMList[hash]
 	return vm and vm16lib.write_mem_bin(vm, addr, s)
 end
 
 function vm16.read_mem_as_str(pos, addr, num)
-	local hash = minetest.hash_node_position(pos)
+	local hash = vm16lib.hash_node_position(pos)
 	local vm = VMList[hash]
 	return vm and vm16lib.read_mem_as_str(vm, addr, num)
 end
 
 function vm16.write_mem_as_str(pos, addr, s)
-	local hash = minetest.hash_node_position(pos)
+	local hash = vm16lib.hash_node_position(pos)
 	local vm = VMList[hash]
 	return vm and vm16lib.write_mem_as_str(vm, addr, s)
 end
 
 function vm16.read_ascii(pos, addr, num)
-	local hash = minetest.hash_node_position(pos)
+	local hash = vm16lib.hash_node_position(pos)
 	local vm = VMList[hash]
 	return vm and vm16lib.read_ascii(vm, addr, num)
 end
 
 function vm16.write_ascii(pos, addr, s)
-	local hash = minetest.hash_node_position(pos)
+	local hash = vm16lib.hash_node_position(pos)
 	local vm = VMList[hash]
 	return vm and vm16lib.write_ascii(vm, addr, s)
 end
 
 function vm16.peek(pos, addr)
-	local hash = minetest.hash_node_position(pos)
+	local hash = vm16lib.hash_node_position(pos)
 	local vm = VMList[hash]
 	return vm and vm16lib.peek(vm, addr)
 end
 
 function vm16.poke(pos, addr, val)
-	local hash = minetest.hash_node_position(pos)
+	local hash = vm16lib.hash_node_position(pos)
 	local vm = VMList[hash]
 	return vm and vm16lib.poke(vm, addr, val)
 end
 
 function vm16.get_cpu_reg(pos)
-	local hash = minetest.hash_node_position(pos)
+	local hash = vm16lib.hash_node_position(pos)
 	local vm = VMList[hash]
 	return vm and vm16lib.get_cpu_reg(vm)
 end
 
 function vm16.set_cpu_reg(pos, regs)
-	local hash = minetest.hash_node_position(pos)
+	local hash = vm16lib.hash_node_position(pos)
 	local vm = VMList[hash]
 	return vm and vm16lib.set_cpu_reg(vm, regs)
 end
 
 function vm16.get_io_reg(pos)
-	local hash = minetest.hash_node_position(pos)
+	local hash = vm16lib.hash_node_position(pos)
 	local vm = VMList[hash]
 	return vm and vm16lib.get_io_reg(vm)
 end
 
 function vm16.set_io_reg(pos, io)
-	local hash = minetest.hash_node_position(pos)
+	local hash = vm16lib.hash_node_position(pos)
 	local vm = VMList[hash]
 	return vm and vm16lib.set_io_reg(vm, io)
 end
 
 -- Write H16 string to VM memory
 function vm16.write_h16(pos, s)
-	local hash = minetest.hash_node_position(pos)
+	local hash = vm16lib.hash_node_position(pos)
 	local vm = VMList[hash]
 	return vm and vm16lib.write_h16(vm, s)
 end
 
 -- Generate H16 string from VM memory
 function vm16.read_h16(pos, start_addr, size)
-	local hash = minetest.hash_node_position(pos)
+	local hash = vm16lib.hash_node_position(pos)
 	local vm = VMList[hash]
 	start_addr = start_addr or 0
 	size = size or vm16lib.mem_size(vm)
@@ -287,7 +302,7 @@ function vm16.read_h16(pos, start_addr, size)
 end
 
 function vm16.run(pos, cpu_def, breakpoints, steps)
-	local hash = minetest.hash_node_position(pos)
+	local hash = vm16lib.hash_node_position(pos)
 	local vm = VMList[hash]
 	local resp = VM16_ERROR
 	local ran, costs
@@ -338,7 +353,7 @@ end
 minetest.register_on_shutdown(function()
 	print("register_on_shutdown2")
 	for hash, vm in pairs(VMList) do
-		local pos = minetest.get_position_from_hash(hash)
+		local pos = vm16.get_position_from_hash(hash)
 		vm_store(pos, vm)
 	end
 	print("done")
@@ -349,7 +364,7 @@ local function remove_unloaded_vms()
 	local cnt = 0
 	VMList = {}
 	for hash, vm in pairs(tbl) do
-		local pos = minetest.get_position_from_hash(hash)
+		local pos = vm16.get_position_from_hash(hash)
 		if minetest.get_node_or_nil(pos) then
 			VMList[hash] = vm
 			cnt = cnt + 1

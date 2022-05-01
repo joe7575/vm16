@@ -446,34 +446,72 @@ static int testbit(lua_State *L) {
     return 1;
 }
 
+/*
+** High perform. hash function
+*/
+static char *hash_uint16(uint16_t val, char *s) {
+    *s++ = 48 + (val % 64);
+    val = val / 64;
+    *s++ = 48 + (val % 64);
+    val = val / 64;
+    *s++ = 48 + val;
+    return s;
+}
+
+static int hash_node_position(lua_State *L) {
+    int16_t x, y, z;
+    char s[12];
+    char *ptr = s;
+    
+    if(lua_istable(L, 1)) {
+        lua_getfield(L, 1, "x");
+        lua_getfield(L, 1, "y");
+        lua_getfield(L, 1, "z");
+        x = luaL_checkint(L, -3);
+        y = luaL_checkint(L, -2);
+        z = luaL_checkint(L, -1);
+        lua_settop(L, 0);
+
+        ptr = hash_uint16(x + 32768, ptr);
+        ptr = hash_uint16(y + 32768, ptr);
+        ptr = hash_uint16(z + 32768, ptr);
+        *ptr = '\0';
+
+        lua_pushlstring(L, s, 9);
+        return 1;
+    }
+    return 0;
+}
+
 static const luaL_Reg R[] = {
-    {"version",          version},
-    {"init",             init},
-    {"mem_size",         mem_size},
-    {"set_pc",           set_pc},
-    {"get_pc",           get_pc},
-    {"deposit",          deposit},
-    {"get_vm",           get_vm},
-    {"set_vm",           set_vm},
-    {"read_mem",         read_mem},
-    {"write_mem",        write_mem},
-    {"write_mem_bin",    write_mem_bin},
-    {"read_mem_bin",     read_mem_bin},
-    {"write_mem_as_str", write_mem_as_str},
-    {"read_mem_as_str",  read_mem_as_str},
-    {"read_ascii",       read_ascii},
-    {"write_ascii",      write_ascii},
-    {"peek",             peek},
-    {"poke",             poke},
-    {"get_cpu_reg",      get_cpu_reg},
-    {"set_cpu_reg",      set_cpu_reg},
-    {"run",              run},
-    {"get_io_reg",       get_io_reg},
-    {"set_io_reg",       set_io_reg},
-    {"read_h16",         read_h16},
-    {"write_h16",        write_h16},
-    {"is_ascii",         is_ascii},
-    {"testbit",          testbit},
+    {"version",            version},
+    {"init",               init},
+    {"mem_size",           mem_size},
+    {"set_pc",             set_pc},
+    {"get_pc",             get_pc},
+    {"deposit",            deposit},
+    {"get_vm",             get_vm},
+    {"set_vm",             set_vm},
+    {"read_mem",           read_mem},
+    {"write_mem",          write_mem},
+    {"write_mem_bin",      write_mem_bin},
+    {"read_mem_bin",       read_mem_bin},
+    {"write_mem_as_str",   write_mem_as_str},
+    {"read_mem_as_str",    read_mem_as_str},
+    {"read_ascii",         read_ascii},
+    {"write_ascii",        write_ascii},
+    {"peek",               peek},
+    {"poke",               poke},
+    {"get_cpu_reg",        get_cpu_reg},
+    {"set_cpu_reg",        set_cpu_reg},
+    {"run",                run},
+    {"get_io_reg",         get_io_reg},
+    {"set_io_reg",         set_io_reg},
+    {"read_h16",           read_h16},
+    {"write_h16",          write_h16},
+    {"is_ascii",           is_ascii},
+    {"testbit",            testbit},
+    {"hash_node_position", hash_node_position},
     {NULL, NULL}
 };
 
