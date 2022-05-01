@@ -131,6 +131,7 @@ Licensed under the GNU GPLv3 (See LICENSE.txt)
 ### API v3.4/Core v2.7.1/ASM v2.4/Compiler v1.4/Debugger v1.2 (2022-04-28)
 
 - Add terminal mode to the debugger
+- Fix server2 bug
 
 ### API v3.4/Core v2.7.1/ASM v2.4/Compiler v1.4/Debugger v1.1 (2022-04-24)
 
