@@ -60,7 +60,7 @@ end
 
 local function bell(pos)
 	minetest.sound_play("vm16_beep", {
-		pos = pos, 
+		pos = pos,
 		gain = 1,
 		max_hear_distance = 5})
 end
