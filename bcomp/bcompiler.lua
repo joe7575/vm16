@@ -95,7 +95,7 @@ end
 ------------------------------------------------------------------------------
 -- API
 ------------------------------------------------------------------------------
-function vm16.assemble(pos, filename, readfile, asmdbg, debug)
+function vm16.assemble(pos, filename, readfile, asmdbg)
 	local code = readfile(pos, filename)
 	code = code:gsub("\t", "  ")
 
@@ -108,10 +108,6 @@ function vm16.assemble(pos, filename, readfile, asmdbg, debug)
 	sts, res = pcall(a.assembler, a, filename, res)
 	if not sts then
 		return false, error_msg(res)
-	end
-
-	if debug then
-		return true, a:listing(res)
 	end
 
 	-- Debugger uses "out.asm" and needs therefore the correct file references

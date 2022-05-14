@@ -48,7 +48,7 @@ local startup_code = {
 local function read_file(pos, filename)
 	--print("read_file", pos, fname)
 	local text
-	local file = io.open("/home/joachim/Projekte/minetest/Compiler/" .. filename, "rt")
+	local file = io.open("/home/joachim/minetest5/mods/vm16/test/compiler/" .. filename, "rt")
 	if file then
 		text = file:read("*all")
 		file:close()
@@ -58,7 +58,7 @@ end
 
 local function write_file(pos, filename, text)
 -- Opens a file in append mode
-	local file = io.open("/home/joachim/Projekte/minetest/Compiler/" .. filename, "wt")
+	local file = io.open("/home/joachim/minetest5/mods/vm16/test/compiler/" .. filename, "wt")
 	if file then
 		file:write(text)
 		file:close()
@@ -111,19 +111,15 @@ end
 
 local function assemble(filename)
 	local pos = {x=0, y=0, z=0}
-	local sts, res = vm16.assemble(pos, filename, read_file, true)
-	print("######################### DBG ############################")
-	print(res)
-	sts, res = vm16.assemble(pos, filename, read_file)
-	print("######################### BIN ############################")
-	print(#res.lCode, res.locals)
+	local sts, res = vm16.assemble(pos, filename, read_file)
+	print(vm16.dump_compiler_output(res))
 end
 
 local function compile_and_assemble(filename)
 	local pos = {x=0, y=0, z=0}
 	local sts, res = vm16.compile(pos, filename, read_file, {gen_asm_code = true})
 	if sts then
-		write_file(pos, "out.asm", res)
+		--write_file(pos, "out.asm", res)
 		sts, res = vm16.assemble(pos, "out.asm", read_file, true)
 		if sts then
 			print("######################### BIN ############################")
@@ -205,29 +201,9 @@ local function beduino_compile(filename)
 	end
 end
 
---test_scanner("test8.c")
---assemble("test1.asm")
+--assemble("stdio.asm")
 --compile("comm.c")
---compile("test13.c")
---test_lookup("test8.c")
---compile_and_assemble("test13.c")
---beduino_compile("test14.c")
---test_lookup("test14.c")
---beduino_compile("test15.c")
-
-
-
-for i = 0,100 do
-	local pos = {x = i, y = i, z = i}
-	local s = vm16lib.hash_node_position(pos)
-	print(P2S(pos), s, P2S(get_position_from_hash(s)))
-end
-
-for i = -30000,30000,10000 do
-	local pos = {x = i, y = i, z = i}
-	local s = vm16lib.hash_node_position(pos)
-	print(P2S(pos), s, P2S(get_position_from_hash(s)))
-end
-
-
-print(vm16lib.hash_node_position({x = 35000, y = -35000, z = 0}))
+--compile("test01.c")
+--test_lookup("test08.c")
+--compile_and_assemble("test01.c")
+beduino_compile("test09.c")

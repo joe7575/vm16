@@ -1,0 +1,156 @@
+program:
+    = definition { definition }
+
+definition:
+    = 'var' var_def
+    | 'static' 'var' var_def
+    | 'const' const_def
+    | 'func' func_def
+    | 'static' 'func' func_def
+    | T_NEWFILE
+    | T_ASMCODE
+
+var_def:
+    = ident [ '=' expression ] ';
+    | array_def ';'
+
+const_def:
+    = ident '=' expression ';' def_list
+
+array_def:
+    = '[' ']' '=' '{' const_list '}'
+   = '[' ']' '=' STRING
+    = '[' number ']' '=' '{' const_list '}'
+    = '[' number ']'
+
+const_list:
+    number { ',' const_list }
+
+func_def:
+    = ident '(' param_list ')' '{' lvar_def_list stmnt_list '}'
+
+lvar_def_list:
+    = 'var' ident [ '=' expression ] ';'  local_def_list
+
+stmnt_list:
+    = { statement }
+
+param_list:
+    =
+    | expression
+    | expression ',' param_list
+
+statement:
+    = if_statement
+    | for_statement
+    | while_statement
+    | 'return' expression ";"
+    | 'return' ";"
+    | asm_declaration
+    | assignment ";"
+    | expression ";"
+
+if_statement:
+    = 'if' '(' condition ')' '{' stmnt_list '}' [ 'else' '{' stmnt_list '}' ]
+    | 'if' '(' condition ')' '{' stmnt_list '}' 'else' if_statement
+
+for_statement:
+    = 'for' '(' assignment ";" condition ";" assignment ')' '{' stmnt_list '}'
+
+while_statement:
+    = 'while' '(' condition ')' '{' stmnt_list '}'
+
+asm_declaration:
+    | _asm_ "{" { instruction } "}"
+
+assignment:
+    = left_value '=' expression
+    | left_value '++'
+    | left_value '--'
+
+condition:
+    = and_condition
+    | and_condition 'or' condition
+    | and_condition '||' condition
+
+and_condition:
+    = comparison
+    | comparison 'and' and_condition
+    | comparison '&&' and_condition
+
+comparison:
+    = 'true'
+    | 'false'
+    | '(' comparison ')'
+    | expression '<' expression
+    | expression '>' expression
+    | expression '==' expression
+    | expression '!=' expression
+    | expression
+
+left_value:
+    = ident
+    | '*' ident
+    | postfix
+
+expression:
+    = shift_expr
+    | shift_expr '&' expression
+    | shift_expr '|' expression
+    | shift_expr '^' expression
+
+shift_expr:
+    = add_expr
+    | add_expr '>>' shift_expr
+    | add_expr '<<' shift_expr
+
+add_expr:
+    = term
+    | term '+' add_expr
+    | term '-' add_expr
+
+term:
+    = unary
+    | unary '*' term
+    | unary '/' term
+    | unary '%' term
+    | unary 'mod' term
+
+unary:
+    = postfix
+    | '-' postfix
+    | '~' postfix
+    | '*' postfix
+    | '&' postfix
+
+postfix:
+    = factor
+    | variable '[' expression ']'
+
+factor:
+    = '(' expression ')'
+    | variable
+    | number
+    | CONST
+    | STRING
+    | func_call
+    | buildin_call
+
+buildin_call:
+    = system '(' expression ',' expression  { ',' expression { ',' expression } } ')'
+    | sleep '(' expression ')'
+    | input '(' expression ')'
+    | output '(' expression ',' expression { ',' expression } ')'
+
+func_call:
+    | address '(' ')'
+    | address '(' expression { ',' expression } ')'
+
+address:
+    | <func>
+    | <local variabe>
+    | <global variable>
+
+variable: (check if valid)
+    | ident
+
