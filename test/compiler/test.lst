@@ -1,0 +1,927 @@
+vm16 version = 2.7.2
+
+ #### Compile 'main': test01.c ####
+#### Code ####
+ file   0 0000: test01.c
+ code   0 0000: 1600 005C
+ code   0 0002: 1C00
+ code   2 0003: 2230 00F4 0002
+ code   3 0006: 2011 00F4
+ code   3 0008: 3810 0002
+ code   3 000A: 2220 00F5
+ code   0 000C: 1800
+ code   6 000D: 2010 0005
+ code   6 000F: 1800
+ code  10 0010: 6A60 0002
+ code  11 0012: 6A60 0002
+ code  12 0014: 2013 0001
+ code  12 0016: 3813 0000
+ code  12 0018: 2000
+ code  12 0019: 30F0 0002
+ code  12 001B: 1800
+ code  16 001C: 6A00 0004
+ code  17 001E: 2013 0000
+ code  17 0020: 9813 0002
+ code  17 0022: 1200 0027
+ code  18 0024: 200C
+ code  18 0025: 30ED
+ code  18 0026: 1800
+ code  20 0027: 2010 000F
+ code  20 0029: 30ED
+ code  20 002A: 1800
+ code  24 002B: 2013 0002
+ code  24 002D: 3013 0001
+ code  24 002F: 2033 0003
+ code  24 0031: 3020
+ code  24 0032: 2053 0004
+ code  24 0034: 3041
+ code  24 0035: 2002
+ code  24 0036: 1800
+ code  28 0037: 1600 000D
+ code  28 0039: 2033 0004
+ code  28 003B: 3820
+ code  28 003C: 2053 0003
+ code  28 003E: 3450 0002
+ code  28 0040: 2073 0002
+ code  28 0042: 3C73 0001
+ code  28 0044: 3843
+ code  28 0045: 3022
+ code  28 0046: 2001
+ code  28 0047: 1800
+ code  32 0048: 2013 0004
+ code  32 004A: 3013 0003
+ code  32 004C: 6800
+ code  32 004D: 1600 001C
+ code  32 004F: 30ED
+ code  32 0050: 2033 0003
+ code  32 0052: 3430 0002
+ code  32 0054: 2053 0002
+ code  32 0056: 3C53 0001
+ code  32 0058: 3822
+ code  32 0059: 3001
+ code  32 005A: 2000
+ code  32 005B: 1800
+ code  36 005C: 2011 00F3
+ code  36 005E: 300D
+ code  36 005F: 6800
+ code  37 0060: 6980
+ code  39 0061: 6A00 000E
+ code  39 0063: 1600 001C
+ code  39 0065: 30ED
+ code  39 0066: 6600 000F
+ code  40 0068: 65B3 0001
+ code  41 006A: 2013 0001
+ code  41 006C: 3010 0003
+ code  41 006E: 3810 0002
+ code  41 0070: 2260 0001
+ code  42 0072: 6613 0008 0001
+ code  43 0075: 2011 00F3
+ code  43 0077: 202C
+ code  43 0078: 0802
+ code  44 0079: 2011 00F3
+ code  44 007B: 3010 0003
+ code  44 007D: 202C
+ code  44 007E: 0802
+ code  45 007F: 6010 0003
+ code  45 0081: 2220 00F4
+ code  46 0083: 6611 000C 00F4
+ code  47 0086: 2010 0005
+ code  47 0088: 0000
+ code  47 0089: 7414 FFFF
+ code  48 008B: 1600 000D
+ code  48 008D: 6600 0005
+ code  50 008F: 6A00 000E
+ code  50 0091: 1600 001C
+ code  50 0093: 30ED
+ code  50 0094: 6600 000F
+ code  51 0096: 2270 0001 0008
+ code  52 0099: 2230 00F4 000C
+ code  53 009C: 6A60 0001
+ code  53 009E: 6A60 0002
+ code  53 00A0: 6A60 0003
+ code  53 00A2: 6A20 00F4
+ code  53 00A4: 1600 002B
+ code  53 00A6: 30F0 0004
+ code  53 00A8: 2260 0000
+ code  54 00AA: 6613 0024 0000
+ code  55 00AD: 69A0
+ code  55 00AE: 6A60 0002
+ code  55 00B0: 6A60 0003
+ code  55 00B2: 6A20 00F4
+ code  55 00B4: 1600 002B
+ code  55 00B6: 30F0 0004
+ code  55 00B8: 2260 0000
+ code  56 00BA: 6613 001D 0000
+ code  58 00BD: 69A0
+ code  58 00BE: 1600 000D
+ code  58 00C0: 6800
+ code  58 00C1: 6A60 0003
+ code  58 00C3: 6A20 00F4
+ code  58 00C5: 1600 002B
+ code  58 00C7: 30F0 0004
+ code  58 00C9: 2260 0001
+ code  59 00CB: 6613 001A 0001
+ code  62 00CE: 6A00 0002
+ code  62 00D0: 6A00 0004
+ code  62 00D2: 6A00 0004
+ code  62 00D4: 6A00 0004
+ code  62 00D6: 1600 0037
+ code  62 00D8: 30F0 0004
+ code  62 00DA: 2260 0000
+ code  63 00DC: 6613 000C 0000
+ code  66 00DF: 6A00 0002
+ code  66 00E1: 6A00 0004
+ code  66 00E3: 6A00 0004
+ code  66 00E5: 6A00 0004
+ code  66 00E7: 1600 0048
+ code  66 00E9: 30F0 0004
+ code  66 00EB: 2260 0000
+ code  67 00ED: 6613 0011 0000
+ code  67 00F0: 30F0 0002
+ code  67 00F2: 1800
+ code   1 00F3: 0000
+ code   2 00F4: 0000
+ code   3 00F5: 0000
+#### Debug ####
+ file   0 0000: "test01.c"
+ gvar   1 00F3: "var1"
+ gvar   2 00F4: "var2"
+ gvar   3 00F5: "var3"
+ func   5 000D: "get_five"
+ svar   6    0: "@num_stack_var@"
+ func   9 0010: "foo"
+ svar  12    2: "a"
+ svar  12   -1: "c"
+ svar  12    1: "b"
+ svar  12   -2: "d"
+ svar  12    2: "@num_stack_var@"
+ func  15 001C: "test_basic"
+brnch  17 0027: "@lbl2"
+ svar  20    1: "a"
+ svar  20   -1: "d"
+ svar  20    1: "@num_stack_var@"
+ func  23 002B: "test_4_param"
+ svar  24    4: "a"
+ svar  24    2: "c"
+ svar  24    3: "b"
+ svar  24    1: "d"
+ svar  24    0: "@num_stack_var@"
+ func  27 0037: "test_expr"
+ call  28 000D: "get_five"
+ svar  28    4: "a"
+ svar  28    2: "c"
+ svar  28    3: "b"
+ svar  28    1: "d"
+ svar  28    0: "@num_stack_var@"
+ func  31 0048: "test_expr2"
+ call  32 001C: "test_basic"
+ svar  32    4: "a"
+ svar  32    2: "c"
+ svar  32    3: "b"
+ svar  32    1: "d"
+ svar  32    0: "@num_stack_var@"
+ func  35 005C: "main"
+ call  39 001C: "test_basic"
+ call  48 000D: "get_five"
+ call  50 001C: "test_basic"
+ call  53 002B: "test_4_param"
+ call  55 002B: "test_4_param"
+ call  58 000D: "get_five"
+ call  58 002B: "test_4_param"
+ call  62 0037: "test_expr"
+ call  66 0048: "test_expr2"
+ svar  67   -2: "res"
+ svar  67   -1: "c"
+ svar  67    2: "@num_stack_var@"
+ endf  70 00F6: "test01.c"
+
+ #### Compile 'main': test02.c ####
+#### Code ####
+ file   0 0000: test02.c
+ code   0 0000: 1600 000F
+ code   0 0002: 1C00
+ code   1 0003: 2010 0002
+ code   2 0005: 2030 0003
+ code   3 0007: 2050 0004
+ code   4 0009: 2070 0005
+ code   0 000B: 1800
+ code   7 000C: 2013 0001
+ code   7 000E: 1800
+ code  11 000F: 2000
+ code  11 0010: 3801
+ code  11 0011: 2022
+ code  11 0012: 3823
+ code  11 0013: 3001
+ code  11 0014: 2060
+ code  12 0015: 2000
+ code  12 0016: 3801
+ code  12 0017: 6800
+ code  12 0018: 1600 000C
+ code  12 001A: 30ED
+ code  12 001B: 2022
+ code  12 001C: 3823
+ code  12 001D: 3001
+ code  12 001E: 2060
+ code  13 001F: 2000
+ code  13 0020: 3801
+ code  13 0021: 6800
+ code  13 0022: 2002
+ code  13 0023: 3803
+ code  13 0024: 6800
+ code  13 0025: 1600 000C
+ code  13 0027: 30ED
+ code  13 0028: 2020
+ code  13 0029: 6C00
+ code  13 002A: 3001
+ code  13 002B: 2060
+ code  14 002C: 2000
+ code  14 002D: 3801
+ code  14 002E: 6800
+ code  14 002F: 2002
+ code  14 0030: 3803
+ code  14 0031: 6800
+ code  14 0032: 1600 000C
+ code  14 0034: 30ED
+ code  14 0035: 2020
+ code  14 0036: 6C00
+ code  14 0037: 3001
+ code  14 0038: 2050 0003
+ code  14 003A: 3040
+ code  14 003B: 2062
+ code  15 003C: 2000
+ code  15 003D: 3801
+ code  15 003E: 6800
+ code  15 003F: 1600 000C
+ code  15 0041: 30ED
+ code  15 0042: 2022
+ code  15 0043: 3823
+ code  15 0044: 3001
+ code  15 0045: 2050 0004
+ code  15 0047: 3040
+ code  15 0048: 2062
+ code  15 0049: 1800
+ code   1 004A: 0000
+ code   2 004B: 0000
+ code   3 004C: 0000
+ code   4 004D: 0000
+#### Debug ####
+ file   0 0000: "test02.c"
+ gvar   1 004A: "a"
+ gvar   2 004B: "b"
+ gvar   3 004C: "c"
+ gvar   4 004D: "d"
+ func   6 000C: "foo"
+ svar   7    1: "a"
+ svar   7    0: "@num_stack_var@"
+ func  10 000F: "main"
+ call  12 000C: "foo"
+ call  13 000C: "foo"
+ call  14 000C: "foo"
+ call  15 000C: "foo"
+ svar  15    0: "@num_stack_var@"
+ endf  18 004E: "test02.c"
+
+ #### Compile 'main': test03.c ####
+#### Code ####
+ file   0 0000: test03.c
+ code   0 0000: 1600 0036
+ code   0 0002: 1C00
+ code   1 0003: 222C 0058
+ code   0 0005: 1800
+ code   5 0006: 2233 0058 0001
+ code   6 0009: 2013 0001
+ code   6 000B: 9810 0014
+ code   6 000D: 1200 0013
+ code   7 000F: 200D
+ code   7 0010: 1800
+ code   8 0011: 1200 0019
+ code   9 0013: 2010 0041
+ code   9 0015: 3013 0001
+ code   9 0017: 2000
+ code   9 0018: 1800
+ code  11 0019: 2011 0058
+ code  11 001B: 300D
+ code  11 001C: 2220 0058
+ code  11 001E: 1800
+ code  15 001F: 200D
+ code  15 0020: 4C00
+ code  15 0021: 300D
+ code  15 0022: 6800
+ code  16 0023: 6A00 0002
+ code  18 0025: 2010 FFFF
+ code  18 0027: 4C00
+ code  18 0028: 2033 0001
+ code  18 002A: 9020
+ code  18 002B: 1200 0031
+ code  19 002D: 6590 0041
+ code  20 002F: 1200 0033
+ code  21 0031: 6590 0042
+ code  22 0033: 30F0 0002
+ code  22 0035: 1800
+ code  26 0036: 69A0
+ code  27 0037: 6980
+ code  29 0038: 2010 0005
+ code  29 003A: 0000
+ code  29 003B: 7414 FFFF
+ code  30 003D: 1600 001F
+ code  31 003F: 2013 0001
+ code  31 0041: 9410 0020
+ code  31 0043: 1200 0055
+ code  32 0045: 6A60 0001
+ code  32 0047: 1600 0006
+ code  32 0049: 30ED
+ code  32 004A: 2260 0000
+ code  33 004C: 6593 0000
+ code  34 004E: 2013 0001
+ code  34 0050: 300D
+ code  34 0051: 2260 0001
+ code  34 0053: 1200 003F
+ code  35 0055: 30F0 0002
+ code  35 0057: 1800
+ code   1 0058: 0000
+ code   2 0059: 0000
+#### Debug ####
+ file   0 0000: "test03.c"
+ gvar   1 0058: "var1"
+ gvar   2 0059: "Drehzahl"
+ func   4 0006: "get_char"
+brnch   6 0013: "@lbl2"
+brnch   8 0019: "@lbl3"
+ svar  11    1: "c"
+ svar  11    0: "@num_stack_var@"
+ func  14 001F: "foo"
+brnch  18 0031: "@lbl5"
+brnch  20 0033: "@lbl6"
+ svar  22   -1: "a"
+ svar  22   -2: "b"
+ svar  22    2: "@num_stack_var@"
+ func  25 0036: "main"
+ call  30 001F: "foo"
+brnch  31 0055: "@lbl8"
+ call  32 0006: "get_char"
+brnch  34 003F: "@lbl7"
+ svar  35   -1: "i"
+ svar  35   -2: "c"
+ svar  35    2: "@num_stack_var@"
+ endf  38 005A: "test03.c"
+
+ #### Compile 'main': test04.c ####
+#### Code ####
+ file   0 0000: test04.c
+ code   0 0000: 1600 0004
+ code   0 0002: 1C00
+ code   0 0003: 1800
+ code   4 0004: 69A0
+ code   5 0005: 6A00 0100
+ code   7 0007: 65B3 0001
+ code   8 0009: 2013 0001
+ code   8 000B: 9410 0020
+ code   8 000D: 1200 0020
+ code   9 000F: 2013 0001
+ code   9 0011: 300D
+ code   9 0012: 2260 0001
+ code  10 0014: 2093 0000
+ code  10 0016: 2268 0001
+ code  13 0018: 2010 0003
+ code  14 001A: 4A20 0100
+ code  15 001C: 1200 0000
+ code  15 001E: 1200 0009
+ code  17 0020: 30F0 0002
+ code  17 0022: 1800
+#### Debug ####
+ file   0 0000: "test04.c"
+ func   3 0004: "main"
+brnch   8 0020: "@lbl2"
+brnch  15 0009: "@lbl1"
+ svar  17   -1: "i"
+ svar  17   -2: "ptr"
+ svar  17    2: "@num_stack_var@"
+ endf  19 0023: "test04.c"
+
+ #### Compile 'main': test05.c ####
+#### Code ####
+ file   0 0000: test05.c
+ code   0 0000: 1600 0072
+ code   0 0002: 1C00
+ code   4 0003: 2230 00C5 00C6
+ code   0 0006: 1800
+ code   7 0007: 2013 0001
+ code   7 0009: 980C
+ code   7 000A: 1200 0019
+ code   8 000C: 2093 0003
+ code   8 000E: 20B3 0002
+ code   8 0010: 2109
+ code   9 0011: 2A60 0003
+ code  10 0013: 2A60 0002
+ code  11 0015: 2E60 0001
+ code  11 0017: 1200 0007
+ code  12 0019: 1800
+ code  16 001A: 6980
+ code  17 001B: 6A60 0002
+ code  18 001D: 6980
+ code  20 001E: 2013 0004
+ code  20 0020: 900C
+ code  20 0021: 1200 0029
+ code  21 0023: 6590 0030
+ code  22 0025: 200C
+ code  22 0026: 30F0 0003
+ code  22 0028: 1800
+ code  25 0029: 2013 0001
+ code  25 002B: 980C
+ code  25 002C: 1200 0048
+ code  26 002E: 2013 0001
+ code  26 0030: 7810 000A
+ code  26 0032: 2260 0002
+ code  27 0034: 2013 0001
+ code  27 0036: 3C10 000A
+ code  27 0038: 2260 0001
+ code  28 003A: 2010 00BF
+ code  28 003C: 3013 0000
+ code  28 003E: 2080
+ code  28 003F: 2033 0002
+ code  28 0041: 3030 0030
+ code  28 0043: 2101
+ code  29 0044: 2A60 0000
+ code  29 0046: 1200 0029
+ code  31 0048: 2013 0000
+ code  31 004A: 980C
+ code  31 004B: 1200 0059
+ code  32 004D: 2013 0000
+ code  32 004F: 340D
+ code  32 0050: 2030 00BF
+ code  32 0052: 3020
+ code  32 0053: 2081
+ code  32 0054: 6588
+ code  31 0055: 2E60 0000
+ code  32 0057: 1200 0048
+ code  33 0059: 30F0 0003
+ code  33 005B: 1800
+ code  37 005C: 6980
+ code  39 005D: 2013 0002
+ code  39 005F: 3013 0000
+ code  39 0061: 2080
+ code  39 0062: 2028
+ code  39 0063: 8C2C
+ code  39 0064: 1200 0070
+ code  40 0066: 2013 0002
+ code  40 0068: 3013 0000
+ code  40 006A: 2080
+ code  40 006B: 6588
+ code  41 006C: 2A60 0000
+ code  41 006E: 1200 005D
+ code  42 0070: 30ED
+ code  42 0071: 1800
+ code  46 0072: 6980
+ code  47 0073: 2013 0000
+ code  47 0075: 300D
+ code  47 0076: 6800
+ code  48 0077: 6A00 00B7
+ code  49 0079: 6A20 00C5
+ code  51 007B: 6A00 00B7
+ code  51 007D: 6A00 00BB
+ code  51 007F: 6A00 0004
+ code  51 0081: 1600 0007
+ code  51 0083: 30F0 0003
+ code  53 0085: 226C 0003
+ code  53 0087: 2013 0003
+ code  53 0089: 9410 0004
+ code  53 008B: 1200 009A
+ code  54 008D: 2010 00B7
+ code  54 008F: 3013 0003
+ code  54 0091: 2080
+ code  54 0092: 6900
+ code  54 0093: 1600 001A
+ code  54 0095: 30ED
+ code  53 0096: 2A60 0003
+ code  54 0098: 1200 0087
+ code  56 009A: 6590 2020
+ code  57 009C: 6A00 55AA
+ code  57 009E: 1600 001A
+ code  57 00A0: 30ED
+ code  58 00A1: 6590 2020
+ code  59 00A3: 6A20 00C5
+ code  59 00A5: 1600 005C
+ code  59 00A7: 30ED
+ code  60 00A8: 6590 2020
+ code  61 00AA: 6A60 0000
+ code  61 00AC: 1600 005C
+ code  61 00AE: 30ED
+ code  62 00AF: 6A00 00CC
+ code  62 00B1: 1600 005C
+ code  62 00B3: 30ED
+ code  62 00B4: 30F0 0004
+ code  62 00B6: 1800
+ code   1 00B7: 0000 0000 0000 0000
+ code   2 00BB: 0001 0002 0003 0004
+ code   3 00BF: 0000 0000 0000 0000 0000 0000
+ code   4 00C5: 0000
+ code   4 00C6: 4865 6C6C 6F20 4A6F 6521 0000
+ code  62 00CC: 4865 6C6C 6F20 776F 726C 6421 0000
+#### Debug ####
+ file   0 0000: "test05.c"
+ gvar   1 00B7: "arr1[]"
+ gvar   2 00BB: "arr2[]"
+ gvar   3 00BF: "out[]"
+ gvar   4 00C5: "str"
+ func   6 0007: "memcpy"
+brnch   7 0019: "@lbl2"
+brnch  11 0007: "@lbl1"
+ svar  12    3: "dst"
+ svar  12    2: "src"
+ svar  12    1: "num"
+ svar  12    0: "@num_stack_var@"
+ func  15 001A: "putval"
+brnch  20 0029: "@lbl4"
+brnch  25 0048: "@lbl6"
+brnch  29 0029: "@lbl5"
+brnch  31 0059: "@lbl8"
+brnch  32 0048: "@lbl7"
+ svar  33   -3: "i"
+ svar  33   -1: "c"
+ svar  33   -2: "r"
+ svar  33    1: "val"
+ svar  33    3: "@num_stack_var@"
+ func  36 005C: "putstr"
+brnch  39 0070: "@lbl10"
+brnch  41 005D: "@lbl9"
+ svar  42   -1: "i"
+ svar  42    1: "s"
+ svar  42    1: "@num_stack_var@"
+ func  45 0072: "main"
+ call  51 0007: "memcpy"
+brnch  53 009A: "@lbl12"
+ call  54 001A: "putval"
+brnch  54 0087: "@lbl11"
+ call  57 001A: "putval"
+ call  59 005C: "putstr"
+ call  61 005C: "putstr"
+ call  62 005C: "putstr"
+ svar  62   -1: "i"
+ svar  62   -2: "c"
+ svar  62   -4: "p2"
+ svar  62   -3: "p1"
+ svar  62    4: "@num_stack_var@"
+ endf  64 00D3: "test05.c"
+
+ #### Compile 'main': test06.c ####
+#### Code ####
+ file   0 0000: test06.c
+ code   0 0000: 1600 0059
+ code   0 0002: 1C00
+ code   0 0003: 1800
+ file   0 0004: string.asm
+ code  18 0004: 2093 0002
+ code  19 0006: 20B3 0001
+ code  20 0008: 2004
+ code  23 0009: 2149
+ code  24 000A: 5170 0009
+ code  26 000C: 1800
+ code  33 000D: 2093 0001
+ code  34 000F: 200C
+ code  37 0010: 202A
+ code  38 0011: 2800
+ code  39 0012: 5110 0010
+ code  41 0014: 1800
+ file   0 0015: stdio.asm
+ code  21 0015: 2013 0001
+ code  22 0017: 6580
+ code  23 0018: 1800
+ code  30 0019: 2093 0001
+ code  31 001B: 2010 0050
+ code  34 001D: 2028
+ code  35 001E: 5430 0027
+ code  36 0020: 2C00
+ code  37 0021: 5410 0027
+ code  39 0023: 6581
+ code  40 0024: 2880
+ code  41 0025: 1200 001D
+ code  44 0027: 1800
+ code  51 0028: 2013 0001
+ code  52 002A: 6980
+ code  55 002B: 2020
+ code  56 002C: 3C30 000A
+ code  57 002E: 2040
+ code  58 002F: 7850 000A
+ code  59 0031: 3050 0030
+ code  60 0033: 6840
+ code  61 0034: 2001
+ code  62 0035: 5010 002B
+ code  65 0037: 6C20
+ code  66 0038: 5430 003D
+ code  67 003A: 6581
+ code  68 003B: 1200 0037
+ code  71 003D: 1800
+ code  78 003E: 2013 0001
+ code  79 0040: 6980
+ code  80 0041: 2050 0004
+ code  83 0043: 2020
+ code  84 0044: 3C30 0010
+ code  85 0046: 7810 0010
+ code  86 0048: 9410 000A
+ code  87 004A: 3010 0007
+ code  88 004C: 3010 0030
+ code  89 004E: 6800
+ code  90 004F: 2001
+ code  91 0050: 7450 0043
+ code  94 0052: 6C20
+ code  95 0053: 5430 0058
+ code  96 0055: 6581
+ code  97 0056: 1200 0052
+ code 100 0058: 1800
+ file   2 0059: test06.c
+ code   7 0059: 6A00 0067
+ code   7 005B: 6A00 0071
+ code   7 005D: 1600 0004
+ code   7 005F: 30F0 0002
+ code   8 0061: 6A00 0067
+ code   8 0063: 1600 0019
+ code   8 0065: 30ED
+ code   8 0066: 1800
+ code   4 0067: 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000
+ code   7 0071: 4865 6C6C 6F20 776F 726C 6421 0000
+#### Debug ####
+ file   0 0059: "test06.c"
+ file   0 0004: "string.asm"
+ func   7 0004: "strcpy"
+ func   8 000D: "strlen"
+ endf  42 0014: "string.asm"
+ file   0 0015: "stdio.asm"
+ func   9 0015: "putchar"
+ func  10 0019: "putstr"
+ func  11 0028: "putnum"
+ func  12 003E: "puthex"
+ endf 101 0058: "stdio.asm"
+ file   2 0059: "test06.c"
+ lvar   4 0067: "arr[]"
+ func   6 0059: "main"
+ call   7 0004: "strcpy"
+ call   8 0019: "putstr"
+ svar   8    0: "@num_stack_var@"
+ endf  10 0078: "test06.c"
+
+ #### Compile 'main': test07.c ####
+#### Code ####
+ file   0 0000: test07.c
+ code   0 0000: 1600 0009
+ code   0 0002: 1C00
+ code   1 0003: 222D 002A
+ code   0 0005: 1800
+ code   6 0006: 6590 3132
+ code   6 0008: 1800
+ code  10 0009: 6A00 0006
+ code  11 000B: 2230 002B 0006
+ code  12 000E: 2010 002C
+ code  12 0010: 300D
+ code  12 0011: 2080
+ code  12 0012: 2110 0006
+ code  14 0014: 1600 0006
+ code  15 0016: 2011 002B
+ code  15 0018: 1400
+ code  16 0019: 2013 0000
+ code  16 001B: 1400
+ code  17 001C: 2010 002C
+ code  17 001E: 3010 0002
+ code  17 0020: 2080
+ code  17 0021: 2228 002B
+ code  18 0023: 2011 002B
+ code  18 0025: 1400
+ code  19 0026: 6590 3334
+ code  19 0028: 30ED
+ code  19 0029: 1800
+ code   1 002A: 0000
+ code   2 002B: 0000
+ code   3 002C: 0000 0000
+#### Debug ####
+ file   0 0000: "test07.c"
+ gvar   1 002A: "val1"
+ gvar   2 002B: "ptr1"
+ lvar   3 002C: "arr[]"
+ func   5 0006: "test"
+ svar   6    0: "@num_stack_var@"
+ func   9 0009: "main"
+ call  14 0006: "test"
+ call  15 002B: "ptr1"
+ call  16 0000: "ptr2"
+ call  18 002B: "ptr1"
+ svar  19   -1: "ptr2"
+ svar  19    1: "@num_stack_var@"
+ endf  21 002E: "test07.c"
+
+ #### Compile 'main': test08.c ####
+#### Code ####
+ file   0 0000: test08.c
+ code   0 0000: 1600 0048
+ code   0 0002: 1C00
+ code   0 0003: 1800
+ file   0 0004: stdio.asm
+ code  21 0004: 2013 0001
+ code  22 0006: 6580
+ code  23 0007: 1800
+ code  30 0008: 2093 0001
+ code  31 000A: 2010 0050
+ code  34 000C: 2028
+ code  35 000D: 5430 0016
+ code  36 000F: 2C00
+ code  37 0010: 5410 0016
+ code  39 0012: 6581
+ code  40 0013: 2880
+ code  41 0014: 1200 000C
+ code  44 0016: 1800
+ code  51 0017: 2013 0001
+ code  52 0019: 6980
+ code  55 001A: 2020
+ code  56 001B: 3C30 000A
+ code  57 001D: 2040
+ code  58 001E: 7850 000A
+ code  59 0020: 3050 0030
+ code  60 0022: 6840
+ code  61 0023: 2001
+ code  62 0024: 5010 001A
+ code  65 0026: 6C20
+ code  66 0027: 5430 002C
+ code  67 0029: 6581
+ code  68 002A: 1200 0026
+ code  71 002C: 1800
+ code  78 002D: 2013 0001
+ code  79 002F: 6980
+ code  80 0030: 2050 0004
+ code  83 0032: 2020
+ code  84 0033: 3C30 0010
+ code  85 0035: 7810 0010
+ code  86 0037: 9410 000A
+ code  87 0039: 3010 0007
+ code  88 003B: 3010 0030
+ code  89 003D: 6800
+ code  90 003E: 2001
+ code  91 003F: 7450 0032
+ code  94 0041: 6C20
+ code  95 0042: 5430 0047
+ code  96 0044: 6581
+ code  97 0045: 1200 0041
+ code 100 0047: 1800
+ file   1 0048: test08.c
+ code   4 0048: 69A0
+ code   5 0049: 6A00 0002
+ code   7 004B: 2013 0001
+ code   7 004D: 900C
+ code   7 004E: 1280 0004
+ code   7 0050: 1200 0058
+ code   7 0052: 2033 0000
+ code   7 0054: 9030 0002
+ code   7 0056: 1200 005F
+ code   8 0058: 6A00 00A0
+ code   8 005A: 1600 0008
+ code   8 005C: 30ED
+ code   9 005D: 1200 0064
+ code  10 005F: 6A00 00A2
+ code  10 0061: 1600 0008
+ code  10 0063: 30ED
+ code  13 0064: 2013 0001
+ code  13 0066: 900D
+ code  13 0067: 1200 0076
+ code  13 0069: 2033 0000
+ code  13 006B: 9030 0002
+ code  13 006D: 1200 0076
+ code  14 006F: 6A00 00A6
+ code  14 0071: 1600 0008
+ code  14 0073: 30ED
+ code  15 0074: 1200 007B
+ code  16 0076: 6A00 00A8
+ code  16 0078: 1600 0008
+ code  16 007A: 30ED
+ code  19 007B: 2013 0001
+ code  19 007D: 900C
+ code  19 007E: 1280 0004
+ code  19 0080: 1200 0088
+ code  19 0082: 2033 0000
+ code  19 0084: 9030 0002
+ code  19 0086: 1200 008D
+ code  20 0088: 6A00 00AC
+ code  20 008A: 1600 0008
+ code  20 008C: 30ED
+ code  23 008D: 2013 0001
+ code  23 008F: 900D
+ code  23 0090: 1200 009D
+ code  23 0092: 2033 0000
+ code  23 0094: 9030 0002
+ code  23 0096: 1200 009D
+ code  24 0098: 6A00 00AE
+ code  24 009A: 1600 0008
+ code  24 009C: 30ED
+ code  25 009D: 30F0 0002
+ code  25 009F: 1800
+ code   8 00A0: 6F6B 0000
+ code  10 00A2: 6572 726F 0072 0000
+ code  14 00A6: 6F6B 0000
+ code  16 00A8: 6572 726F 0072 0000
+ code  20 00AC: 6F6B 0000
+ code  24 00AE: 6F6B 0000
+#### Debug ####
+ file   0 0048: "test08.c"
+ file   0 0004: "stdio.asm"
+ func   9 0004: "putchar"
+ func  10 0008: "putstr"
+ func  11 0017: "putnum"
+ func  12 002D: "puthex"
+ endf 101 0047: "stdio.asm"
+ file   1 0048: "test08.c"
+ func   3 0048: "main"
+brnch   7 0000: "+4"
+brnch   7 0058: "@lbl1"
+brnch   7 005F: "@lbl2"
+ call   8 0008: "putstr"
+brnch   9 0064: "@lbl3"
+ call  10 0008: "putstr"
+brnch  13 0076: "@lbl5"
+brnch  13 0076: "@lbl5"
+ call  14 0008: "putstr"
+brnch  15 007B: "@lbl6"
+ call  16 0008: "putstr"
+brnch  19 0000: "+4"
+brnch  19 0088: "@lbl7"
+brnch  19 008D: "@lbl8"
+ call  20 0008: "putstr"
+brnch  23 009D: "@lbl10"
+brnch  23 009D: "@lbl10"
+ call  24 0008: "putstr"
+ svar  25   -1: "a"
+ svar  25   -2: "b"
+ svar  25    2: "@num_stack_var@"
+ endf  27 00B0: "test08.c"
+
+ #### Compile 'loop': test09.c ####
+#### Code ####
+ file   0 0000: test09.c
+ code   0 0000: 1200 0008
+ code   0 0008: 1600 0011
+ code   0 000A: 1600 0034
+ code   0 000C: 1600 003B
+ code   0 000E: 0000
+ code   0 000F: 1200 000C
+ code   2 0011: 222C 004F
+ code   0 0013: 1800
+ file   0 0014: comm.c
+ code   5 0014: 200C
+ code   5 0015: 1800
+ code   9 0016: 2010 004C
+ code   9 0018: 300C
+ code   9 0019: 2080
+ code   9 001A: 2113 0003
+ code  10 001C: 2010 004C
+ code  10 001E: 300D
+ code  10 001F: 2080
+ code  10 0020: 2113 0002
+ code  11 0022: 2010 004C
+ code  11 0024: 3010 0002
+ code  11 0026: 2080
+ code  11 0027: 2113 0001
+ code  12 0029: 2013 0004
+ code  12 002B: 2030 004C
+ code  12 002D: 0802
+ code  13 002E: 6A00 0002
+ code  13 0030: 1600 0014
+ code  13 0032: 30ED
+ code  13 0033: 1800
+ file   1 0034: test09.c
+ code   6 0034: 2010 496E
+ code   6 0036: 0800
+ code   7 0037: 2010 6974
+ code   7 0039: 0800
+ code   7 003A: 1800
+ code  11 003B: 600D
+ code  11 003C: 900D
+ code  11 003D: 1200 004A
+ code  12 003F: 65B1 004F
+ code  13 0041: 2011 004F
+ code  13 0043: 300D
+ code  13 0044: 7810 0040
+ code  13 0046: 2220 004F
+ code  14 0048: 1200 004B
+ code  15 004A: 65AC
+ code  16 004B: 1800
+ code   2 004C: 0000 0000 0000
+ code   2 004F: 0000
+#### Debug ####
+ file   0 0034: "test09.c"
+ file   0 0014: "comm.c"
+ lvar   2 004C: "buff[]"
+ func   4 0014: "test"
+ svar   5    1: "a"
+ svar   5    0: "@num_stack_var@"
+ func   8 0016: "send_msg"
+ call  13 0014: "test"
+ svar  13    4: "port"
+ svar  13    3: "topic"
+ svar  13    1: "ptr"
+ svar  13    2: "size"
+ svar  13    0: "@num_stack_var@"
+ endf  15 0033: "comm.c"
+ file   1 0034: "test09.c"
+ lvar   2 004F: "idx"
+ func   5 0034: "init"
+ svar   7    0: "@num_stack_var@"
+ func  10 003B: "loop"
+brnch  11 004A: "@lbl2"
+brnch  14 004B: "@lbl3"
+ svar  16    0: "@num_stack_var@"
+ endf  18 0050: "test09.c"
