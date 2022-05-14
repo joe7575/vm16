@@ -307,12 +307,16 @@ function vm16.run(pos, cpu_def, breakpoints, steps)
 	local resp = VM16_ERROR
 	local ran, costs
 
+	if not vm then
+		return resp
+	end
+
 	local cycles = steps or cpu_def.instr_per_cycle
 	if skip_break_instr(pos, vm, cpu_def, breakpoints) then
 		return VM16_OK
 	end
 
-	while vm and cycles > 0 do
+	while cycles > 0 do
 		resp, ran = vm16lib.run(vm, cycles)
 		cycles = cycles - ran
 
