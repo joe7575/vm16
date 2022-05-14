@@ -38,3 +38,4 @@ func main() {
   test2();
   exit:
 }
+
