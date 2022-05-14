@@ -84,6 +84,7 @@ compile1("test03.c")  -- if, else, while
 compile1("test04.c")  -- const, inline asm
 compile1("test05.c")  -- arrays and strings
 compile1("test06.c")  -- import files
-compile1("test07.c")  -- static function and vars
+compile1("test07.c")  -- static function and vars, pointers
 compile1("test08.c")  -- boolean expressions
 compile2("test09.c")  -- beduino init, loop
+compile1("test10.c")  -- break, continue, goto

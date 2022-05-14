@@ -263,12 +263,16 @@ end
 stmnt_list:
     = { statement }
 ]]--
-function BPars:stmnt_list()
+function BPars:stmnt_list(lbl_loop, lbl_end)
+	self:push_var("lbl_loop", lbl_loop)
+	self:push_var("lbl_end", lbl_end)
 	local val = self:tk_peek().val
 	while val and val ~= "}" do
 		self:statement()
 		val = self:tk_peek().val
 	end
+	self:pop_var("lbl_loop")
+	self:pop_var("lbl_end")
 end
 
 --[[
@@ -307,6 +311,10 @@ statement:
     | asm_declaration
     | assignment ";"
     | expression ";"
+    | "goto" ident ";"
+    | "break" ";"
+    | "continue" ";"
+    | ident ":"
 ]]--
 function BPars:statement()
 	local val = self:tk_peek().val
@@ -330,6 +338,33 @@ function BPars:statement()
 		self:func_return(self.func_name or "")
 		self:tk_match(";")
 		self:reset_reg_use()
+	elseif val == "goto" then
+		self:tk_match("goto")
+		local lbl = self:ident()
+		self:local_add(lbl)
+		self:tk_match(";")
+		self:reset_reg_use()
+		self:add_instr("jump", lbl)
+	elseif val == "break" then
+		if self.lbl_end then
+			self:tk_match("break")
+			self:tk_match(";")
+			self:add_instr("jump", self.lbl_end)
+		else
+			self:error_msg("Invalid position for a 'break'")
+		end
+	elseif val == "continue" then
+		if self.lbl_loop then
+			self:tk_match("continue")
+			self:tk_match(";")
+			self:add_instr("jump", self.lbl_loop)
+		else
+			self:error_msg("Invalid position for a 'continue'")
+		end
+	elseif self:label() then
+		local ident = self:ident()
+		self:add_label(ident)
+		self:tk_match(":")
 	elseif self:assignment() then
 		self:tk_match(";")
 	else
@@ -388,8 +423,9 @@ function BPars:for_statement()
 	self:tk_match(";")
 	local loop = self:get_label()
 	local lend = self:get_label()
+	local lbreak = self:get_label()
 	self:add_label(loop)
-	self:condition(loop, lend)
+	self:condition()
 	self:reset_reg_use()
 	self:tk_match(";")
 	self:add_instr("jump", lend)
@@ -400,7 +436,8 @@ function BPars:for_statement()
 	self:tk_match(")")
 	self:tk_match("{")
 	self:add_then_label()
-	self:stmnt_list()
+	self:stmnt_list(lbreak, lend)
+	self:add_label(lbreak)
 	local pos3 = self:get_instr_pos()
 	self:add_instr("jump", loop)
 	self:add_label(lend)
@@ -424,7 +461,7 @@ function BPars:while_statement()
 	self:add_instr("jump", lend)
 	self:tk_match("{")
 	self:add_then_label()
-	self:stmnt_list()
+	self:stmnt_list(loop, lend)
 	self:add_instr("jump", loop)
 	self:add_label(lend)
 	self:tk_match("}")
@@ -600,5 +637,31 @@ function BPars:left_value()
 		end
 	end
 end
+
+--[[
+label:
+    = identifier ":"
+]]--
+function BPars:label()
+	if self:tk_next().val == ":" then
+		return true
+	end
+end
+
+function BPars:push_var(name, val)
+	if not self["stack_" .. name] then
+		self["stack_" .. name] = {}
+	end
+	if self[name] then
+		table.insert(self["stack_" .. name], self[name])
+	end
+	self[name] = val or self[name]
+end
+
+function BPars:pop_var(name)
+	self[name] = table.remove(self["stack_" .. name])
+	return self[name]
+end
+
 
 vm16.BPars = BPars

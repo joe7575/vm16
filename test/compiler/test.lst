@@ -542,16 +542,16 @@ brnch  32 0048: "@lbl7"
  svar  33    1: "val"
  svar  33    3: "@num_stack_var@"
  func  36 005C: "putstr"
-brnch  39 0070: "@lbl10"
-brnch  41 005D: "@lbl9"
+brnch  39 0070: "@lbl11"
+brnch  41 005D: "@lbl10"
  svar  42   -1: "i"
  svar  42    1: "s"
  svar  42    1: "@num_stack_var@"
  func  45 0072: "main"
  call  51 0007: "memcpy"
-brnch  53 009A: "@lbl12"
+brnch  53 009A: "@lbl13"
  call  54 001A: "putval"
-brnch  54 0087: "@lbl11"
+brnch  54 0087: "@lbl12"
  call  57 001A: "putval"
  call  59 005C: "putstr"
  call  61 005C: "putstr"
@@ -925,3 +925,149 @@ brnch  11 004A: "@lbl2"
 brnch  14 004B: "@lbl3"
  svar  16    0: "@num_stack_var@"
  endf  18 0050: "test09.c"
+
+ #### Compile 'main': test10.c ####
+#### Code ####
+ file   0 0000: test10.c
+ code   0 0000: 1600 009D
+ code   0 0002: 1C00
+ code   0 0003: 1800
+ file   0 0004: stdio.asm
+ code  21 0004: 2013 0001
+ code  22 0006: 6580
+ code  23 0007: 1800
+ code  30 0008: 2093 0001
+ code  31 000A: 2010 0050
+ code  34 000C: 2028
+ code  35 000D: 5430 0016
+ code  36 000F: 2C00
+ code  37 0010: 5410 0016
+ code  39 0012: 6581
+ code  40 0013: 2880
+ code  41 0014: 1200 000C
+ code  44 0016: 1800
+ code  51 0017: 2013 0001
+ code  52 0019: 6980
+ code  55 001A: 2020
+ code  56 001B: 3C30 000A
+ code  57 001D: 2040
+ code  58 001E: 7850 000A
+ code  59 0020: 3050 0030
+ code  60 0022: 6840
+ code  61 0023: 2001
+ code  62 0024: 5010 001A
+ code  65 0026: 6C20
+ code  66 0027: 5430 002C
+ code  67 0029: 6581
+ code  68 002A: 1200 0026
+ code  71 002C: 1800
+ code  78 002D: 2013 0001
+ code  79 002F: 6980
+ code  80 0030: 2050 0004
+ code  83 0032: 2020
+ code  84 0033: 3C30 0010
+ code  85 0035: 7810 0010
+ code  86 0037: 9410 000A
+ code  87 0039: 3010 0007
+ code  88 003B: 3010 0030
+ code  89 003D: 6800
+ code  90 003E: 2001
+ code  91 003F: 7450 0032
+ code  94 0041: 6C20
+ code  95 0042: 5430 0047
+ code  96 0044: 6581
+ code  97 0045: 1200 0041
+ code 100 0047: 1800
+ file   1 0048: test10.c
+ code   4 0048: 6980
+ code   5 0049: 6980
+ code   7 004A: 226C 0000
+ code   7 004C: 2013 0000
+ code   7 004E: 9410 0005
+ code   7 0050: 1200 007C
+ code   8 0052: 226C 0001
+ code   8 0054: 2013 0001
+ code   8 0056: 9410 0005
+ code   8 0058: 1200 0078
+ code   9 005A: 6A60 0001
+ code   9 005C: 1600 0017
+ code   9 005E: 30ED
+ code  10 005F: 2013 0001
+ code  10 0061: 9410 0002
+ code  10 0063: 1200 0067
+ code  11 0065: 1200 0074
+ code  13 0067: 6A00 00A4
+ code  13 0069: 1600 0008
+ code  13 006B: 30ED
+ code  14 006C: 2013 0001
+ code  14 006E: 9010 0004
+ code  14 0070: 1200 0074
+ code  15 0072: 1200 0078
+ code   8 0074: 2A60 0001
+ code  16 0076: 1200 0054
+ code   7 0078: 2A60 0000
+ code  17 007A: 1200 004C
+ code  20 007C: 226C 0001
+ code  21 007E: 200D
+ code  21 007F: 9810 0000
+ code  21 0081: 1200 0094
+ code  22 0083: 2013 0001
+ code  22 0085: 9810 0003
+ code  22 0087: 1200 008B
+ code  23 0089: 1200 0094
+ code  25 008B: 6A60 0001
+ code  25 008D: 1600 0017
+ code  25 008F: 30ED
+ code  26 0090: 2A60 0001
+ code  26 0092: 1200 007E
+ code  27 0094: 30F0 0002
+ code  27 0096: 1800
+ code  31 0097: 6A00 00A8
+ code  31 0099: 1600 0008
+ code  31 009B: 30ED
+ code  31 009C: 1800
+ code  35 009D: 1600 0048
+ code  37 009F: 1200 00A3
+ code  38 00A1: 1600 0097
+ code  39 00A3: 1800
+ code  13 00A4: 6920 3E3D 2032 0000
+ code  31 00A8: 5368 6F75 6C64 206E 6F74 2068 6170 7065
+ code  31 00B0: 006E 0000
+#### Debug ####
+ file   0 0048: "test10.c"
+ file   0 0004: "stdio.asm"
+ func   9 0004: "putchar"
+ func  10 0008: "putstr"
+ func  11 0017: "putnum"
+ func  12 002D: "puthex"
+ endf 101 0047: "stdio.asm"
+ file   1 0048: "test10.c"
+ func   3 0048: "test1"
+brnch   7 007C: "@lbl2"
+brnch   8 0078: "@lbl5"
+ call   9 0017: "putnum"
+brnch  10 0067: "@lbl8"
+brnch  11 0074: "@lbl6"
+ call  13 0008: "putstr"
+brnch  14 0074: "@lbl10"
+brnch  15 0078: "@lbl5"
+brnch  16 0054: "@lbl4"
+brnch  17 004C: "@lbl1"
+brnch  21 0094: "@lbl12"
+brnch  22 008B: "@lbl14"
+brnch  23 0094: "@lbl12"
+ call  25 0017: "putnum"
+brnch  26 007E: "@lbl11"
+ svar  27   -1: "i"
+ svar  27   -2: "j"
+ svar  27    2: "@num_stack_var@"
+ func  30 0097: "test2"
+ call  31 0008: "putstr"
+ svar  31    0: "@num_stack_var@"
+ func  34 009D: "main"
+ call  35 0048: "test1"
+brnch  37 00A3: "exit"
+ call  38 0097: "test2"
+ svar  39   -1: "exit"
+ svar  39    1: "@num_stack_var@"
+ endf  41 00B2: "test10.c"
