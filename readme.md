@@ -122,6 +122,10 @@ Licensed under the GNU GPLv3 (See LICENSE.txt)
 
 ## History
 
+### API v3.5/Core v2.7.2/ASM v2.4/Compiler v1.5/Debugger v1.2 (2022-05-22)
+
+- Compiler: Add octal number and string escape sequence support
+
 ### API v3.5/Core v2.7.2/ASM v2.4/Compiler v1.4/Debugger v1.2 (2022-05-14)
 
 - Add break, continue, and goto statements to the compiler

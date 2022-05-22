@@ -151,6 +151,15 @@ local function compile(filename)
 		print(res)
 		return
 	end
+	
+	sts, res = vm16.compile(pos, filename, read_file, {gen_token_list = true})
+	if sts then
+		print("######################### Tokenlist ############################")
+		print(dump(res))
+	else
+		print(res)
+		return
+	end
 
 	sts, res = vm16.compile(pos, filename, read_file, {gen_asm_code = true})
 	if sts then
@@ -207,4 +216,4 @@ end
 --test_lookup("test08.c")
 --compile_and_assemble("test01.c")
 --beduino_compile("test09.c")
-compile("test10.c")
+compile("test11.c")

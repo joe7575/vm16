@@ -127,7 +127,7 @@ local function neg_value(s, is_hex)
 end
 
 local function word_val(s, idx)
-	if s:byte(idx) == 0 then
+	if s:byte(idx) == 0 and s:byte(idx+1) == 0 then
 		return 0
 	elseif idx == #s then
 		return s:byte(idx)
@@ -365,7 +365,7 @@ end
 function Asm:decode_ctext(tok)
 	local codestr = tok[CODESTR]
 	if codestr:byte(1) == 34 and codestr:byte(-1) == 34 then
-		codestr = codestr:gsub("\\0", "\0\0")
+		codestr = codestr:gsub('\\0"', '\0\0"')
 		codestr = codestr:gsub("\\n", "\n")
 		codestr = codestr:sub(2, -2)
 		local ln = #codestr

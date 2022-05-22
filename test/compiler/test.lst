@@ -1071,3 +1071,31 @@ brnch  37 00A3: "exit"
  svar  39   -1: "exit"
  svar  39    1: "@num_stack_var@"
  endf  42 00B2: "test10.c"
+
+ #### Compile 'main': test11.c ####
+#### Code ####
+ file   0 0000: test11.c
+ code   0 0000: 1600 000D
+ code   0 0002: 1C00
+ code   1 0003: 2230 000F 0015
+ code   2 0006: 2230 0010 0019
+ code   3 0009: 2230 0011 001E
+ code   0 000C: 1800
+ code   7 000D: 658C
+ code   7 000E: 1800
+ code   1 000F: 0000
+ code   2 0010: 0000
+ code   3 0011: 0000
+ code   4 0012: 01FF 01FF 01FF
+ code   1 0015: 6572 726F 0072 0000
+ code   2 0019: 7830 3053 7830 3065 0000
+ code   3 001E: 7830 3001 7830 3002 7830 3003 0000
+#### Debug ####
+ file   0 0000: "test11.c"
+ gvar   1 000F: "s0"
+ gvar   2 0010: "s1"
+ gvar   3 0011: "s2"
+ gvar   4 0012: "buff[]"
+ func   6 000D: "main"
+ svar   7    0: "@num_stack_var@"
+ endf   9 0025: "test11.c"

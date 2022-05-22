@@ -18,6 +18,7 @@ local IDENT1   = "[A-Za-z_]+"
 local IDENT2   = "[A-Za-z_][A-Za-z_0-9]*"
 local NUMBER   = "[0-9]+"
 local HEXNUM   = "[0-9a-fA-F]+"
+local OCTNUM   = "[0-7]+"
 local OPERAND  = "[%+%-/%*%%=<>!;,&|!~%^:][%+%-/=<>&|]*"
 local BRACE    = "[{}%(%)%[%]]"
 local SPACE    = "[%s]"
@@ -60,6 +61,10 @@ local function char_to_val(char)
 	end
 end
 
+local function handle_escape_sequence(str)
+	return string.gsub(str, "\\([0-7][0-7][0-7])", function(s) return "\x00" .. string.char(tonumber(s, 8)) end)
+end
+
 local BScan = vm16.BGen:new({})
 
 function BScan:bscan_init()
@@ -96,6 +101,7 @@ function BScan:tokenize(text)
 
 	while idx <= size do
 		local ch = text:sub(idx, idx)
+		local nxt = text:sub(idx + 1, idx + 1)
 		if ch:match(SPACE) then
 			local space = text:match(SPACE, idx)
 			idx = idx + #space
@@ -110,10 +116,15 @@ function BScan:tokenize(text)
 				table.insert(lToken, {type = T_IDENT, val = ident, lineno = self.lineno})
 			end
 			idx = idx + #ident
-		elseif ch == "0" and text:sub(idx + 1, idx + 1) == "x" then
+		elseif ch == "0" and nxt == "x" then
 			idx = idx + 2
 			local number = text:match(HEXNUM, idx)
 			table.insert(lToken, {type = T_NUMBER, val = tonumber(number, 16) or 0, lineno = self.lineno})
+			idx = idx + #number
+		elseif ch == "0" and nxt:match(OCTNUM) then
+			idx = idx + 1
+			local number = text:match(OCTNUM, idx)
+			table.insert(lToken, {type = T_NUMBER, val = tonumber(number, 8) or 0, lineno = self.lineno})
 			idx = idx + #number
 		elseif ch:match(NUMBER) then
 			local number = text:match(NUMBER, idx)
@@ -140,7 +151,13 @@ function BScan:tokenize(text)
 				self.is_import_line = nil
 				self:import_file(string.sub(str, 2, -2))
 			else
-				local str2 = string.sub(str, 1, -2) .. '\\0"'
+				local str2
+				if string.find(str, "\\") then
+					str2 = handle_escape_sequence(str)
+				else
+					str2 = str
+				end
+				str2 = string.sub(str2, 1, -2) .. '\\0"'
 				table.insert(lToken, {type = T_STRING, val = str2, lineno = self.lineno})
 			end
 			idx = idx + #str
@@ -195,7 +212,12 @@ function BScan:tk_match(ttype)
 		return tok
 	end
 
-	local detected = tok.val:gsub("\\0", "")
+	local detected
+	if tok.type == T_STRING then
+		detected = tok.val:gsub("\\0", "")
+	else
+		detected = tok.val
+	end
 	local expected = type(ttype) == "string" and ttype or lTypeString[ttype]
 	self:error_msg(string.format("Syntax error: '%s' expected near '%s'", expected, detected))
 end
