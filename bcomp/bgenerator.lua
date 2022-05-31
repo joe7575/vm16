@@ -82,6 +82,16 @@ function BGen:__free_last_operand_reg(instr, opnd)
 	end
 end
 
+function BGen:next_free_reg()
+	self.reg_cnt = self.reg_cnt + 1
+	if self.reg_cnt < 5 then
+		local reg = REGLIST[self.reg_cnt]
+		return reg
+	else
+		self:error_msg("Expression too complex", 2)
+	end
+end
+
 function BGen:next_free_indexreg()
 	if not self.x_in_use then
 		self.x_in_use = true

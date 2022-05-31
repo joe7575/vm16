@@ -1,4 +1,4 @@
-vm16 version = 2.7.2
+vm16 version = 2.7.3
 
  #### Compile 'main': test01.c ####
 #### Code ####
@@ -1099,3 +1099,51 @@ brnch  37 00A3: "exit"
  func   6 000D: "main"
  svar   7    0: "@num_stack_var@"
  endf   9 0025: "test11.c"
+
+ #### Compile 'loop': test12.c ####
+#### Code ####
+ file   0 0000: test12.c
+ code   0 0000: 1200 0008
+ code   0 0008: 1600 0011
+ code   0 000A: 1600 0012
+ code   0 000C: 1600 0030
+ code   0 000E: 0000
+ code   0 000F: 1200 000C
+ code   0 0011: 1800
+ code   5 0012: 6A00 0030
+ code   6 0014: 6980
+ code   7 0015: 6980
+ code   9 0016: 2093 0002
+ code   9 0018: 2008
+ code   9 0019: 0800
+ code  10 001A: 2013 0002
+ code  10 001C: 300D
+ code  10 001D: 2080
+ code  10 001E: 2008
+ code  10 001F: 0800
+ code  11 0020: 2013 0002
+ code  11 0022: 3010 0002
+ code  11 0024: 2080
+ code  11 0025: 2008
+ code  11 0026: 0800
+ code  12 0027: 2010 0033
+ code  12 0029: 0800
+ code  13 002A: 2007
+ code  13 002B: 300D
+ code  13 002C: 0800
+ code  13 002D: 30F0 0003
+ code  13 002F: 1800
+ code   1 0030: 0041 0042 0043
+ code   2 0033: 0000
+#### Debug ####
+ file   0 0000: "test12.c"
+ gvar   1 0030: "buff[]"
+ gvar   2 0033: "a"
+ func   4 0012: "init"
+ svar  13   -3: "c"
+ svar  13   -1: "p"
+ svar  13   -2: "b"
+ svar  13    3: "@num_stack_var@"
+ func  17 0030: "loop"
+ svar  17    0: "@num_stack_var@"
+ endf  19 0034: "test12.c"

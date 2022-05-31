@@ -11,8 +11,8 @@
 ]]--
 
 local vm16lib = ...
-if vm16lib.version() ~= "2.7.2" then
-	minetest.log("error", "[vm16] Install Lua library v2.7.2 (see readme.md)!")
+if vm16lib.version() ~= "2.7.3" then
+	minetest.log("error", "[vm16] Install Lua library v2.7.3 (see readme.md)!")
 end
 
 local M = minetest.get_meta
@@ -247,6 +247,12 @@ function vm16.write_ascii(pos, addr, s)
 	local hash = vm16lib.hash_node_position(pos)
 	local vm = VMList[hash]
 	return vm and vm16lib.write_ascii(vm, addr, s)
+end
+
+function vm16.write_ascii_16(pos, addr, s)
+	local hash = vm16lib.hash_node_position(pos)
+	local vm = VMList[hash]
+	return vm and vm16lib.write_ascii_16(vm, addr, s)
 end
 
 function vm16.peek(pos, addr)

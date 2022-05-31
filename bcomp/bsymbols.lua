@@ -55,6 +55,7 @@ end
 function BSym:local_get(ident)
 	if self.locals[ident] then
 		local pos = self.stack_size - self.locals[ident] + self.num_param
+		self.stack_offs = pos
 		return "[SP+" .. pos .. "]"
 	end
 end

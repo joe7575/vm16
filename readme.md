@@ -122,6 +122,11 @@ Licensed under the GNU GPLv3 (See LICENSE.txt)
 
 ## History
 
+### API v3.5 / Core v2.7.3 / ASM v2.4 / Compiler v1.6 / Debugger v1.2 (2022-05-31)
+
+- Compiler: Add support for the '&' reference operator
+- Add core functions `write_ascii_16` for 16-bit/compact strings
+
 ### API v3.5/Core v2.7.2/ASM v2.4/Compiler v1.5/Debugger v1.2 (2022-05-22)
 
 - Compiler: Add octal number and string escape sequence support

@@ -163,6 +163,14 @@ res = vm16.write_ascii(pos, addr, s)
 
 Write ASCII string to given address `addr`. Function returns true if successful.
 
+## write_ascii_16
+
+```lua
+res = vm16.write_ascii_16(pos, addr, s)
+```
+
+Write ASCII string to given address `addr` as 16-bit/compact string. Function returns true if successful.
+
 ## is_ascii
 
 ```lua

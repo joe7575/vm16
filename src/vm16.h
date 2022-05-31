@@ -37,7 +37,7 @@ LUALIB_API int luaopen_vm16(lua_State *L);
 
 #define IDENT           (0x36314D56)
 #define VERSION         (2)    // VM compatibility
-#define SVERSION        "2.7.2"
+#define SVERSION        "2.7.3"
 #define VM16_WORD_SIZE  (16)
 
 /*
@@ -154,6 +154,10 @@ uint16_t vm16_read_ascii(vm16_t *C, uint16_t addr, uint16_t num, char *p_buffer)
 */
 uint32_t vm16_write_ascii(vm16_t *C, uint16_t addr, uint16_t num, char *p_buffer);
 
+/*
+** Write ASCII string to VM memory (with two chars to one word (compact string)
+*/
+uint32_t vm16_write_ascii_16(vm16_t *C, uint16_t addr, uint16_t num, char *p_buffer);
 /*
 ** Read value from VM memory
 */

@@ -13,7 +13,7 @@
 --]]
 
 vm16.Comp = {}
-vm16.Comp.version = "1.5"
+vm16.Comp.version = "1.6"
 
 local function error_msg(err)
 	local t = string.split(err, "\001")

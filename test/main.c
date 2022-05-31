@@ -208,6 +208,29 @@ void test5(void) {
     free(C);
 }
 
+void test6(void) {
+    char buffer1[BUFF_SIZE];
+    char buffer2[BUFF_SIZE];
+    uint32_t i;
+    uint16_t num;
+    uint32_t size = vm16_calc_size(5);
+    vm16_t *C = (vm16_t *)malloc(size);
+    vm16_init(C, size);
+
+    memset(buffer1, 0, BUFF_SIZE);
+
+    for(i=0; i<8; i++) {
+        buffer1[i] = 'A' + i;
+        num = vm16_write_ascii_16(C, 0x100, BUFF_SIZE, buffer1);
+        num = vm16_read_ascii(C, 0x100, BUFF_SIZE, buffer2);
+        printf("%s\n", buffer2);
+    }
+
+    printf("ok\n");
+
+    free(C);
+}
+
 char *hash_uint16(uint16_t val, char *s) {
     *s++ = 48 + (val % 64);
     val = val / 64;
@@ -228,7 +251,7 @@ char *hash_node_position(int16_t x, int16_t y, int16_t z, char *s) {
 
 
 int main() {
-    char buffer[80];
+    //char buffer[80];
 
     //test1();
     //test2();
@@ -236,7 +259,9 @@ int main() {
     //test4();
     //test5();
 
-    hash_node_position(10000, 20000, 30000, buffer);
-    printf("%s", buffer);
+    //hash_node_position(10000, 20000, 30000, buffer);
+    //printf("%s", buffer);
+
+    test6();
     return 0;
 }

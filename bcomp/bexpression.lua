@@ -147,13 +147,19 @@ function BExpr:unary()
 		return "[" .. reg .. "]"
 	elseif val == "&" then
 		self:tk_match("&")
+		self.stack_offs = nil
 		local opnd = self:postfix()
 		if opnd == "[X]" then
 			return "X"
 		elseif opnd == "[Y]" then
 			return "Y"
+		elseif self.stack_offs then
+			local reg = self:next_free_reg()
+			self:add_instr("move", reg, "SP")
+			self:add_instr("add", reg, "#" .. self.stack_offs)
+			return reg
 		end
-		return "#" .. self:postfix() -- TODO
+		return "#" .. opnd
 	end
 	return self:postfix()
 end

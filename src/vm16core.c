@@ -440,6 +440,26 @@ uint32_t vm16_write_ascii(vm16_t *C, uint16_t addr, uint16_t num, char *p_buffer
     return 0;
 }
 
+uint32_t vm16_write_ascii_16(vm16_t *C, uint16_t addr, uint16_t num, char *p_buffer) {
+    if(VM_VALID(C)) {
+        if((p_buffer != NULL) && (num > 0) && (num <= C->mem_size)) {
+            for(int i = 0; i < (num + 1) / 2; i++) {
+                if(p_buffer[1] == 0) {
+                    *ADDR_DST(C, addr) = p_buffer[0];
+                    p_buffer++;
+                    addr++;
+                } else {
+                    *ADDR_DST(C, addr) = (p_buffer[0] << 8) + p_buffer[1];
+                    p_buffer += 2;
+                    addr++;
+                }
+            }
+            return num;
+        }
+    }
+    return 0;
+}
+
 uint16_t vm16_peek(vm16_t *C, uint16_t addr) {
     if(VM_VALID(C)) {
         return *ADDR_SRC(C, addr);
