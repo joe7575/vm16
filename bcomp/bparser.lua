@@ -87,7 +87,7 @@ function BPars:definition()
 		self:add_asm_token(tok)
 		if string.sub(tok.val, 1, 6) == "global" then
 			local funcname = string.trim(string.sub(tok.val, 8))
-			self:add_func(funcname)
+			self:sym_add_func(funcname, nil, "global")
 			self:add_debugger_info("func", tok.lineno, funcname)
 		end
 		self:tk_match(T_ASMCODE)
@@ -104,25 +104,25 @@ var_def:
 function BPars:var_def(static)
 	local ident = self:ident()
 	local val = self:tk_peek().val
-	local is_array = val == "["
+	local sym_is_array = val == "["
 	if static then
 		local old_ident = ident
-		local postfix = is_array and "[]" or ""
-		ident = self:set_file_local(ident)
+		local postfix = sym_is_array and "[]" or ""
+		ident = self:sym_add_filelocal(ident)
 		self:add_debugger_info("lvar", self.lineno, ident, old_ident .. postfix)
 	else
-		local postfix = is_array and "[]" or ""
+		local postfix = sym_is_array and "[]" or ""
 		self:add_debugger_info("gvar", self.lineno, ident, ident .. postfix)
 	end
 	self:switch_to_var_def()
 	self:set_global(ident)
-	if is_array then
-		self:add_global(ident, true, true)
+	if sym_is_array then
+		self:sym_add_global(ident, true)
 		self:array_def(ident)
 		self:tk_match(";")
 		self:reset_reg_use()
 	else
-		self:add_global(ident, true)
+		self:sym_add_global(ident)
 		self:add_data(ident)
 		if self:tk_peek().val == "=" then
 			self:tk_match("=")
@@ -144,7 +144,7 @@ function BPars:const_def()
 	local ident = self:ident()
 	self:tk_match("=")
 	local right = self:expression()
-	self:add_const(ident, right)
+	self:sym_add_const(ident, right, "global")
 	self:tk_match(";")
 	self:reset_reg_use()
 	self:switch_to_func_def()
@@ -217,21 +217,20 @@ function BPars:func_def(static)
 		self:set_global(ident)
 	end
 	self:add_debugger_info("func", self.lineno, ident)
-	self:add_func(ident)
 	self.func_name = ident
 	self:add_label(ident)
 	self:tk_match("(")
 	self:local_new()
 	local cnt = self:param_list()
-	self:add_global(ident, cnt)
+	self:sym_add_func(ident, cnt, static and "static" or "global")
 	self:tk_match(")")
 	-- Consider the return address in between param and local variables
 	-- "func" is used here, because "func" is no valid variable name
-	self:local_add("func")
+	self:sym_add_local("func")
 	self:tk_match("{")
 	self:lvar_def_list();
 	self:stmnt_list()
-	self:func_return(ident, true)
+	self:sym_func_return(ident, true)
 	self:tk_match("}")
 end
 
@@ -251,7 +250,7 @@ function BPars:lvar_def_list()
 		else
 			self:add_instr("push", "#0")
 		end
-		self:local_add(ident)
+		self:sym_add_local(ident)
 		self.num_auto = self.num_auto + 1
 		self:reset_reg_use()
 		self:tk_match(";")
@@ -287,7 +286,7 @@ function BPars:param_list()
 		self.is_func_param = true
 		while true do
 			local val = self:expression()
-			self:param_add(val)
+			self:sym_add_param(val)
 			cnt = cnt + 1
 			if self:tk_peek().val == "," then
 				self:tk_match(",")
@@ -335,13 +334,13 @@ function BPars:statement()
 		else
 			self:add_instr("move", "A", "#0")
 		end
-		self:func_return(self.func_name or "")
+		self:sym_func_return(self.func_name or "")
 		self:tk_match(";")
 		self:reset_reg_use()
 	elseif val == "goto" then
 		self:tk_match("goto")
 		local lbl = self:ident()
-		self:local_add(lbl)
+		self:sym_add_local(lbl)
 		self:tk_match(";")
 		self:reset_reg_use()
 		self:add_instr("jump", lbl)
@@ -616,7 +615,7 @@ function BPars:left_value()
 	if self:tk_peek().val == '*' then
 		self:tk_match("*")
 		local ident = self:ident()
-		local lval = self:local_get(ident) or (self.globals[ident] and ident)
+		local lval = self:sym_get_local(ident) or (self:sym_is_global(ident) and ident)
 		if not lval then
 			self:error_msg(string.format("Unknown identifier '%s'", ident))
 		end
@@ -629,7 +628,7 @@ function BPars:left_value()
 		local val = self:tk_next().val
 		if val == "=" or val == "++" or val == "--" then
 			local ident = self:ident()
-			local lval = self:local_get(ident) or (self.globals[ident] and ident)
+			local lval = self:sym_get_local(ident) or (self:sym_is_global(ident) and ident)
 			if not lval then
 				self:error_msg(string.format("Unknown identifier '%s'", ident))
 			end

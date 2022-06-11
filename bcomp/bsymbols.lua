@@ -23,17 +23,14 @@ local BSym = vm16.BScan:new({})
 
 function BSym:bsym_init()
 	self:bscan_init()
-	self.constants = {}
-	self.globals = {}
-	self.functions = {}
-	self.arrays = {}
+	self.globals = {}      -- global variables
 	self.file_locals = {}  -- file local variables
 	self.locals = {}       -- function local variables
 	self.file_locals_cnt = 1
 end
 
 -------------------------------------------------------------------------------
--- Locals or auto/stack variables
+-- Local/stack variables
 -------------------------------------------------------------------------------
 function BSym:local_new()
 	self.locals = {}
@@ -42,25 +39,115 @@ function BSym:local_new()
 	self.num_param = 0   -- params only
 end
 
-function BSym:local_add(ident)
-	self.stack_size = self.stack_size + 1
-	self.locals[ident] = self.stack_size
-end
-
-function BSym:param_add(ident)
-	self.stack_size = self.stack_size + 1
-	self.locals[ident] = self.stack_size
-end
-
-function BSym:local_get(ident)
+function BSym:sym_add_local(ident, is_array)
 	if self.locals[ident] then
-		local pos = self.stack_size - self.locals[ident] + self.num_param
-		self.stack_offs = pos
-		return "[SP+" .. pos .. "]"
+		self:error_msg(string.format("Redefinition of '%s'", ident))
+	elseif KEYWORDS[ident] and ident ~= "func" then
+		self:error_msg(string.format("'%s' is a protected keyword", ident))
+	end
+	self.stack_size = self.stack_size + 1
+	self.locals[ident] = {type = is_array and "array" or "var", ref = self.stack_size}
+end
+
+function BSym:sym_add_param(ident)
+	self.stack_size = self.stack_size + 1
+	self.locals[ident] = {type = "param", ref = self.stack_size}
+end
+
+function BSym:sym_get_local(ident)
+	if self.locals[ident] then
+		local pos = self.stack_size - self.locals[ident].ref + self.num_param
+		self.stack_offs = pos  -- TODO: als Returnwert
+		if self.locals[ident].type == "array" then
+			return "SP+" .. pos
+		else
+			return "[SP+" .. pos .. "]"
+		end
 	end
 end
 
-function BSym:func_return(ident, end_of_func)
+-------------------------------------------------------------------------------
+-- Globals
+-------------------------------------------------------------------------------
+function BSym:sym_add_global(ident, is_array)
+	if self.globals[ident] then
+		self:error_msg(string.format("Redefinition of '%s'", ident))
+	elseif KEYWORDS[ident] then
+		self:error_msg(string.format("'%s' is a protected keyword", ident))
+	end
+	self.globals[ident] = {type = is_array and "array" or "var"}
+end
+
+function BSym:sym_is_global(val)
+	return self.globals[val] ~= nil
+end
+
+-------------------------------------------------------------------------------
+-- File locals
+-------------------------------------------------------------------------------
+-- Because of ASM limitations, file local variables (static) have to be declared
+-- as global variables. To be able to distinguish local variables with the same name,
+-- add a prefix to the variable name.
+function BSym:next_file_for_local_vars()
+	self.file_locals_cnt = self.file_locals_cnt + 1
+	self.file_locals = {}
+end
+
+function BSym:sym_add_filelocal(ident, is_array)
+	if self.file_locals[ident] then
+		self:error_msg(string.format("Redefinition of '%s'", ident))
+	elseif KEYWORDS[ident] then
+		self:error_msg(string.format("'%s' is a protected keyword", ident))
+	end
+	self.file_locals[ident] = {type = is_array and "array" or "var", ref = ident .. "@" .. self.file_locals_cnt}
+	return self.file_locals[ident].ref
+end
+
+function BSym:sym_get_filelocal(ident)
+	local item = self.file_locals[ident]
+	return item and item.ref or ident
+end
+
+
+function BSym:sym_is_array(ident)
+	local item = self.globals[ident] or self.file_locals[ident] or self.locals[ident]
+	return item and item.type == "array"
+end
+
+-------------------------------------------------------------------------------
+-- Functions
+-------------------------------------------------------------------------------
+function BSym:sym_add_func(ident, num_param, scope)
+	if scope == "global" then
+		if self.globals[ident] then
+			self:error_msg(string.format("Redefinition of '%s'", ident))
+		elseif KEYWORDS[ident] then
+			self:error_msg(string.format("'%s' is a protected keyword", ident))
+		end
+		self.globals[ident] = {type = "func", num_param = num_param}
+	else
+		if self.file_locals[ident] then
+			self:error_msg(string.format("Redefinition of '%s'", ident))
+		elseif KEYWORDS[ident] then
+			self:error_msg(string.format("'%s' is a protected keyword", ident))
+		end
+		self.file_locals[ident] = {type = "func", num_param = num_param}
+	end
+end
+
+function BSym:sym_check_num_param(ident, num_param)
+	local item = self.globals[ident] or self.file_locals[ident]
+	if item and item.num_param and item.num_param ~= num_param then
+		self:error_msg(string.format("Wrong number of parameters for '%s'", ident))
+	end
+end
+
+function BSym:sym_is_func(ident)
+	local item = self.globals[ident] or self.file_locals[ident]
+	return item and item.type == "func"
+end
+
+function BSym:sym_func_return(ident, end_of_func)
 	if self:get_last_instr() ~= "ret" then
 		if self.num_auto > 0 then
 			self:add_instr("add", "SP", "#" .. self.num_auto)
@@ -73,7 +160,7 @@ function BSym:func_return(ident, end_of_func)
 		local base
 		for k,v in pairs(self.locals) do
 			if k == "func" then
-				base = v
+				base = v.ref
 				break
 			end
 		end
@@ -81,8 +168,8 @@ function BSym:func_return(ident, end_of_func)
 		local num_stack_var = 0
 		for k,v in pairs(self.locals) do
 			if k ~= "func" then
-				self:add_debugger_info("svar", self.lineno, k, base - v)
-				num_stack_var = math.min(num_stack_var, base - v)
+				self:add_debugger_info("svar", self.lineno, k, base - v.ref)
+				num_stack_var = math.min(num_stack_var, base - v.ref)
 			end
 		end
 		self:add_debugger_info("svar", self.lineno, "@num_stack_var@", -num_stack_var)
@@ -91,69 +178,34 @@ function BSym:func_return(ident, end_of_func)
 end
 
 -------------------------------------------------------------------------------
--- Globals, constants, and functions
+-- Constants
 -------------------------------------------------------------------------------
-function BSym:add_global(ident, value, is_array)
-	if type(value) == "number" and type(self.globals[ident]) == "number" then
-		if value ~= self.globals[ident] then
-			self:error_msg(string.format("Wrong number of parameters for '%s'", ident))
+function BSym:sym_add_const(ident, val, scope)
+	if scope == "global" then
+		if self.globals[ident] then
+			self:error_msg(string.format("Redefinition of '%s'", ident))
+		elseif KEYWORDS[ident] then
+			self:error_msg(string.format("'%s' is a protected keyword", ident))
 		end
-	elseif self.globals[ident] then
-		self:error_msg(string.format("Redefinition of '%s'", ident))
-	elseif KEYWORDS[ident] then
-		self:error_msg(string.format("'%s' is a protected keyword", ident))
-	end
-	self.globals[ident] = value
-	self.arrays[ident] = is_array
-end
-
-function BSym:is_global_var(val)
-	if self.globals[val] and self.globals[val] == true then
-		return val
+		self.globals[ident] = {type = "const", value = val}
+	else
+		if self.file_locals[ident] then
+			self:error_msg(string.format("Redefinition of '%s'", ident))
+		elseif KEYWORDS[ident] then
+			self:error_msg(string.format("'%s' is a protected keyword", ident))
+		end
+		self.file_locals[ident] = {type = "const", value = val}
 	end
 end
 
--- Because of ASM limitations, file local variables (static) have to be declared
--- as global variables. To be able to distinguish local variables with the same name,
--- add a prefix to the variable name.
-function BSym:next_file_for_local_vars()
-	self.file_locals_cnt = self.file_locals_cnt + 1
-	self.file_locals = {}
+function BSym:sym_is_const(ident)
+	local item = self.globals[ident] or self.file_locals[ident]
+	return item and item.type == "const"
 end
 
-function BSym:set_file_local(ident)
-	self.file_locals[ident] = ident .. "@" .. self.file_locals_cnt
-	return self.file_locals[ident]
-end
-
-function BSym:get_file_local(ident)
-	return self.file_locals[ident] or ident
-end
-
-function BSym:is_array(val)
-	if self.arrays[val] and self.arrays[val] == true then
-		return val
-	end
-end
-
-function BSym:add_func(ident)
-	self.functions[ident] = true
-end
-
-function BSym:is_func(ident)
-	return self.functions[ident] ~= nil
-end
-
-function BSym:add_const(ident, val)
-	self.constants[ident] = val
-end
-
-function BSym:is_const(ident)
-	return self.constants[ident] ~= nil
-end
-
-function BSym:get_const(ident)
-	return self.constants[ident]
+function BSym:sym_get_const(ident)
+	local item = self.globals[ident] or self.file_locals[ident]
+	return item and item.type == "const" and item.value
 end
 
 vm16.BSym = BSym

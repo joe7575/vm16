@@ -198,9 +198,9 @@ function BExpr:factor()
 	if tok.type == T_NUMBER then
 		self:tk_match()
 		return "#" .. tok.val
-	elseif self:is_const(tok.val) then
+	elseif self:sym_is_const(tok.val) then
 		self:tk_match()
-		return self:get_const(tok.val)
+		return self:sym_get_const(tok.val)
 	elseif tok.val == "(" then
 		self:tk_match("(")
 		local res = self:expression()
@@ -312,8 +312,8 @@ function BExpr:func_call(ident)
 	if self.num_param > base_val then
 		self:add_instr("add", "SP", "#" .. (self.num_param - base_val))
 	end
-	if self:is_func(ident) then
-		self:add_global(ident, self.num_param - base_val)
+	if self:sym_is_func(ident) then
+		self:sym_check_num_param(ident, self.num_param - base_val)
 	end
 	self.num_param = base_val
 	local opnd = self:pop_regs()
@@ -328,17 +328,17 @@ address:
 ]]--
 function BExpr:address()
 	local ident = self:ident()
-	if not self.is_func_param and not self:local_get(ident)
-	and not self:is_global_var(ident) and not self:is_func(ident) then
+	if not self.is_func_param and not self:sym_get_local(ident)
+	and not self:sym_is_global(ident) and not self:sym_is_func(ident) then
 		self:error_msg(string.format("Unknown variable '%s'", ident or ""))
 	end
-	if self:is_func(ident) then
+	if self:sym_is_func(ident) then
 		return ident
-	elseif self:local_get(ident) then
-		local opnd = self:local_get(ident)
+	elseif self:sym_get_local(ident) then
+		local opnd = self:sym_get_local(ident)
 		self:add_instr("move", "A", opnd)
 		return "A"
-	elseif self:is_global_var(ident) then
+	elseif self:sym_is_global(ident) then
 		self:add_instr("move", "A", ident)
 		return "A"
 	else
@@ -352,20 +352,20 @@ variable: (check if valid)
 ]]--
 function BExpr:variable()
 	local ident = self:ident()
-	if not self.is_func_param and not self:local_get(ident)
-	and not self:is_global_var(ident) and not self:is_func(ident) then
+	if not self.is_func_param and not self:sym_get_local(ident)
+	and not self:sym_is_global(ident) and not self:sym_is_func(ident) then
 		self:error_msg(string.format("Unknown variable '%s'", ident or ""))
 	end
-	if self:is_array(ident) or self:is_func(ident) then
+	if self:sym_is_array(ident) or self:sym_is_func(ident) then
 		return "#" .. ident
 	end
-	return self:local_get(ident) or ident or ""
+	return self:sym_get_local(ident) or ident or ""
 end
 
 function BExpr:number()
 	local tok = self:tk_match()
-	if self:is_const(tok.val) then
-		local val = self:get_const(tok.val)
+	if self:sym_is_const(tok.val) then
+		local val = self:sym_get_const(tok.val)
 		return tonumber(val:sub(2)) or 0
 	end
 	return tok.val
@@ -373,7 +373,7 @@ end
 
 function BExpr:ident()
 	local ident = (self:tk_match(T_IDENT) or {}).val
-	return self:get_file_local(ident)
+	return self:sym_get_filelocal(ident)
 end
 
 vm16.BExpr = BExpr
