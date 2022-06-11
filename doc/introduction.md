@@ -48,8 +48,9 @@ move A, [X]+    ; the value in X is incremented after the move instruction
 
 ; Stack-pointer-relative (SPREL): use SP register plus offset as address to the memory
 ; (valid offset range = +0..+65535)
-move A, [SP+2]
-move [SP+3], B
+move A, [SP+2]  ; variable value
+move [SP+3], B  ; variable value
+move A, SP+2    ; variable address
 
 ; X/Y register-relative (XREL/YREL): use X/Y register plus offset as address to the memory
 ; (valid offset range = +0..+65535)

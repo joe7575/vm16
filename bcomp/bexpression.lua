@@ -328,8 +328,7 @@ address:
 ]]--
 function BExpr:address()
 	local ident = self:ident()
-	if not self.is_func_param and not self:sym_get_local(ident)
-	and not self:sym_is_global(ident) and not self:sym_is_func(ident) then
+	if not self:sym_get_var(ident) then
 		self:error_msg(string.format("Unknown variable '%s'", ident or ""))
 	end
 	if self:sym_is_func(ident) then
@@ -351,15 +350,15 @@ variable: (check if valid)
     | ident
 ]]--
 function BExpr:variable()
-	local ident = self:ident()
-	if not self.is_func_param and not self:sym_get_local(ident)
-	and not self:sym_is_global(ident) and not self:sym_is_func(ident) then
+	local ident = (self:tk_match(T_IDENT) or {}).val
+	local ref = self:sym_get_var(ident)
+	if not ref and not self.is_func_param then
 		self:error_msg(string.format("Unknown variable '%s'", ident or ""))
 	end
-	if self:sym_is_array(ident) or self:sym_is_func(ident) then
-		return "#" .. ident
+	if self:sym_is_func(ident) then
+		return "#" .. ref
 	end
-	return self:sym_get_local(ident) or ident or ""
+	return ref or ident or ""
 end
 
 function BExpr:number()
@@ -373,7 +372,7 @@ end
 
 function BExpr:ident()
 	local ident = (self:tk_match(T_IDENT) or {}).val
-	return self:sym_get_filelocal(ident)
+	return self:sym_get_filelocal(ident) or ident
 end
 
 vm16.BExpr = BExpr

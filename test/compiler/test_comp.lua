@@ -33,7 +33,12 @@ local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
 local S2P = function(s) return minetest.string_to_pos(s) end
 
 
-local startup_code = {
+local startup_code1 = {
+	"call main",
+	"halt",
+}
+
+local startup_code2 = {
 	-- Reserved area 0002 - 0007:
 	"jump 8",
 	".org 8",
@@ -134,7 +139,7 @@ end
 
 local function compile(filename)
 	local pos = {x=0, y=0, z=0}
-	local sts, res = vm16.compile(pos, filename, read_file, {gen_token_list = true})
+	local sts, res = vm16.compile(pos, filename, read_file, {startup_code = startup_code1, gen_token_list = true})
 	if sts then
 		print("######################### Scanner ############################")
 		print(res)
@@ -143,7 +148,7 @@ local function compile(filename)
 		return
 	end
 	
-	sts, res = vm16.compile(pos, filename, read_file, {gen_parser_output = true})
+	sts, res = vm16.compile(pos, filename, read_file, {startup_code = startup_code1, gen_parser_output = true})
 	if sts then
 		print("######################### Parser ############################")
 		print(dump_parser_output(res))
@@ -152,7 +157,7 @@ local function compile(filename)
 		return
 	end
 	
-	sts, res = vm16.compile(pos, filename, read_file, {gen_token_list = true})
+	sts, res = vm16.compile(pos, filename, read_file, {startup_code = startup_code1, gen_token_list = true})
 	if sts then
 		print("######################### Tokenlist ############################")
 		print(dump(res))
@@ -161,7 +166,7 @@ local function compile(filename)
 		return
 	end
 
-	sts, res = vm16.compile(pos, filename, read_file, {gen_asm_code = true})
+	sts, res = vm16.compile(pos, filename, read_file, {startup_code = startup_code1, gen_asm_code = true})
 	if sts then
 		print("######################### ASM ############################")
 		print(res)
@@ -170,7 +175,7 @@ local function compile(filename)
 		return
 	end
 	
-	sts, res = vm16.compile(pos, filename, read_file)
+	sts, res = vm16.compile(pos, filename, read_file, {startup_code = startup_code1})
 	if sts then
 		print("######################### BIN ############################")
 		print(vm16.dump_compiler_output(res))
@@ -182,7 +187,7 @@ end
 
 local function beduino_compile(filename)
 	local pos = {x=0, y=0, z=0}
-	local sts, res = vm16.compile(pos, filename, read_file, {startup_code = startup_code, gen_parser_output = true})
+	local sts, res = vm16.compile(pos, filename, read_file, {startup_code = startup_code2, gen_parser_output = true})
 	if sts then
 		print("######################### Parser ############################")
 		print(dump_parser_output(res))
@@ -191,7 +196,7 @@ local function beduino_compile(filename)
 		return
 	end
 
-	sts, res = vm16.compile(pos, filename, read_file, {startup_code = startup_code, gen_asm_code = true})
+	sts, res = vm16.compile(pos, filename, read_file, {startup_code = startup_code2, gen_asm_code = true})
 	if sts then
 		print("######################### ASM ############################")
 		print(res)
@@ -200,7 +205,7 @@ local function beduino_compile(filename)
 		return
 	end
 
-	local sts, res = vm16.compile(pos, filename, read_file, {startup_code = startup_code})
+	local sts, res = vm16.compile(pos, filename, read_file, {startup_code = startup_code2})
 	if sts then
 		print("######################### BIN ############################")
 		print(vm16.dump_compiler_output(res))
@@ -212,8 +217,8 @@ end
 
 --assemble("stdio.asm")
 --compile("comm.c")
---compile("test01.c")
+--compile("test05.c")
 --test_lookup("test08.c")
 --compile_and_assemble("test01.c")
---beduino_compile("test09.c")
-beduino_compile("test13.c")
+beduino_compile("test09.c")
+--beduino_compile("test13.c")

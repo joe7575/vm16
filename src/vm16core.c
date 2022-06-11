@@ -62,6 +62,7 @@ along with VM16.  If not, see <https://www.gnu.org/licenses/>.
 #define  REL2  (0x14)     // relative: jump -10
 #define  XREL  (0x15)     // X register relative [X+1]
 #define  YREL  (0x16)     // Y register relative [Y+1]
+#define  SRE2  (0x17)     // stack relative address: SP+1
 
 
 /* OP codes */
@@ -185,6 +186,7 @@ static uint16_t *getaddr(vm16_t *C, uint8_t addr_mod) {
             C->pcnt++;
             return ADDR_DST(C, C->yreg + offs);
         }
+        case SRE2: return ADDR_DST(C, 0); // invalid
         default: return ADDR_DST(C, 0);
     }
 }
@@ -250,6 +252,11 @@ static uint16_t getoprnd(vm16_t *C, uint8_t addr_mod) {
             uint16_t offs = *ADDR_SRC(C, C->pcnt);
             C->pcnt++;
             return *ADDR_SRC(C, C->yreg + offs);
+        }
+        case SRE2: {
+            uint16_t offs = *ADDR_SRC(C, C->pcnt);
+            C->pcnt++;
+            return C->sptr + offs;
         }
         default: return 0;
     }

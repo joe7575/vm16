@@ -88,9 +88,9 @@ The Instruction Set table below uses mainly the following two addressing groups:
 |------|------|------|------|------|------|------|------|
 | 0100 | 0120 | 0140 | 0160 | 0180 | 01A0 | 01C0 | 01E0 |
 
-| CONST | MEM  | REL*) | [SP+n] | REL2 | [X+n] | [Y+n] |
-| ----- | ---- | ----- | ------ | ---- | ----- | ----- |
-| 0200  | 0220 | 0240  | 0260   | 0280 | 02A0  | 02C0  |
+| CONST | MEM  | REL*) | [SP+n] | REL2 | [X+n] | [Y+n] | SP+n |
+| ----- | ---- | ----- | ------ | ---- | ----- | ----- | ---- |
+| 0200  | 0220 | 0240  | 0260   | 0280 | 02A0  | 02C0  | 02E0 |
 
 #### Operand 2 (Opnd2)
 
@@ -102,9 +102,9 @@ The Instruction Set table below uses mainly the following two addressing groups:
 |------|------|------|------|------|------|------|------|
 | 0008 | 0009 | 000A | 000B | 000C | 000D | 000E | 000F |
 
-| CONST | MEM  | REL*) | [SP+n] | REL2 | [X+n] | [Y+n] |
-| ----- | ---- | ----- | ------ | ---- | ----- | ----- |
-| 0010  | 0011 | 0012  | 0013   | 0014 | 0015  | 0016  |
+| CONST | MEM  | REL*) | [SP+n] | REL2 | [X+n] | [Y+n] | SP+n |
+| ----- | ---- | ----- | ------ | ---- | ----- | ----- | ---- |
+| 0010  | 0011 | 0012  | 0013   | 0014 | 0015  | 0016  | 0017 |
 
 *) REL instructions are deprecated. Use REL2 instead!
 

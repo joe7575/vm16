@@ -10,7 +10,7 @@
 
 ]]--
 
-local version = "2.4"
+local version = "2.5"
 
 local CTYPE   = 1
 local LINENO  = 2
@@ -45,7 +45,7 @@ local Opcodes = {[0] =
 local Operands = {[0] =
 	"A", "B", "C", "D", "X", "Y", "PC", "SP",
 	"[X]", "[Y]", "[X]+", "[Y]+", "#0", "#1", "-", "-",
-	"IMM", "IND", "REL", "[SP+n]", "REL2", "[X+n]", "[Y+n]"
+	"IMM", "IND", "REL", "[SP+n]", "REL2", "[X+n]", "[Y+n]", "SP+n"
 }
 
 --
@@ -260,6 +260,7 @@ function Asm:operand(s)
 	if c == "+" then return tOperands["REL2"], pos_value(string.sub(s, 2, -1)) end
 	if c == "-" then return tOperands["REL2"], neg_value(string.sub(s, 2, -1)) end
 	if string.sub(s, 1, 4) == "[SP+" then return tOperands["[SP+n]"], value(string.sub(s, 5, -2)) end
+	if string.sub(s, 1, 3) == "SP+" then return tOperands["SP+n"],  value(string.sub(s, 4, -2)) end
 	if string.sub(s, 1, 3) == "[X+" then return tOperands["[X+n]"], value(string.sub(s, 4, -2)) end
 	if string.sub(s, 1, 3) == "[Y+" then return tOperands["[Y+n]"], value(string.sub(s, 4, -2)) end
 	-- valid label keyword
@@ -406,7 +407,7 @@ function Asm:handle_label(tok, i, label)
 	elseif self.globals[label] then
 		tok[OPCODES][i] = self.globals[label]
 	else
-		self:err_msg("Function '" .. label .. "' is mssing")
+		self:err_msg("Function '" .. label .. "' is missing")
 	end
 end
 

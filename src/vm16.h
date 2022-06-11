@@ -37,7 +37,7 @@ LUALIB_API int luaopen_vm16(lua_State *L);
 
 #define IDENT           (0x36314D56)
 #define VERSION         (2)    // VM compatibility
-#define SVERSION        "2.7.3"
+#define SVERSION        "2.7.4"
 #define VM16_WORD_SIZE  (16)
 
 /*

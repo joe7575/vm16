@@ -11,8 +11,8 @@
 ]]--
 
 local vm16lib = ...
-if vm16lib.version() ~= "2.7.3" then
-	minetest.log("error", "[vm16] Install Lua library v2.7.3 (see readme.md)!")
+if vm16lib.version() ~= "2.7.4" then
+	minetest.log("error", "[vm16] Install Lua library v2.7.4 (see readme.md)!")
 end
 
 local M = minetest.get_meta

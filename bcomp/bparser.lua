@@ -104,25 +104,33 @@ var_def:
 function BPars:var_def(static)
 	local ident = self:ident()
 	local val = self:tk_peek().val
-	local sym_is_array = val == "["
+	local is_array = val == "["
 	if static then
 		local old_ident = ident
-		local postfix = sym_is_array and "[]" or ""
-		ident = self:sym_add_filelocal(ident)
+		local postfix = is_array and "[]" or ""
+		ident = self:sym_add_filelocal(ident, is_array)
 		self:add_debugger_info("lvar", self.lineno, ident, old_ident .. postfix)
 	else
-		local postfix = sym_is_array and "[]" or ""
+		local postfix = is_array and "[]" or ""
 		self:add_debugger_info("gvar", self.lineno, ident, ident .. postfix)
 	end
 	self:switch_to_var_def()
 	self:set_global(ident)
-	if sym_is_array then
-		self:sym_add_global(ident, true)
+	if is_array then
+		if static then
+			self:sym_add_filelocal(ident, true)
+		else
+			self:sym_add_global(ident, true)
+		end
 		self:array_def(ident)
 		self:tk_match(";")
 		self:reset_reg_use()
 	else
-		self:sym_add_global(ident)
+		if static then
+			self:sym_add_filelocal(ident)
+		else
+			self:sym_add_global(ident)
+		end
 		self:add_data(ident)
 		if self:tk_peek().val == "=" then
 			self:tk_match("=")
@@ -243,18 +251,35 @@ function BPars:lvar_def_list()
 	while val and val == "var" do
 		self:tk_match("var")
 		local ident = self:ident()
-		if self:tk_peek().val == "=" then
-			self:tk_match("=")
-			local right = self:expression()
-			self:add_instr("push", right)
+		
+		if self:tk_peek().val == "[" then
+			self:tk_match("[")
+			local size = self:number()
+			self:tk_match("]")
+			self:add_data(ident)
+			self:sym_add_local(ident, true)
+			while size > 0 do
+				self:add_instr("push", "#0")
+				self.num_auto = self.num_auto + 1
+				size = size - 1
+			end
+			self:reset_reg_use()
+			self:tk_match(";")
+			val = self:tk_peek().val
 		else
-			self:add_instr("push", "#0")
+			if self:tk_peek().val == "=" then
+				self:tk_match("=")
+				local right = self:expression()
+				self:add_instr("push", right)
+			else
+				self:add_instr("push", "#0")
+			end
+			self:sym_add_local(ident)
+			self.num_auto = self.num_auto + 1
+			self:reset_reg_use()
+			self:tk_match(";")
+			val = self:tk_peek().val
 		end
-		self:sym_add_local(ident)
-		self.num_auto = self.num_auto + 1
-		self:reset_reg_use()
-		self:tk_match(";")
-		val = self:tk_peek().val
 	end
 end
 
@@ -615,7 +640,7 @@ function BPars:left_value()
 	if self:tk_peek().val == '*' then
 		self:tk_match("*")
 		local ident = self:ident()
-		local lval = self:sym_get_local(ident) or (self:sym_is_global(ident) and ident)
+		local lval = self:sym_get_var(ident)
 		if not lval then
 			self:error_msg(string.format("Unknown identifier '%s'", ident))
 		end
@@ -628,7 +653,7 @@ function BPars:left_value()
 		local val = self:tk_next().val
 		if val == "=" or val == "++" or val == "--" then
 			local ident = self:ident()
-			local lval = self:sym_get_local(ident) or (self:sym_is_global(ident) and ident)
+			local lval = self:sym_get_var(ident)
 			if not lval then
 				self:error_msg(string.format("Unknown identifier '%s'", ident))
 			end

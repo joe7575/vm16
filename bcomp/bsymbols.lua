@@ -82,6 +82,16 @@ function BSym:sym_is_global(val)
 	return self.globals[val] ~= nil
 end
 
+function BSym:sym_get_global(ident)
+	if self.globals[ident] then
+		if self.globals[ident].type == "array" then
+			return "#" .. ident
+		else
+			return ident
+		end
+	end
+end
+
 -------------------------------------------------------------------------------
 -- File locals
 -------------------------------------------------------------------------------
@@ -105,13 +115,13 @@ end
 
 function BSym:sym_get_filelocal(ident)
 	local item = self.file_locals[ident]
-	return item and item.ref or ident
-end
-
-
-function BSym:sym_is_array(ident)
-	local item = self.globals[ident] or self.file_locals[ident] or self.locals[ident]
-	return item and item.type == "array"
+	if item then
+		if item.type == "array" then
+			return "#" .. item.ref
+		else
+			return item.ref
+		end
+	end
 end
 
 -------------------------------------------------------------------------------
@@ -131,7 +141,7 @@ function BSym:sym_add_func(ident, num_param, scope)
 		elseif KEYWORDS[ident] then
 			self:error_msg(string.format("'%s' is a protected keyword", ident))
 		end
-		self.file_locals[ident] = {type = "func", num_param = num_param}
+		self.file_locals[ident] = {type = "func", num_param = num_param, ref = ident}
 	end
 end
 
@@ -206,6 +216,16 @@ end
 function BSym:sym_get_const(ident)
 	local item = self.globals[ident] or self.file_locals[ident]
 	return item and item.type == "const" and item.value
+end
+
+-------------------------------------------------------------------------------
+-- Common
+-------------------------------------------------------------------------------
+function BSym:sym_get_var(ident)
+	if ident:find("@") then
+		return ident
+	end
+	return self:sym_get_local(ident) or self:sym_get_filelocal(ident) or self:sym_get_global(ident)
 end
 
 vm16.BSym = BSym
