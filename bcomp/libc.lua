@@ -129,10 +129,12 @@ vm16.libc.mem_asm = [[
 ; mem v1.0
 ; - memcpy(dst, src, num)
 ; - memcmp(ptr1, ptr2, num)
+; - memset(ptr, val, num)
 ;===================================
 
 global memcpy
 global memcmp
+global memset
 
   .code
 
@@ -175,12 +177,33 @@ loop02:
   skne [X]+, [Y]+
   dbnz A, loop02
 
-    dec X
-    dec Y
+  dec X
+  dec Y
 
 exit02:
-    move A, [X]
-    sub  A, [Y]
+  move A, [X]
+  sub  A, [Y]
+  ret
+
+;===================================
+; [03] memset(ptr, val, num)
+; ptr:  [SP+3]
+; val:  [SP+2]
+; num:  [SP+1]
+;===================================
+memset:
+  move X, [SP+3]
+  move B, [SP+2]
+  move A, [SP+1]
+
+  skgt A, #0
+  jump exit03
+
+loop03:
+  move [X]+, B
+  dbnz A, loop03
+
+exit03:
     ret
 ]]
 
