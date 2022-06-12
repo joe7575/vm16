@@ -122,6 +122,12 @@ Licensed under the GNU GPLv3 (See LICENSE.txt)
 
 ## History
 
+### API v3.5 / Core v2.7.4 / ASM v2.5 / Compiler v1.7 / Debugger v1.3 (2022-06-12)
+
+- Add support for function-local arrays (core, asm, compiler, debugger)
+- Improve standard library (memset, itoa, halt,...)
+- Fix some minor bugs
+
 ### API v3.5 / Core v2.7.3 / ASM v2.4 / Compiler v1.6 / Debugger v1.2 (2022-05-31)
 
 - Compiler: Add support for the '&' reference operator

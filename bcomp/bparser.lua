@@ -257,7 +257,7 @@ function BPars:lvar_def_list()
 			local size = self:number()
 			self:tk_match("]")
 			self:add_data(ident)
-			self:sym_add_local(ident, true)
+			self:sym_add_local(ident, size)
 			while size > 0 do
 				self:add_instr("push", "#0")
 				self.num_auto = self.num_auto + 1

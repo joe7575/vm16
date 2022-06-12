@@ -37,7 +37,7 @@ local function mem_dump(pos, mem, x, y)
 		for i = 0,15 do
 			local offs = i * 8
 			table.insert(lines, string.format("%04X: %04X %04X %04X %04X %04X %04X %04X %04X\n",
-				mem.startaddr+offs, data[1+offs], data[2+offs], data[3+offs], data[4+offs],
+				(mem.startaddr+offs) % 0x10000, data[1+offs], data[2+offs], data[3+offs], data[4+offs],
 				data[5+offs], data[6+offs], data[7+offs], data[8+offs]))
 		end
 	else

@@ -260,7 +260,7 @@ function Asm:operand(s)
 	if c == "+" then return tOperands["REL2"], pos_value(string.sub(s, 2, -1)) end
 	if c == "-" then return tOperands["REL2"], neg_value(string.sub(s, 2, -1)) end
 	if string.sub(s, 1, 4) == "[SP+" then return tOperands["[SP+n]"], value(string.sub(s, 5, -2)) end
-	if string.sub(s, 1, 3) == "SP+" then return tOperands["SP+n"],  value(string.sub(s, 4, -2)) end
+	if string.sub(s, 1, 3) == "SP+" then return tOperands["SP+n"],  value(string.sub(s, 4, -1)) end
 	if string.sub(s, 1, 3) == "[X+" then return tOperands["[X+n]"], value(string.sub(s, 4, -2)) end
 	if string.sub(s, 1, 3) == "[Y+" then return tOperands["[Y+n]"], value(string.sub(s, 4, -2)) end
 	-- valid label keyword

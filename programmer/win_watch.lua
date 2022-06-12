@@ -114,7 +114,7 @@ local function mem_dump(pos, mem, x, y, xsize, ysize, fontsize)
 			for i = 0,3 do
 				local offs = i * 4
 				table.insert(lines, string.format("%04X: %04X %04X %04X %04X",
-					mem.startaddr + offs, data[1+offs], data[2+offs], data[3+offs], data[4+offs]))
+					(mem.startaddr + offs) % 0x10000, data[1+offs], data[2+offs], data[3+offs], data[4+offs]))
 				if i < 3 then
 					table.insert(lines, "\n")
 				end
@@ -177,7 +177,7 @@ function vm16.watch.on_receive_fields(pos, fields, mem)
 		elseif evt.type == "CHG" then
 			local idx = tonumber(evt.row)
 			local item = mem.watch_varlist[idx]
-			if item and item.type == "global" and idx ~= mem.last_watch_idx then
+			if item and idx ~= mem.last_watch_idx then
 				mem.last_watch_idx = idx
 				mem.startaddr = item.addr
 				mem.pointaddr = nil

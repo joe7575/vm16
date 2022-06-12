@@ -90,3 +90,4 @@ compile2("test09.c")  -- beduino init, loop
 compile1("test10.c")  -- break, continue, goto
 compile1("test11.c")  -- Strings with hex escape sequences
 compile2("test12.c")  -- Pointers
+compile2("test13.c")  -- Function local arrays

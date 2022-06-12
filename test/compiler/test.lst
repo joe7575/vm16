@@ -1147,3 +1147,82 @@ brnch  37 00A3: "exit"
  func  17 0030: "loop"
  svar  17    0: "@num_stack_var@"
  endf  19 0034: "test12.c"
+
+ #### Compile 'loop': test13.c ####
+#### Code ####
+ file   0 0000: test13.c
+ code   0 0000: 1200 0008
+ code   0 0008: 1600 0011
+ code   0 000A: 1600 0027
+ code   0 000C: 1600 0054
+ code   0 000E: 0000
+ code   0 000F: 1200 000C
+ code   0 0011: 1800
+ code   2 0012: 2013 0001
+ code   2 0014: 3010 0002
+ code   2 0016: 2080
+ code   2 0017: 2008
+ code   2 0018: 1800
+ code   6 0019: 2013 0001
+ code   6 001B: 3010 0002
+ code   6 001D: 2080
+ code   6 001E: 2008
+ code   6 001F: 1800
+ code  10 0020: 2013 0001
+ code  10 0022: 3010 0002
+ code  10 0024: 2080
+ code  10 0025: 2008
+ code  10 0026: 1800
+ code  14 0027: 6980
+ code  14 0028: 6980
+ code  15 0029: 6980
+ code  17 002A: 2017 0001
+ code  17 002C: 300C
+ code  17 002D: 2080
+ code  17 002E: 210D
+ code  18 002F: 2277 0000 0001
+ code  19 0032: 2097 0001
+ code  19 0034: 2268 0000
+ code  20 0036: 2017 0001
+ code  20 0038: 300D
+ code  20 0039: 2080
+ code  20 003A: 2268 0000
+ code  21 003C: 6AE0 0001
+ code  21 003E: 1600 0012
+ code  21 0040: 30ED
+ code  22 0041: 69A0
+ code  22 0042: 6AE0 0002
+ code  22 0044: 1600 0019
+ code  22 0046: 30F0 0002
+ code  23 0048: 69A0
+ code  23 0049: 6A00 0002
+ code  23 004B: 6AE0 0003
+ code  23 004D: 1600 0020
+ code  23 004F: 30F0 0003
+ code  23 0051: 30F0 0003
+ code  23 0053: 1800
+ code  14 0054: 0000
+#### Debug ####
+ file   0 0000: "test13.c"
+ func   1 0012: "foo1"
+ svar   2    1: "a"
+ svar   2    0: "@num_stack_var@"
+ func   5 0019: "foo2"
+ svar   6    2: "a"
+ svar   6    1: "b"
+ svar   6    0: "@num_stack_var@"
+ func   9 0020: "foo3"
+ svar  10    3: "a"
+ svar  10    1: "c"
+ svar  10    2: "b"
+ svar  10    0: "@num_stack_var@"
+ func  13 0027: "init"
+ call  21 0012: "foo1"
+ call  22 0019: "foo2"
+ call  23 0020: "foo3"
+ svar  23   -2: "c"
+ svar  23   -2: "arr1"
+ svar  23    2: "@num_stack_var@"
+ func  26 0054: "loop"
+ svar  26    0: "@num_stack_var@"
+ endf  28 0055: "test13.c"

@@ -112,7 +112,7 @@ The instruction supports absolute and relative addressing.
 
 ```
 jump $1234		; absolute
-jump +4			; relative (skip 2 two-word instructions)
+jump +4			; relative (skip next two-word instruction)
 ```
 
 ### call - Call a subroutin
@@ -122,7 +122,7 @@ and the stack pointer is decremented. The instruction supports absolute and rela
 
 ```
 call $1234		; absolute
-call +4			; relative (skip 2 two-word instructions)
+call +4			; relative (skip next two-word instruction)
 ```
 
 ### ret - Return from subroutine
@@ -303,7 +303,7 @@ operand2 can be any memory location/register, operand2 an absolute and relative 
 ```
 bnze  A, #$100   ; jump to absolute address
 bnze  A, -2      ; jump to the prior address
-bnze  [X], +4    ; skip the next 2 word instruction
+bnze  [X], +4    ; skip next two-word instruction
 ```
 
 ### bze - Branch if zero
@@ -314,7 +314,7 @@ operand2 can be any memory location/register, operand2 an absolute and relative 
 ```
 bze  A, #$100   ; jump to absolute address
 bze  A, -2      ; jump to the prior address
-bze  [X], +4    ; skip the next 2 word instruction
+bze  [X], +4    ; skip next two-word instruction
 ```
 
 ### bpos - Branch if positive
@@ -325,7 +325,7 @@ operand2 can be any memory location/register, operand2 an absolute and relative 
 ```
 bpos  A, #$100   ; jump to absolute address
 bpos  A, -2      ; jump to the prior address
-bpos  [X], +4    ; skip the next 2 word instruction
+bpos  [X], +4    ; skip next two-word instruction
 ```
 
 ### bneg - Branch if negative
@@ -336,7 +336,7 @@ operand2 can be any memory location/register, operand2 an absolute and relative 
 ```
 bneg  A, #$100   ; jump to absolute address
 bneg  A, -2      ; jump to the prior address
-bneg  [X], +4    ; skip the next 2 word instruction
+bneg  [X], +4    ; skip next two-word instruction
 ```
 
 ### dbnz - Decrement and branch if not zero
@@ -347,7 +347,7 @@ operand1 can be any memory location/register, operand2 an absolute and relative 
 ```
 dbnz  A, #$100   ; jump to absolute address
 dbnz  A, -2      ; jump to the prior address
-dbnz  [X], +4    ; skip the next 2 word instruction
+dbnz  [X], +4    ; skip next two-word instruction
 ```
 
 ### in - IN operation

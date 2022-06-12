@@ -39,14 +39,18 @@ function BSym:local_new()
 	self.num_param = 0   -- params only
 end
 
-function BSym:sym_add_local(ident, is_array)
+function BSym:sym_add_local(ident, array_size)
 	if self.locals[ident] then
 		self:error_msg(string.format("Redefinition of '%s'", ident))
 	elseif KEYWORDS[ident] and ident ~= "func" then
 		self:error_msg(string.format("'%s' is a protected keyword", ident))
 	end
 	self.stack_size = self.stack_size + 1
-	self.locals[ident] = {type = is_array and "array" or "var", ref = self.stack_size}
+	if array_size then
+		self.locals[ident] = {type = "array", ref = self.stack_size, offs = array_size - 1}
+	else
+		self.locals[ident] = {type = "var", ref = self.stack_size}
+	end
 end
 
 function BSym:sym_add_param(ident)
@@ -178,7 +182,7 @@ function BSym:sym_func_return(ident, end_of_func)
 		local num_stack_var = 0
 		for k,v in pairs(self.locals) do
 			if k ~= "func" then
-				self:add_debugger_info("svar", self.lineno, k, base - v.ref)
+				self:add_debugger_info("svar", self.lineno, k, base - v.ref - (v.offs or 0))
 				num_stack_var = math.min(num_stack_var, base - v.ref)
 			end
 		end

@@ -327,3 +327,115 @@ else02:
 
 ]]
 
+-------------------------------------------------------------------------------
+-- stdlib.asm
+-------------------------------------------------------------------------------
+vm16.libc.stdlib_asm = [[
+;===================================
+; stdlib v1.0
+; - itoa(c, str)
+; - itoha(c, str)
+; - halt()
+;===================================
+
+global itoa
+global itoha
+global halt
+
+  .code
+
+;===================================
+; [01] itoa(val, str)
+; val: [SP+2]
+; str: [SP+1]
+;===================================
+itoa:
+  move A, [SP+2]
+  move X, [SP+1]
+  move D, X      ; return val
+  push #0        ; end-of-string
+
+loop01:
+  move B, A
+  div  B, #10    ; rest in B
+  move C, A
+  mod  C, #10    ; digit in C
+  add  C, #48
+  push C         ; store on stack
+  move A, B
+  bnze A, loop01 ; next digit
+
+output01:
+  pop  A
+  bnze A, getB01
+
+  ; A is 0
+  move [X], A
+  jump exit01
+
+getB01:
+  pop  B
+  bnze B, merge01
+
+  ; B is 0
+  move [X]+, A
+  move [X], B
+  jump exit01
+
+merge01:
+  shl  A, #8
+  add  A, B
+  move [X]+, A
+  jump output01
+
+exit01:
+  move A, D
+  ret
+
+;===================================
+; [02] itoha(val, str)
+; val: [SP+2]
+; str: [SP+1]
+;===================================
+itoha:
+  move A, [SP+2]
+  move X, [SP+1]
+  move D, X      ; return val
+  move C, #4     ; num digits
+
+loop02:
+  move B, A
+  div  B, #$10   ; rest in B
+  mod  A, #$10   ; digit in C
+  sklt A, #10    ; C < 10 => jmp +2
+  add  A, #7     ; A-F offset
+  add  A, #48    ; 0-9 offset
+  push A         ; store on stack
+  move A, B
+  dbnz C, loop02 ; next digit
+
+output02:
+  pop  A
+  shl  A, #8
+  pop  B
+  add  A, B
+  move [X]+, A
+
+  pop  A
+  shl  A, #8
+  pop  B
+  add  A, B
+  move [X]+, A
+
+  move [X], #0
+
+  move A, D
+  ret
+
+;===================================
+; [03] halt()
+;===================================
+halt:
+  halt
+]]
+
