@@ -245,6 +245,7 @@ end
 --[[
 lvar_def_list:
     = 'var' ident [ '=' expression ] ';'  local_def_list
+    | 'var' ident '[' number ']' ';'
 ]]--
 function BPars:lvar_def_list()
 	local val = self:tk_peek().val
@@ -258,11 +259,8 @@ function BPars:lvar_def_list()
 			self:tk_match("]")
 			self:add_data(ident)
 			self:sym_add_local(ident, size)
-			while size > 0 do
-				self:add_instr("push", "#0")
-				self.num_auto = self.num_auto + 1
-				size = size - 1
-			end
+			self:add_instr("sub", "SP", "#" .. size)
+			self.num_auto = self.num_auto + size
 			self:reset_reg_use()
 			self:tk_match(";")
 			val = self:tk_peek().val
