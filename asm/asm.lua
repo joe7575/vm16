@@ -213,7 +213,13 @@ function Asm:address_label(tok)
 			end
 			self.symbols[label] = self.address
 		end
-		tok[CODESTR] = codestr:sub(pos+1, -1)
+		codestr = codestr:sub(pos+1, -1)
+		codestr = string.trim(codestr)
+		if codestr ~= "" and string.byte(codestr, 1) ~= 59 then
+			tok[CODESTR] = codestr
+		else
+			tok[CODESTR] = ""
+		end
 	end
 	return tok
 end
