@@ -130,6 +130,7 @@ local function mem_dump(pos, mem, x, y, xsize, ysize, fontsize)
 end
 
 function vm16.watch.init(pos, mem, obj)
+	 mem.last_watch_idx = nil
 end
 
 function vm16.watch.fs_window(pos, mem, x, y, xsize, ysize, fontsize)
