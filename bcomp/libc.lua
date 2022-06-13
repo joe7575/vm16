@@ -212,15 +212,19 @@ exit03:
 -------------------------------------------------------------------------------
 vm16.libc.string_asm = [[
 ;===================================
-; string v1.1
+; string v1.2
 ; - strcpy(dst, src)
 ; - strlen(s)
 ; - strcmp(str1, str2)
+; - strcat(dst, src)
+; - strpack(str)
 ;===================================
 
 global strcpy
 global strlen
 global strcmp
+global strcat
+global strpack
 
   .code
 
@@ -278,6 +282,68 @@ exit03:
     move A, [X]
     sub  A, [Y]
     ret
+
+;===================================
+; [04] strcat(dst, src)
+; dst: [SP+2]
+; src: [SP+1]
+;===================================
+strcat:
+  move X, [SP+2]
+
+loop04:
+  move A, [X]+
+  bnze [X], loop04
+
+  move [SP+2], X
+  jump strcpy  
+  
+;===================================
+; [05] strpack(str)
+; str: [SP+1]
+;===================================
+strpack:
+  move X, [SP+1]
+  move Y, [SP+1]
+loop05:
+  move A, [X]+
+  bnze A, elseif ; if A == 0 then
+  bnze B, else1  ;     if B == 0 then
+  move [Y]+, A
+  jump exit05
+else1:           ;     else
+  move [Y]+, B
+  move [Y]+, A
+  jump exit05
+elseif:          ;     end
+  sklt A, #256   ; elseif A < 256 then
+  jump else2
+  bnze B, else3  ;     if B == 0 then
+  move B, A
+  jump loop05
+else3:           ;     else
+  shl  B, #8
+  add  B, A
+  move [Y]+, B
+  move B, #0
+  jump loop05    ;     end
+else2:           ; else // A > 255
+  bnze B, else4  ;     if B == 0 then
+  move [Y]+, A
+  jump loop05
+else4:           ;     else
+  shl  B, #8
+  move D, A
+  shr  D, #8
+  add  B, D
+  move [Y]+, B
+  and  A, #255
+  move B, A
+  jump loop05    ;     end
+                 ; end
+exit05:
+  move A, [SP+2]
+  ret
 ]]
 
 -------------------------------------------------------------------------------
