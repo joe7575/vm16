@@ -139,6 +139,18 @@ local function loadfile_by_address(mem, addr)
 	end
 end
 
+-- return from subroutine
+local function step_out(pos, mem)
+	local cpu = vm16.get_cpu_reg(mem.cpu_pos)
+	local addr = (vm16.peek(mem.cpu_pos, cpu.BP) or 2) - 2
+	addr = mem.lut:find_next_address(addr)
+	if loadfile_by_address(mem, addr) then
+		local lineno = mem.lut:get_line(addr)
+		set_temp_breakpoint(pos, mem, lineno)
+		start_cpu(mem)
+	end
+end
+
 function vm16.debug.init(pos, mem, obj)
 	mem.breakpoints = {}
 	mem.breakpoint_lines = {}
@@ -267,10 +279,14 @@ function vm16.debug.on_receive_fields(pos, fields, mem)
 				mem.curr_lineno = mem.cursorline
 			elseif mem.file_ext == "c" then
 				local addr = vm16.get_pc(mem.cpu_pos)
-				local lineno = mem.lut:get_next_line(addr)
-				set_temp_breakpoint(pos, mem, lineno)
-				set_branch_breakpoint(pos, mem, addr)
-				start_cpu(mem)
+				if mem.lut:is_return_line(addr) then
+					step_out(pos, mem)
+				else
+					local lineno = mem.lut:get_next_line(addr)
+					set_temp_breakpoint(pos, mem, lineno)
+					set_branch_breakpoint(pos, mem, addr)
+					start_cpu(mem)
+				end
 			end
 		end
 	elseif fields.stepin then
@@ -284,14 +300,7 @@ function vm16.debug.on_receive_fields(pos, fields, mem)
 		end
 	elseif fields.stepout then
 		if vm16.is_loaded(mem.cpu_pos) and mem.lut then
-			local cpu = vm16.get_cpu_reg(mem.cpu_pos)
-			local addr = (vm16.peek(mem.cpu_pos, cpu.BP) or 2) - 2
-			addr = mem.lut:find_next_address(addr)
-			if loadfile_by_address(mem, addr) then
-				local lineno = mem.lut:get_line(addr)
-				set_temp_breakpoint(pos, mem, lineno)
-				start_cpu(mem)
-			end
+			step_out(pos, mem)
 		end
 	elseif fields.runto then
 		if vm16.is_loaded(mem.cpu_pos) and mem.lut then

@@ -481,6 +481,8 @@ function Asm:assembler(filename, output)
 		elseif ctype == "func" or ctype == "call" then
 			local addr = self.globals[ident] or self.symbols[ident] or 0
 			append(lOut2, {ctype, lineno, addr, ident})
+		elseif ctype == "ret" then
+			append(lOut2, {ctype, lineno, 0, 0})
 		elseif ctype == "brnch" then
 			local addr = self.symbols[ident] or 0
 			append(lOut2, {ctype, lineno, addr, ident})

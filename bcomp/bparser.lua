@@ -349,7 +349,8 @@ function BPars:statement()
 	elseif val == "while" then
 		self:while_statement()
 	elseif val == "return" then
-		self:tk_match("return")
+		local tok = self:tk_match("return")
+		self:add_debugger_info("ret", tok.lineno)
 		if self:tk_peek().val ~= ";" then
 			local right = self:expression()
 			self:add_instr("move", "A", right)

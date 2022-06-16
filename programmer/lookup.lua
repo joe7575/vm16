@@ -21,6 +21,7 @@ function Lut:new(o)
 	o.addr2lineno = {}
 	o.lineno2addr = {}
 	o.step_in = {}
+	o.step_out = {}
 	o.globals = {}
 	o.branches = {}
 	o.func_locals = {}
@@ -89,6 +90,8 @@ function Lut:init(obj)
 		if ctype == "call" then
 			self.step_in[file] = self.step_in[file] or {}
 			self.step_in[file][lineno] = address
+		elseif ctype == "ret" then
+			self.step_out[lineno] = true
 		elseif ctype == "gvar" then
 			table.insert(self.globals, {name = ident, addr = address, type = "global"})
 		elseif ctype == "lvar" then
@@ -194,6 +197,15 @@ function Lut:get_next_line(address)
 		end
 	end
 	DBG("Lut:get_next_line", "oops")
+end
+
+function Lut:is_return_line(address)
+	DBG("Lut:is_return_line", address)
+	if address then
+		local lineno = self.addr2lineno[address]
+		return lineno and self.step_out[lineno]
+	end
+	DBG("Lut:is_return_line", "oops")
 end
 
 function Lut:get_stepin_address(file, lineno)
