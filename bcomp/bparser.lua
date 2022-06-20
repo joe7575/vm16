@@ -145,13 +145,13 @@ end
 
 --[[
 const_def:
-    = ident '=' expression ';' def_list
+    = ident '=' number ';' def_list
 ]]--
 function BPars:const_def()
 	self:switch_to_var_def()
 	local ident = self:ident()
 	self:tk_match("=")
-	local right = self:expression()
+	local right = '#' .. self:number()
 	self:sym_add_const(ident, right, "global")
 	self:tk_match(";")
 	self:reset_reg_use()
@@ -204,8 +204,15 @@ function BPars:const_list(ident, size)
 	size = size - 1
 	while self:tk_peek().val == ',' do
 		self:tk_match(",")
-		local tok = self:tk_match(T_NUMBER)
-		self:append_val(tok.val)
+		
+		if self:tk_peek().val == '-' then
+			self:tk_match()
+			local tok = self:tk_match(T_NUMBER)
+			self:append_val(0x10000 - tok.val)
+		else
+			local tok = self:tk_match(T_NUMBER)
+			self:append_val(tok.val)
+		end
 		size = size - 1
 	end
 

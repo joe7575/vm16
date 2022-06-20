@@ -37,6 +37,9 @@ local T_ENDFILE = 8
 local lTypeString = {"ident", "number", "operand", "brace", "string", "asm code", "new file", "end file"}
 local lToken = {}
 local tScannedFiles = {}
+local InvalidOperands = {
+	[",-"] = true, ["=-"] = true, ["/-"] = true, ["*-"] = true, ["|-"] = true, ["&-"] = true,
+	["<-"] = true, [">-"] = true, [";-"] = true}
 
 local function file_ext(filename)
 	local _, ext = unpack(string.split(filename, ".", true, 1))
@@ -135,8 +138,13 @@ function BScan:tokenize(text)
 			if operand:sub(1, 2) == "//" then -- EOL comment
 				break
 			end
-			table.insert(lToken, {type = T_OPERAND, val = operand, lineno = self.lineno})
-			idx = idx + #operand
+			if InvalidOperands[operand] then
+				table.insert(lToken, {type = T_OPERAND, val = ch, lineno = self.lineno})
+				idx = idx + 1
+			else
+				table.insert(lToken, {type = T_OPERAND, val = operand, lineno = self.lineno})
+				idx = idx + #operand
+			end
 		elseif ch:match(BRACE) then
 			table.insert(lToken, {type = T_BRACE, val = ch, lineno = self.lineno})
 			idx = idx + 1
@@ -152,7 +160,7 @@ function BScan:tokenize(text)
 				self:import_file(string.sub(str, 2, -2))
 			else
 				local str2
-				if string.find(str, "\\") then
+				if not self.gen_asm_code and string.find(str, "\\") then
 					str2 = handle_escape_sequence(str)
 				else
 					str2 = str
@@ -167,8 +175,9 @@ function BScan:tokenize(text)
 	end
 end
 
-function BScan:scanner(filename)
+function BScan:scanner(filename, gen_asm_code)
 	self.filename = filename
+	self.gen_asm_code = gen_asm_code
 	self.lineno = 0
 	if self.nested_calls > 10 then
 		self:error_msg("Maximum number of nested imports exceeded")

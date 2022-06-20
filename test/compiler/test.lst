@@ -172,16 +172,16 @@ brnch  17 0027: "@lbl2"
  svar  24    1: "d"
  svar  24    0: "@num_stack_var@"
  func  27 0037: "test_expr"
- call  28 000D: "get_five"
   ret  28 0000: "0"
+ call  28 000D: "get_five"
  svar  28    4: "a"
  svar  28    2: "c"
  svar  28    3: "b"
  svar  28    1: "d"
  svar  28    0: "@num_stack_var@"
  func  31 0048: "test_expr2"
- call  32 001C: "test_basic"
   ret  32 0000: "0"
+ call  32 001C: "test_basic"
  svar  32    4: "a"
  svar  32    2: "c"
  svar  32    3: "b"
@@ -1100,8 +1100,8 @@ brnch  37 00A3: "exit"
  code   3 0011: 0000
  code   4 0012: 01FF 01FF 01FF
  code   1 0015: 6572 726F 0072 0000
- code   2 0019: 7830 3053 7830 3065 0000
- code   3 001E: 7830 3001 7830 3002 7830 3003 0000
+ code   2 0019: 5C31 3233 5C31 3435 0000
+ code   3 001E: 5C30 3031 5C30 3032 5C30 3033 0000
 #### Debug ####
  file   0 0000: "test11.c"
  gvar   1 000F: "s0"

@@ -365,7 +365,11 @@ function BExpr:number()
 	local tok = self:tk_match()
 	if self:sym_is_const(tok.val) then
 		local val = self:sym_get_const(tok.val)
-		return tonumber(val:sub(2)) or 0
+		if type(val) == "string" then
+			return tonumber(val:sub(2)) or 0
+		else
+			return val
+		end
 	end
 	return tok.val
 end

@@ -182,10 +182,6 @@ function Asm:scanner(text, filename)
 	self.filename = filename
 	self.lineno = 0
 
-	if not vm16.is_ascii(text) then
-		self:err_msg("Invalid ASCII file format!")
-	end
-
 	append(lOut, {"file", 0, filename})
 	self.ctype = "code"
 

@@ -124,7 +124,9 @@ local function compile_and_assemble(filename)
 	local pos = {x=0, y=0, z=0}
 	local sts, res = vm16.compile(pos, filename, read_file, {gen_asm_code = true})
 	if sts then
-		--write_file(pos, "out.asm", res)
+		print("######################### Assembler ############################")
+		print(res)
+		write_file(pos, "out.asm", res)
 		sts, res = vm16.assemble(pos, "out.asm", read_file, true)
 		if sts then
 			print("######################### BIN ############################")

@@ -127,7 +127,7 @@ function vm16.compile(pos, filename, readfile, options)
 	local prs =  vm16.BPars:new({pos = pos, readfile = readfile, options = options})
 	prs:bpars_init()
 
-	local sts, res = pcall(prs.scanner, prs, filename)
+	local sts, res = pcall(prs.scanner, prs, filename, options)
 	if not sts then
 		return false, error_msg(res)
 	end

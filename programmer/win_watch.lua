@@ -21,7 +21,7 @@ local OPCODES = vm16.Asm.OPCODES
 
 local function var_address(cpu, offs, num_stack_var)
 	-- Valid Base Pointer (before ret instruction)
-	if cpu.SP <= cpu.BP or cpu.BP == 0 then
+	if cpu.SP < cpu.BP or cpu.BP == 0 then
 		return cpu.BP + offs
 	else
 		return cpu.SP + offs + num_stack_var

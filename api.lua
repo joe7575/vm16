@@ -347,6 +347,7 @@ function vm16.run(pos, cpu_def, breakpoints, steps)
 		elseif resp == VM16_SYS then
 			local io = vm16lib.get_io_reg(vm)
 			io.data, costs = cpu_def.on_system(pos, io.addr, io.A, io.B, io.C)
+			io.data = io.data or 0
 			vm16lib.set_io_reg(vm, io)
 			costs = tonumber(costs)
 			cycles = cycles - (costs or cpu_def.system_costs)
