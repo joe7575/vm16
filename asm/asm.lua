@@ -83,6 +83,10 @@ local function strsplit(s)
 	return words
 end
 
+local function handle_escape_sequence(str)
+	return string.gsub(str, "\\([0-7][0-7][0-7])", function(s) return "\x00" .. string.char(tonumber(s, 8)) end)
+end
+
 local function constant(s)
 	if s and string.sub(s, 1, 1) == "#" then
 		if string.sub(s, 2, 2) == "$" then
@@ -368,6 +372,7 @@ end
 function Asm:decode_ctext(tok)
 	local codestr = tok[CODESTR]
 	if codestr:byte(1) == 34 and codestr:byte(-1) == 34 then
+		codestr = handle_escape_sequence(codestr)
 		codestr = codestr:gsub('\\0"', '\0\0"')
 		codestr = codestr:gsub("\\n", "\n")
 		codestr = codestr:sub(2, -2)
