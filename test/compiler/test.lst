@@ -1240,3 +1240,56 @@ brnch  37 00A3: "exit"
  func  26 0054: "loop"
  svar  26    0: "@num_stack_var@"
  endf  28 0055: "test13.c"
+
+ #### Compile 'loop': test14.c ####
+#### Code ####
+ file   0 0000: test14.c
+ code   0 0000: 1200 0008
+ code   0 0008: 1600 0011
+ code   0 000A: 1600 0014
+ code   0 000C: 1600 0029
+ code   0 000E: 0000
+ code   0 000F: 1200 000C
+ code   2 0011: 222C 0032
+ code   0 0013: 1800
+ code   5 0014: 1800
+ code   9 0015: 2013 0001
+ code   9 0017: 1800
+ code  13 0018: 2010 002F
+ code  13 001A: 300D
+ code  13 001B: 2080
+ code  13 001C: 6800
+ code  13 001D: 6A60 0002
+ code  13 001F: 1600 0015
+ code  13 0021: 30ED
+ code  13 0022: 2020
+ code  13 0023: 6C00
+ code  13 0024: 2101
+ code  14 0025: 2233 0032 0001
+ code  14 0028: 1800
+ code  18 0029: 6A00 0002
+ code  18 002B: 1600 0018
+ code  18 002D: 30ED
+ code  18 002E: 1800
+ code   1 002F: 0000 0000 0000
+ code   2 0032: 0000
+ code   3 0033: 0004 0005
+#### Debug ####
+ file   0 0000: "test14.c"
+ gvar   1 002F: "route[]"
+ gvar   2 0032: "last_floor"
+ gvar   3 0033: "heights[]"
+ func   5 0014: "init"
+ svar   5    0: "@num_stack_var@"
+ func   8 0015: "calc_height2"
+  ret   9 0000: "0"
+ svar   9    1: "dest_floor"
+ svar   9    0: "@num_stack_var@"
+ func  12 0018: "move_lift"
+ call  13 0015: "calc_height2"
+ svar  14    1: "floor"
+ svar  14    0: "@num_stack_var@"
+ func  17 0029: "loop"
+ call  18 0018: "move_lift"
+ svar  18    0: "@num_stack_var@"
+ endf  19 0035: "test14.c"
