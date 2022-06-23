@@ -521,12 +521,17 @@ function BPars:assignment()
 	if self:tk_peek().val == ";" then
 		return true
 	end
+	self:move_code1()
 	local left = self:left_value()
 	if left then
 		local val = self:tk_peek().val
 		if val == "=" then
+			self:move_code2()
+			self:reset_reg_use()
 			self:tk_match("=")
 			local right = self:expression()
+			self:move_code3()
+			local left = self:left_value() or left
 			self:add_instr("move", left, right)
 			self:reset_reg_use()
 			return true

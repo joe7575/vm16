@@ -59,6 +59,12 @@ end
 local function compile1(filename)
 	print("\n #### Compile 'main': " .. filename .. " ####")
 	local pos = {x=0, y=0, z=0}
+	local sts, res = vm16.compile(pos, filename, read_file, {startup_code = startup_code1, gen_asm_code = true})
+	if sts then
+		print(res)
+	else
+		print(res)
+	end
 	local sts, res = vm16.compile(pos, filename, read_file, {startup_code = startup_code1})
 	if sts then
 		print(vm16.dump_compiler_output(res))
@@ -70,6 +76,12 @@ end
 local function compile2(filename)
 	print("\n #### Compile 'loop': " .. filename .. " ####")
 	local pos = {x=0, y=0, z=0}
+	local sts, res = vm16.compile(pos, filename, read_file, {startup_code = startup_code2, gen_asm_code = true})
+	if sts then
+		print(res)
+	else
+		print(res)
+	end
 	local sts, res = vm16.compile(pos, filename, read_file, {startup_code = startup_code2})
 	if sts then
 		print(vm16.dump_compiler_output(res))
@@ -91,3 +103,4 @@ compile1("test10.c")  -- break, continue, goto
 compile1("test11.c")  -- Strings with hex escape sequences
 compile2("test12.c")  -- Pointers
 compile2("test13.c")  -- Function local arrays
+compile2("test14.c")  -- Function local arrays

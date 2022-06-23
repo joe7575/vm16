@@ -23,16 +23,13 @@ vm16 version = 2.7.4
  code: (  7) "move A, [SP+1]"
  code: (  7) "ret"
  code: ( 10) "move_lift:"
- code: ( 11) "move A, #route"
- code: ( 11) "add A, #1"
- code: ( 11) "move X, A"
- code: ( 11) "push A"
- code: ( 11) "push [SP+2]"
+ code: ( 11) "push [SP+1]"
  code: ( 11) "call calc_height2"
  code: ( 11) "add SP, #1"
- code: ( 11) "move B, A"
- code: ( 11) "pop  A"
- code: ( 11) "move [X], B"
+ code: ( 11) "move B, #route"
+ code: ( 11) "add B, #1"
+ code: ( 11) "move X, B"
+ code: ( 11) "move [X], A"
  code: ( 11) "ret"
  code: ( 14) "loop:"
  code: ( 15) "push #2"
@@ -90,16 +87,13 @@ calc_height2:
 ;  10: func move_lift(floor) {
 move_lift:
 ;  11:   route[1] = calc_height2(floor);
-  move A, #route
-  add A, #1
-  move X, A
-  push A
-  push [SP+2]
+  push [SP+1]
   call calc_height2
   add SP, #1
-  move B, A
-  pop  A
-  move [X], B
+  move B, #route
+  add B, #1
+  move X, B
+  move [X], A
   ret
 ;  12: }
 ;  14: func loop() {
@@ -118,32 +112,29 @@ route: 0,0,0
  code   0 0000: 1200 0008
  code   0 0008: 1600 0011
  code   0 000A: 1600 0012
- code   0 000C: 1600 0024
+ code   0 000C: 1600 0021
  code   0 000E: 0000
  code   0 000F: 1200 000C
  code   0 0011: 1800
  code   3 0012: 1800
  code   7 0013: 2013 0001
  code   7 0015: 1800
- code  11 0016: 2010 002A
- code  11 0018: 300D
- code  11 0019: 2080
- code  11 001A: 6800
- code  11 001B: 6A60 0002
- code  11 001D: 1600 0013
- code  11 001F: 30ED
- code  11 0020: 2020
- code  11 0021: 6C00
- code  11 0022: 2101
- code  11 0023: 1800
- code  15 0024: 6A00 0002
- code  15 0026: 1600 0016
- code  15 0028: 30ED
- code  15 0029: 1800
- code   1 002A: 0000 0000 0000
+ code  11 0016: 6A60 0001
+ code  11 0018: 1600 0013
+ code  11 001A: 30ED
+ code  11 001B: 2030 0027
+ code  11 001D: 302D
+ code  11 001E: 2081
+ code  11 001F: 2100
+ code  11 0020: 1800
+ code  15 0021: 6A00 0002
+ code  15 0023: 1600 0016
+ code  15 0025: 30ED
+ code  15 0026: 1800
+ code   1 0027: 0000 0000 0000
 #### Debug ####
  file   0 0000: "test14.c"
- gvar   1 002A: "route[]"
+ gvar   1 0027: "route[]"
  func   3 0012: "init"
  svar   3    0: "@num_stack_var@"
  func   6 0013: "calc_height2"
@@ -154,7 +145,7 @@ route: 0,0,0
  call  11 0013: "calc_height2"
  svar  11    1: "floor"
  svar  11    0: "@num_stack_var@"
- func  14 0024: "loop"
+ func  14 0021: "loop"
  call  15 0016: "move_lift"
  svar  15    0: "@num_stack_var@"
- endf  16 002D: "test14.c"
+ endf  16 002A: "test14.c"

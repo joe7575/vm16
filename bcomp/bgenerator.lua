@@ -138,6 +138,7 @@ function BGen:push_regs()
 	table.insert(self.reg_cnt_stack, self.reg_cnt)
 	for i = 1, self.reg_cnt do
 		table.insert(self.lCode,  {"code", self.lineno, "push " .. REGLIST[i]})
+		self.stack_size = self.stack_size + 1
 	end
 	self.reg_cnt = 0
 end
@@ -156,6 +157,7 @@ function BGen:pop_regs()
 	end
 	for i = old_reg_cnt, 1, -1 do
 		table.insert(self.lCode,  {"code", self.lineno, "pop  " .. REGLIST[i]})
+		self.stack_size = self.stack_size - 1
 	end
 	return reg
 end

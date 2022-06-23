@@ -253,6 +253,40 @@ function BScan:scan_dbg_dump()
 	return table.concat(out, "\n")
 end
 
+------------------------------------------------------------------------------------
+-- Functions to move generated code to the end
+------------------------------------------------------------------------------------
+function BScan:move_code1()
+	self.marker_token = self.tk_idx
+	self.marker_code = #self.lCode
+end
+
+function BScan:move_code2()
+	if #self.lCode > self.marker_code then
+		-- Delete code
+		while #self.lCode > self.marker_code do
+			table.remove(self.lCode, self.marker_code + 1)
+		end
+		
+		-- extract tokens
+		local n = self.tk_idx - self.marker_token
+		self.token_tbl = {}
+		for idx = 1, n do
+			self.token_tbl[idx] = table.remove(self.lTok, self.marker_token)
+		end
+		self.tk_idx = self.tk_idx - n
+	end
+end
+
+function BScan:move_code3()
+	-- insert tokens
+	for idx, tok in pairs(self.token_tbl or {}) do
+		table.insert(self.lTok, self.tk_idx + idx - 1, tok)
+	end
+	self.token_tbl = nil
+	self.marker_token = nil
+	self.marker_code = nil
+end
 
 vm16.BScan = BScan
 

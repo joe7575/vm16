@@ -901,9 +901,9 @@ memcpy:
   skgt A, #0
   jump @lbl2
 ;   8:     *dst = *src;
-  move X, [SP+3]
-  move Y, [SP+2]
-  move [X], [Y]
+  move X, [SP+2]
+  move Y, [SP+3]
+  move [Y], [X]
 ;   9:     dst++;
   inc [SP+3]
 ;  10:     src++;
@@ -950,12 +950,12 @@ putval:
   div A, #10
   move [SP+1], A
 ;  28:     out[i] = c + 0x30;
-  move A, #out
-  add A, [SP+0]
-  move X, A
-  move B, [SP+2]
-  add B, #48
-  move [X], B
+  move A, [SP+2]
+  add A, #48
+  move B, #out
+  add B, [SP+0]
+  move X, B
+  move [X], A
 ;  29:     i++;
   inc [SP+0]
   jump @lbl5
@@ -1084,9 +1084,9 @@ str: 0
  code   7 0007: 2013 0001
  code   7 0009: 980C
  code   7 000A: 1200 0019
- code   8 000C: 2093 0003
- code   8 000E: 20B3 0002
- code   8 0010: 2109
+ code   8 000C: 2093 0002
+ code   8 000E: 20B3 0003
+ code   8 0010: 2128
  code   9 0011: 2A60 0003
  code  10 0013: 2A60 0002
  code  11 0015: 2E60 0001
@@ -1111,12 +1111,12 @@ str: 0
  code  27 0034: 2013 0001
  code  27 0036: 3C10 000A
  code  27 0038: 2260 0001
- code  28 003A: 2010 00BF
- code  28 003C: 3013 0000
- code  28 003E: 2080
- code  28 003F: 2033 0002
- code  28 0041: 3030 0030
- code  28 0043: 2101
+ code  28 003A: 2013 0002
+ code  28 003C: 3010 0030
+ code  28 003E: 2030 00BF
+ code  28 0040: 3033 0000
+ code  28 0042: 2081
+ code  28 0043: 2100
  code  29 0044: 2A60 0000
  code  29 0046: 1200 0029
  code  31 0048: 2013 0000
@@ -3034,16 +3034,13 @@ calc_height2:
 ;  12: func move_lift(floor) {
 move_lift:
 ;  13:   route[1] = calc_height2(floor);
-  move A, #route
-  add A, #1
-  move X, A
-  push A
-  push [SP+2]
+  push [SP+1]
   call calc_height2
   add SP, #1
-  move B, A
-  pop  A
-  move [X], B
+  move B, #route
+  add B, #1
+  move X, B
+  move [X], A
   ret
 ;  14: }
 ;  16: func loop() {
@@ -3062,7 +3059,7 @@ c: 0
  code   0 0000: 1200 0008
  code   0 0008: 1600 0011
  code   0 000A: 1600 0012
- code   0 000C: 1600 0025
+ code   0 000C: 1600 0022
  code   0 000E: 0000
  code   0 000F: 1200 000C
  code   0 0011: 1800
@@ -3070,27 +3067,24 @@ c: 0
  code   5 0013: 1800
  code   9 0014: 2013 0001
  code   9 0016: 1800
- code  13 0017: 2010 002B
- code  13 0019: 300D
- code  13 001A: 2080
- code  13 001B: 6800
- code  13 001C: 6A60 0002
- code  13 001E: 1600 0014
- code  13 0020: 30ED
- code  13 0021: 2020
- code  13 0022: 6C00
- code  13 0023: 2101
- code  13 0024: 1800
- code  17 0025: 6A00 0002
- code  17 0027: 1600 0017
- code  17 0029: 30ED
- code  17 002A: 1800
- code   1 002B: 0000 0000 0000
- code   2 002E: 0000
+ code  13 0017: 6A60 0001
+ code  13 0019: 1600 0014
+ code  13 001B: 30ED
+ code  13 001C: 2030 0028
+ code  13 001E: 302D
+ code  13 001F: 2081
+ code  13 0020: 2100
+ code  13 0021: 1800
+ code  17 0022: 6A00 0002
+ code  17 0024: 1600 0017
+ code  17 0026: 30ED
+ code  17 0027: 1800
+ code   1 0028: 0000 0000 0000
+ code   2 002B: 0000
 #### Debug ####
  file   0 0000: "test14.c"
- gvar   1 002B: "route[]"
- gvar   2 002E: "c"
+ gvar   1 0028: "route[]"
+ gvar   2 002B: "c"
  func   4 0012: "init"
  svar   5    0: "@num_stack_var@"
  func   8 0014: "calc_height2"
@@ -3101,7 +3095,7 @@ c: 0
  call  13 0014: "calc_height2"
  svar  13    1: "floor"
  svar  13    0: "@num_stack_var@"
- func  16 0025: "loop"
+ func  16 0022: "loop"
  call  17 0017: "move_lift"
  svar  17    0: "@num_stack_var@"
- endf  18 002F: "test14.c"
+ endf  18 002C: "test14.c"
