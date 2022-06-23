@@ -1,0 +1,183 @@
+vm16 version = 2.7.4
+######################### Parser ############################
+#### Code ####
+ file: (  0) "test14.c"
+ code: (  0) "global route"
+ code: (  0) "global last_floor"
+ code: (  0) "global heights"
+ code: (  0) "global init"
+ code: (  0) "global calc_height2"
+ code: (  0) "global move_lift"
+ code: (  0) "global loop"
+ code: (  0) "jump 8"
+ code: (  0) ".org 8"
+ code: (  0) "call @init"
+ code: (  0) "call init"
+ code: (  0) "@loop:"
+ code: (  0) "call loop"
+ code: (  0) "nop"
+ code: (  0) "jump @loop"
+ code: (  0) "@init:"
+ code: (  2) "move last_floor, #0"
+ code: (  0) "ret"
+ code: (  5) "init:"
+ code: (  5) "ret"
+ code: (  8) "calc_height2:"
+ code: (  9) "move A, [SP+1]"
+ code: (  9) "ret"
+ code: ( 12) "move_lift:"
+ code: ( 13) "move A, #route"
+ code: ( 13) "add A, #1"
+ code: ( 13) "move X, A"
+ code: ( 13) "push A"
+ code: ( 13) "push [SP+2]"
+ code: ( 13) "call calc_height2"
+ code: ( 13) "add SP, #1"
+ code: ( 13) "move B, A"
+ code: ( 13) "pop  A"
+ code: ( 13) "move [X], B"
+ code: ( 14) "move last_floor, [SP+1]"
+ code: ( 14) "ret"
+ code: ( 17) "loop:"
+ code: ( 18) "push #2"
+ code: ( 18) "call move_lift"
+ code: ( 18) "add SP, #1"
+ code: ( 18) "ret"
+ data: (  1) "route: 0,0,0"
+ data: (  2) "last_floor: 0"
+ data: (  3) "heights: 4,5"
+#### Debug ####
+ file   0 test14.c oops 
+ gvar   1 route route[] 
+ gvar   2 last_floor last_floor 
+ gvar   3 heights heights[] 
+ func   5 init oops 
+ svar   5 @num_stack_var@ -0 
+ func   8 calc_height2 oops 
+  ret   9 -1000 oops 
+ svar   9 dest_floor 1 
+ svar   9 @num_stack_var@ -0 
+ func  12 move_lift oops 
+ call  13 calc_height2 calc_height2 
+ svar  14 floor 1 
+ svar  14 @num_stack_var@ -0 
+ func  17 loop oops 
+ call  18 move_lift move_lift 
+ svar  18 @num_stack_var@ -0 
+ endf  19 test14.c oops 
+######################### ASM ############################
+;##### test14.c #####
+newfile test14.c
+  .code
+  global route
+  global last_floor
+  global heights
+  global init
+  global calc_height2
+  global move_lift
+  global loop
+  jump 8
+  .org 8
+  call @init
+  call init
+@loop:
+  call loop
+  nop
+  jump @loop
+@init:
+;   1: var route[] = {0,0,0};
+;   2: var last_floor = 0;
+  move last_floor, #0
+  ret
+;   3: var heights[] = {4, 5};
+;   5: func init() {
+init:
+  ret
+;   6: }
+;   8: func calc_height2(dest_floor) {
+calc_height2:
+;   9:   return dest_floor;
+  move A, [SP+1]
+  ret
+;  10: }
+;  12: func move_lift(floor) {
+move_lift:
+;  13:   route[1] = calc_height2(floor);
+  move A, #route
+  add A, #1
+  move X, A
+  push A
+  push [SP+2]
+  call calc_height2
+  add SP, #1
+  move B, A
+  pop  A
+  move [X], B
+;  14:   last_floor = floor;
+  move last_floor, [SP+1]
+  ret
+;  15: }
+;  17: func loop() {
+loop:
+;  18:   move_lift(2);
+  push #2
+  call move_lift
+  add SP, #1
+  ret
+;  19: }
+  .data
+route: 0,0,0
+last_floor: 0
+heights: 4,5
+######################### BIN ############################
+#### Code ####
+ file   0 0000: test14.c
+ code   0 0000: 1200 0008
+ code   0 0008: 1600 0011
+ code   0 000A: 1600 0014
+ code   0 000C: 1600 0029
+ code   0 000E: 0000
+ code   0 000F: 1200 000C
+ code   2 0011: 222C 0032
+ code   0 0013: 1800
+ code   5 0014: 1800
+ code   9 0015: 2013 0001
+ code   9 0017: 1800
+ code  13 0018: 2010 002F
+ code  13 001A: 300D
+ code  13 001B: 2080
+ code  13 001C: 6800
+ code  13 001D: 6A60 0002
+ code  13 001F: 1600 0015
+ code  13 0021: 30ED
+ code  13 0022: 2020
+ code  13 0023: 6C00
+ code  13 0024: 2101
+ code  14 0025: 2233 0032 0001
+ code  14 0028: 1800
+ code  18 0029: 6A00 0002
+ code  18 002B: 1600 0018
+ code  18 002D: 30ED
+ code  18 002E: 1800
+ code   1 002F: 0000 0000 0000
+ code   2 0032: 0000
+ code   3 0033: 0004 0005
+#### Debug ####
+ file   0 0000: "test14.c"
+ gvar   1 002F: "route[]"
+ gvar   2 0032: "last_floor"
+ gvar   3 0033: "heights[]"
+ func   5 0014: "init"
+ svar   5    0: "@num_stack_var@"
+ func   8 0015: "calc_height2"
+  ret   9 0000: "0"
+ svar   9    1: "dest_floor"
+ svar   9    0: "@num_stack_var@"
+ func  12 0018: "move_lift"
+ call  13 0015: "calc_height2"
+ svar  14    1: "floor"
+ svar  14    0: "@num_stack_var@"
+ func  17 0029: "loop"
+ call  18 0018: "move_lift"
+ svar  18    0: "@num_stack_var@"
+ endf  19 0035: "test14.c"
