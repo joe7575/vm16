@@ -1,6 +1,226 @@
 vm16 version = 2.7.4
 
  #### Compile 'main': test01.c ####
+;##### test01.c #####
+newfile test01.c
+  .code
+  global var1
+  global var2
+  global var3
+  global get_five
+  global foo
+  global test_basic
+  global test_4_param
+  global test_expr
+  global test_expr2
+  global main
+  call main
+  halt
+@init:
+;   1: var var1;
+;   2: var var2 = 2;
+  move var2, #2
+;   3: var var3 = var2 * 2;
+  move A, var2
+  mul A, #2
+  move var3, A
+  ret
+;   5: func get_five() {
+get_five:
+;   6:   return 5;
+  move A, #5
+  ret
+;   7: }
+;   9: func foo(a,b) {
+foo:
+;  10:   var c = a;
+  push [SP+2]
+;  11:   var d = b;
+  push [SP+2]
+;  12:   return c * d;
+  move A, [SP+1]
+  mul A, [SP+0]
+  move A, A
+  add SP, #2
+  ret
+;  13: }
+;  15: func test_basic(a) {
+test_basic:
+;  16:   var d = 4;
+  push #4
+;  17:   if(d > a) {
+  move A, [SP+0]
+  skgt A, [SP+2]
+  jump @lbl2
+@lbl1:
+;  18:     return 0;
+  move A, #0
+  add SP, #1
+  ret
+;  19:   }
+@lbl2:
+;  20:   return 15;
+  move A, #15
+  add SP, #1
+  ret
+;  21: }
+;  23: func test_4_param(a, b, c, d) {
+test_4_param:
+;  24:   return a + b + c + d;
+  move A, [SP+2]
+  add A, [SP+1]
+  move B, [SP+3]
+  add B, A
+  move C, [SP+4]
+  add C, B
+  move A, C
+  ret
+;  25: }
+;  27: func test_expr(a, b, c, d) {
+test_expr:
+;  28:   return a * get_five() + (b - 2) * c / d;
+  call get_five
+  move B, [SP+4]
+  mul B, A
+  move C, [SP+3]
+  sub C, #2
+  move D, [SP+2]
+  div D, [SP+1]
+  mul C, D
+  add B, C
+  move A, B
+  ret
+;  29: }
+;  31: func test_expr2(a, b, c, d) {
+test_expr2:
+;  32:   return test_basic(a + b) + (b - 2) * c / d;
+  move A, [SP+4]
+  add A, [SP+3]
+  push A
+  call test_basic
+  add SP, #1
+  move B, [SP+3]
+  sub B, #2
+  move C, [SP+2]
+  div C, [SP+1]
+  mul B, C
+  add A, B
+  move A, A
+  ret
+;  33: }
+;  35: func main() {
+main:
+;  36:   var c = var1 + 1;
+  move A, var1
+  add A, #1
+  push A
+;  37:   var res;
+  push #0
+;  39:   output(15, test_basic(14));
+  push #14
+  call test_basic
+  add SP, #1
+  out #15, A
+;  40:   output(1, c);
+  out #1, [SP+1]
+;  41:   c = (c + 3) * 2;
+  move A, [SP+1]
+  add A, #3
+  mul A, #2
+  move [SP+1], A
+;  42:   output(8, c);
+  out #8, [SP+1]
+;  43:   system(2, var1, 0);
+  move A, var1
+  move B, #0
+  sys #2
+;  44:   system(2, var1 + 3, 0);
+  move A, var1
+  add A, #3
+  move B, #0
+  sys #2
+;  45:   var2 = input(3);
+  in A, #3
+  move var2, A
+;  46:   output(12, var2);
+  out #12, var2
+;  47:   sleep(5);
+  move A, #5
+  nop
+  dbnz A, -1
+;  48:   output(5, get_five());
+  call get_five
+  out #5, A
+;  50:   output(15, test_basic(14));
+  push #14
+  call test_basic
+  add SP, #1
+  out #15, A
+;  51:   c = 8;
+  move [SP+1], #8
+;  52:   var2 = 12;
+  move var2, #12
+;  53:   res = test_4_param(c, c, c, var2);
+  push [SP+1]
+  push [SP+2]
+  push [SP+3]
+  push var2
+  call test_4_param
+  add SP, #4
+  move [SP+0], A
+;  54:   output(36, res);
+  out #36, [SP+0]
+;  55:   res = test_4_param(1, c, c, var2);
+  push #1
+  push [SP+2]
+  push [SP+3]
+  push var2
+  call test_4_param
+  add SP, #4
+  move [SP+0], A
+;  56:   output(29, res);
+  out #29, [SP+0]
+;  57:   //                 1 + 5        + 8 + 12
+;  58:   c = test_4_param(1, get_five(), c, var2);
+  push #1
+  call get_five
+  push A
+  push [SP+3]
+  push var2
+  call test_4_param
+  add SP, #4
+  move [SP+1], A
+;  59:   output(26, c);
+  out #26, [SP+1]
+;  61:   // 2 * 5 + (4 - 2) * 4 / 4 = 10 + 8 / 4 = 10 + 2 = 12
+;  62:   res = test_expr(2, 4, 4, 4);
+  push #2
+  push #4
+  push #4
+  push #4
+  call test_expr
+  add SP, #4
+  move [SP+0], A
+;  63:   output(12, res);
+  out #12, [SP+0]
+;  65:   // d < (2 + 4) => 15: 15 + (4 - 2) * 4 / 4 = 15 + 2 = 17
+;  66:   res = test_expr2(2, 4, 4, 4);
+  push #2
+  push #4
+  push #4
+  push #4
+  call test_expr2
+  add SP, #4
+  move [SP+0], A
+;  67:   output(17, res);
+  out #17, [SP+0]
+  add SP, #2
+  ret
+;  68: }
+  .data
+var1: 0
+var2: 0
+var3: 0
 #### Code ####
  file   0 0000: test01.c
  code   0 0000: 1600 005C
@@ -203,6 +423,99 @@ brnch  17 0027: "@lbl2"
  endf  70 00F6: "test01.c"
 
  #### Compile 'main': test02.c ####
+;##### test02.c #####
+newfile test02.c
+  .code
+  global a
+  global b
+  global c
+  global d
+  global foo
+  global main
+  call main
+  halt
+@init:
+;   1: var a = 2;
+  move a, #2
+;   2: var b = 3;
+  move b, #3
+;   3: var c = 4;
+  move c, #4
+;   4: var d = 5;
+  move d, #5
+  ret
+;   6: func foo(a) {
+foo:
+;   7:   return a;
+  move A, [SP+1]
+  ret
+;   8: }
+;  10: func main() {
+main:
+;  11:   d = (a * b) + (c * d);
+  move A, a
+  mul A, b
+  move B, c
+  mul B, d
+  add A, B
+  move d, A
+;  12:   d = foo(a * b) + (c * d);
+  move A, a
+  mul A, b
+  push A
+  call foo
+  add SP, #1
+  move B, c
+  mul B, d
+  add A, B
+  move d, A
+;  13:   d = (a * b) + foo(c * d);
+  move A, a
+  mul A, b
+  push A
+  move A, c
+  mul A, d
+  push A
+  call foo
+  add SP, #1
+  move B, A
+  pop  A
+  add A, B
+  move d, A
+;  14:   d = 3 + (a * b) + foo(c * d);
+  move A, a
+  mul A, b
+  push A
+  move A, c
+  mul A, d
+  push A
+  call foo
+  add SP, #1
+  move B, A
+  pop  A
+  add A, B
+  move C, #3
+  add C, A
+  move d, C
+;  15:   d = 4 + foo(a * b) + (c * d);
+  move A, a
+  mul A, b
+  push A
+  call foo
+  add SP, #1
+  move B, c
+  mul B, d
+  add A, B
+  move C, #4
+  add C, A
+  move d, C
+  ret
+;  16: }
+  .data
+a: 0
+b: 0
+c: 0
+d: 0
 #### Code ####
  file   0 0000: test02.c
  code   0 0000: 1600 000F
@@ -290,6 +603,114 @@ brnch  17 0027: "@lbl2"
  endf  18 004E: "test02.c"
 
  #### Compile 'main': test03.c ####
+;##### test03.c #####
+newfile test03.c
+  .code
+  global var1
+  global Drehzahl
+  global get_char
+  global foo
+  global main
+  call main
+  halt
+@init:
+;   1: var var1 = 0;
+  move var1, #0
+  ret
+;   2: var Drehzahl;
+;   4: func get_char(c) {
+get_char:
+;   5:   var1 = c;
+  move var1, [SP+1]
+;   6:   if(c > 20) {
+  move A, [SP+1]
+  skgt A, #20
+  jump @lbl2
+@lbl1:
+;   7:     return 1;
+  move A, #1
+  ret
+;   8:   } else {
+  jump @lbl3
+@lbl2:
+;   9:     return 65 + c;
+  move A, #65
+  add A, [SP+1]
+  move A, A
+  ret
+@lbl3:
+;  10:   }
+;  11:   var1 = var1 + 1;
+  move A, var1
+  add A, #1
+  move var1, A
+  ret
+;  12: }
+;  14: func foo() {
+foo:
+;  15:   var a = -1;
+  move A, #1
+  not A
+  add A, #1
+  push A
+;  16:   var b = 2;
+  push #2
+;  18:   if(a == ~0xffff){
+  move A, #65535
+  not A
+  move B, [SP+1]
+  skeq B, A
+  jump @lbl5
+@lbl4:
+;  19:     output(0, 0x41);
+  out #0, #65
+;  20:   } else {
+  jump @lbl6
+@lbl5:
+;  21:     output(0, 0x42);
+  out #0, #66
+@lbl6:
+;  22:   }
+  add SP, #2
+  ret
+;  23: }
+;  25: func main() {
+main:
+;  26:   var i = 1;
+  push #1
+;  27:   var c;
+  push #0
+;  29:   sleep(5);
+  move A, #5
+  nop
+  dbnz A, -1
+;  30:   foo();
+  call foo
+;  31:   while(i < 32) {
+@lbl7:
+  move A, [SP+1]
+  sklt A, #32
+  jump @lbl8
+;  32:     c = get_char(i);
+  push [SP+1]
+  call get_char
+  add SP, #1
+  move [SP+0], A
+;  33:     output(0, c);
+  out #0, [SP+0]
+;  34:     i = i + 1;
+  move A, [SP+1]
+  add A, #1
+  move [SP+1], A
+  jump @lbl7
+@lbl8:
+;  35:   }
+  add SP, #2
+  ret
+;  36: }
+  .data
+var1: 0
+Drehzahl: 0
 #### Code ####
  file   0 0000: test03.c
  code   0 0000: 1600 0036
@@ -376,6 +797,49 @@ brnch  34 003F: "@lbl7"
  endf  38 005A: "test03.c"
 
  #### Compile 'main': test04.c ####
+;##### test04.c #####
+newfile test04.c
+  .code
+  global main
+  call main
+  halt
+@init:
+  ret
+;   1: const MAX = 32;
+;   3: func main() {
+main:
+;   4:   var i = 1;
+  push #1
+;   5:   var ptr = 0x100;
+  push #256
+;   7:   output(1, i);
+  out #1, [SP+1]
+;   8:   while(i < MAX) {
+@lbl1:
+  move A, [SP+1]
+  sklt A, #32
+  jump @lbl2
+;   9:     i = i + 1;
+  move A, [SP+1]
+  add A, #1
+  move [SP+1], A
+;  10:     i = *ptr;
+  move X, [SP+0]
+  move [SP+1], [X]
+;  12:     _asm_ {
+;  13:       move A, #3
+  move A, #3
+;  14:       xor $100, [X]++
+  xor $100, [X]++
+;  15:       jump 0
+  jump 0
+  jump @lbl1
+@lbl2:
+;  16:     }
+;  17:   }
+  add SP, #2
+  ret
+;  18: }
 #### Code ####
  file   0 0000: test04.c
  code   0 0000: 1600 0004
@@ -409,6 +873,208 @@ brnch  15 0009: "@lbl1"
  endf  19 0023: "test04.c"
 
  #### Compile 'main': test05.c ####
+;##### test05.c #####
+newfile test05.c
+  .code
+  global arr1
+  global arr2
+  global out
+  global str
+  global memcpy
+  global putval
+  global putstr
+  global main
+  call main
+  halt
+@init:
+;   1: var arr1[4];
+;   2: var arr2[4] = {1, 2, 3, 4};
+;   3: var out[6];
+;   4: var str = "Hello Joe!";
+  move str, #@s1
+  ret
+;   6: func memcpy(dst, src, num) {
+memcpy:
+;   7:   while(num > 0) {
+@lbl1:
+  move A, [SP+1]
+  skgt A, #0
+  jump @lbl2
+;   8:     *dst = *src;
+  move X, [SP+3]
+  move Y, [SP+2]
+  move [X], [Y]
+;   9:     dst++;
+  inc [SP+3]
+;  10:     src++;
+  inc [SP+2]
+;  11:     num--;
+  dec [SP+1]
+  jump @lbl1
+@lbl2:
+;  12:   }
+  ret
+;  13: }
+;  15: func putval(val) {
+putval:
+;  16:   var c;
+  push #0
+;  17:   var r = val;
+  push [SP+2]
+;  18:   var i = 0;
+  push #0
+;  20:   if(val == 0) {
+  move A, [SP+4]
+  skeq A, #0
+  jump @lbl4
+@lbl3:
+;  21:     output(0, 0x30);
+  out #0, #48
+;  22:     return;
+  move A, #0
+  add SP, #3
+  ret
+;  23:   }
+@lbl4:
+;  25:   while(r > 0) {
+@lbl5:
+  move A, [SP+1]
+  skgt A, #0
+  jump @lbl6
+;  26:     c = r % 10;
+  move A, [SP+1]
+  mod A, #10
+  move [SP+2], A
+;  27:     r = r / 10;
+  move A, [SP+1]
+  div A, #10
+  move [SP+1], A
+;  28:     out[i] = c + 0x30;
+  move A, #out
+  add A, [SP+0]
+  move X, A
+  move B, [SP+2]
+  add B, #48
+  move [X], B
+;  29:     i++;
+  inc [SP+0]
+  jump @lbl5
+@lbl6:
+;  30:   }
+;  31:   for(; i > 0; i--) {
+@lbl7:
+  move A, [SP+0]
+  skgt A, #0
+  jump @lbl8
+;  32:     output(0, out[i-1]);
+  move A, [SP+0]
+  sub A, #1
+  move B, #out
+  add B, A
+  move X, B
+  out #0, [X]
+@lbl9:
+  dec [SP+0]
+  jump @lbl7
+@lbl8:
+;  33:   }
+  add SP, #3
+  ret
+;  34: }
+;  36: func putstr(s) {
+putstr:
+;  37:   var i;
+  push #0
+;  39:   while(s[i] != 0) {
+@lbl10:
+  move A, [SP+2]
+  add A, [SP+0]
+  move X, A
+  move B, [X]
+  skne B, #0
+  jump @lbl11
+;  40:     output(0, s[i]);
+  move A, [SP+2]
+  add A, [SP+0]
+  move X, A
+  out #0, [X]
+;  41:     i++;
+  inc [SP+0]
+  jump @lbl10
+@lbl11:
+;  42:   }
+  add SP, #1
+  ret
+;  43: }
+;  45: func main() {
+main:
+;  46:   var i;
+  push #0
+;  47:   var c = i + 1;
+  move A, [SP+0]
+  add A, #1
+  push A
+;  48:   var p1 = arr1;
+  push #arr1
+;  49:   var p2 = str;
+  push str
+;  51:   memcpy(arr1, arr2, 4);
+  push #arr1
+  push #arr2
+  push #4
+  call memcpy
+  add SP, #3
+;  53:   for(i = 0; i < 4; i++) {
+  move [SP+3], #0
+@lbl12:
+  move A, [SP+3]
+  sklt A, #4
+  jump @lbl13
+;  54:     putval(arr1[i]);
+  move A, #arr1
+  add A, [SP+3]
+  move X, A
+  push [X]
+  call putval
+  add SP, #1
+@lbl14:
+  inc [SP+3]
+  jump @lbl12
+@lbl13:
+;  55:   }
+;  56:   output(0, '  ');
+  out #0, #8224
+;  57:   putval(0x55AA);
+  push #21930
+  call putval
+  add SP, #1
+;  58:   output(0, '  ');
+  out #0, #8224
+;  59:   putstr(str);
+  push str
+  call putstr
+  add SP, #1
+;  60:   output(0, '  ');
+  out #0, #8224
+;  61:   putstr(p2);
+  push [SP+0]
+  call putstr
+  add SP, #1
+;  62:   putstr("Hello world!");
+  push #@s2
+  call putstr
+  add SP, #1
+  add SP, #4
+  ret
+;  63: }
+  .data
+arr1: 0,0,0,0
+arr2: 1,2,3,4
+out: 0,0,0,0,0,0
+str: 0
+  .ctext
+  @s1: "Hello Joe!\0"
+  @s2: "Hello world!\0"
 #### Code ####
  file   0 0000: test05.c
  code   0 0000: 1600 0072
@@ -575,6 +1241,241 @@ brnch  54 0087: "@lbl12"
  endf  64 00D3: "test05.c"
 
  #### Compile 'main': test06.c ####
+;##### test06.c #####
+newfile test06.c
+  .code
+  global arr@6
+  global main
+  call main
+  halt
+@init:
+  ret
+;##### string.asm #####
+newfile string.asm
+;   1: ;===================================
+;   2: ; [20] string v1.0
+;   3: ; - strcpy(dst, src)
+;   4: ; - strlen(s)
+;   5: ;===================================
+;   7: global strcpy
+  .code
+  global strcpy
+;   8: global strlen
+  global strlen
+;  10:   .code
+;  12: ;===================================
+;  13: ; [01] strcpy(dst, src)
+;  14: ; dst: [SP+2]
+;  15: ; src: [SP+1]
+;  16: ;===================================
+;  17: strcpy:
+strcpy:
+;  18:   move X, [SP+2]
+  move X, [SP+2]
+;  19:   move Y, [SP+1]
+  move Y, [SP+1]
+;  20:   move A, X
+  move A, X
+;  22: loop01:
+loop01:
+;  23:   move [X]+, [Y]
+  move [X]+, [Y]
+;  24:   bnze [Y]+, loop01
+  bnze [Y]+, loop01
+;  26:   ret
+  ret
+;  28: ;===================================
+;  29: ; [02] strlen(str)
+;  30: ; str: [SP+1]
+;  31: ;===================================
+;  32: strlen:
+strlen:
+;  33:   move X, [SP+1]
+  move X, [SP+1]
+;  34:   move A, #0
+  move A, #0
+;  36: loop02:
+loop02:
+;  37:   move B, [X]+
+  move B, [X]+
+;  38:   inc  A
+  inc  A
+;  39:   bnze [X], loop02
+  bnze [X], loop02
+;  41:   ret
+  ret
+;##### stdio.asm #####
+newfile stdio.asm
+;   1: ;===================================
+;   2: ; Standard I/O v1.0
+;   3: ; - putchar(c)
+;   4: ; - putstr(s)
+;   5: ; - putnum(val)  -- decimal output
+;   6: ; - puthex(val)  -- hexadecimal output
+;   7: ;===================================
+;   9: global putchar
+  .code
+  global putchar
+;  10: global putstr
+  global putstr
+;  11: global putnum
+  global putnum
+;  12: global puthex
+  global puthex
+;  14:   .code
+;  16: ;===================================
+;  17: ; [01] putchar(c)
+;  18: ; c: [SP+1]
+;  19: ;===================================
+;  20: putchar:
+putchar:
+;  21:   move A, [SP+1]
+  move A, [SP+1]
+;  22:   out  #0, A
+  out  #0, A
+;  23:   ret
+  ret
+;  25: ;===================================
+;  26: ; [02] putstr(s)
+;  27: ; s: [SP+1]
+;  28: ;===================================
+;  29: putstr:
+putstr:
+;  30:   move X, [SP+1]
+  move X, [SP+1]
+;  31:   move A, #80  ; max string size
+  move A, #80  ; max string size
+;  33: loop02:
+loop02:
+;  34:   move B, [X]
+  move B, [X]
+;  35:   bze  B, exit02
+  bze  B, exit02
+;  36:   dec  A
+  dec  A
+;  37:   bze  A, exit02
+  bze  A, exit02
+;  39:   out #0, B
+  out #0, B
+;  40:   inc X
+  inc X
+;  41:   jump loop02
+  jump loop02
+;  43: exit02:
+exit02:
+;  44:   ret
+  ret
+;  46: ;===================================
+;  47: ; [03] putnum(val)
+;  48: ; val: [SP+1]
+;  49: ;===================================
+;  50: putnum:
+putnum:
+;  51:   move A, [SP+1]
+  move A, [SP+1]
+;  52:   push #0        ; end-of-string
+  push #0        ; end-of-string
+;  54: loop03:
+loop03:
+;  55:   move B, A
+  move B, A
+;  56:   div  B, #10    ; rest in B
+  div  B, #10    ; rest in B
+;  57:   move C, A
+  move C, A
+;  58:   mod  C, #10    ; digit in C
+  mod  C, #10    ; digit in C
+;  59:   add  C, #48
+  add  C, #48
+;  60:   push C         ; store on stack
+  push C         ; store on stack
+;  61:   move A, B
+  move A, B
+;  62:   bnze A, loop03 ; next digit
+  bnze A, loop03 ; next digit
+;  64: output03:
+output03:
+;  65:   pop  B
+  pop  B
+;  66:   bze  B, exit03
+  bze  B, exit03
+;  67:   out  #0, B
+  out  #0, B
+;  68:   jump output03
+  jump output03
+;  70: exit03:
+exit03:
+;  71:   ret
+  ret
+;  73: ;===================================
+;  74: ; [04] puthex(val)
+;  75: ; val: [SP+1]
+;  76: ;===================================
+;  77: puthex:
+puthex:
+;  78:   move A, [SP+1]
+  move A, [SP+1]
+;  79:   push #0        ; end-of-string
+  push #0        ; end-of-string
+;  80:   move C, #4     ; num digits
+  move C, #4     ; num digits
+;  82: loop04:
+loop04:
+;  83:   move B, A
+  move B, A
+;  84:   div  B, #$10   ; rest in B
+  div  B, #$10   ; rest in B
+;  85:   mod  A, #$10   ; digit in C
+  mod  A, #$10   ; digit in C
+;  86:   sklt A, #10    ; C < 10 => jmp +2
+  sklt A, #10    ; C < 10 => jmp +2
+;  87:   add  A, #7     ; A-F offset
+  add  A, #7     ; A-F offset
+;  88:   add  A, #48    ; 0-9 offset
+  add  A, #48    ; 0-9 offset
+;  89:   push A         ; store on stack
+  push A         ; store on stack
+;  90:   move A, B
+  move A, B
+;  91:   dbnz C, loop04 ; next digit
+  dbnz C, loop04 ; next digit
+;  93: output04:
+output04:
+;  94:   pop  B
+  pop  B
+;  95:   bze  B, exit04
+  bze  B, exit04
+;  96:   out  #0, B
+  out  #0, B
+;  97:   jump output04
+  jump output04
+;  99: exit04:
+exit04:
+; 100:   ret
+  ret
+;##### test06.c #####
+newfile test06.c
+;   1: import "string.asm"
+;   2: import "stdio.asm"
+;   4: static var arr[10];
+;   6: func main() {
+  .code
+main:
+;   7:   strcpy(arr, "Hello world!");
+  push #arr@6
+  push #@s1
+  call strcpy
+  add SP, #2
+;   8:   putstr(arr);
+  push #arr@6
+  call putstr
+  add SP, #1
+  ret
+;   9: }
+  .data
+arr@6: 0,0,0,0,0,0,0,0,0,0
+  .ctext
+  @s1: "Hello world!\0"
 #### Code ####
  file   0 0000: test06.c
  code   0 0000: 1600 0059
@@ -671,6 +1572,63 @@ brnch  54 0087: "@lbl12"
  endf  10 0078: "test06.c"
 
  #### Compile 'main': test07.c ####
+;##### test07.c #####
+newfile test07.c
+  .code
+  global val1
+  global ptr1
+  global arr@2
+  global main
+  call main
+  halt
+@init:
+;   1: var val1 = 1;
+  move val1, #1
+  ret
+;   2: var ptr1;
+;   3: static var arr[2];
+;   5: static func test() {
+test:
+;   6:   output(0, '12');
+  out #0, #12594
+  ret
+;   7: }
+;   9: func main() {
+main:
+;  10:   var ptr2 = test;
+  push #test
+;  11:   ptr1 = test;
+  move ptr1, #test
+;  12:   arr[1] = test;
+  move A, #arr@2
+  add A, #1
+  move X, A
+  move [X], #test
+;  14:   test();
+  call test
+;  15:   ptr1();
+  move A, ptr1
+  call A
+;  16:   ptr2();
+  move A, [SP+0]
+  call A
+;  17:   ptr1 = arr[2];
+  move A, #arr@2
+  add A, #2
+  move X, A
+  move ptr1, [X]
+;  18:   ptr1();
+  move A, ptr1
+  call A
+;  19:   output(0, '34');
+  out #0, #13108
+  add SP, #1
+  ret
+;  20: }
+  .data
+val1: 0
+ptr1: 0
+arr@2: 0,0
 #### Code ####
  file   0 0000: test07.c
  code   0 0000: 1600 0009
@@ -719,6 +1677,255 @@ brnch  54 0087: "@lbl12"
  endf  21 002E: "test07.c"
 
  #### Compile 'main': test08.c ####
+;##### test08.c #####
+newfile test08.c
+  .code
+  global main
+  call main
+  halt
+@init:
+  ret
+;##### stdio.asm #####
+newfile stdio.asm
+;   1: ;===================================
+;   2: ; Standard I/O v1.0
+;   3: ; - putchar(c)
+;   4: ; - putstr(s)
+;   5: ; - putnum(val)  -- decimal output
+;   6: ; - puthex(val)  -- hexadecimal output
+;   7: ;===================================
+;   9: global putchar
+  .code
+  global putchar
+;  10: global putstr
+  global putstr
+;  11: global putnum
+  global putnum
+;  12: global puthex
+  global puthex
+;  14:   .code
+;  16: ;===================================
+;  17: ; [01] putchar(c)
+;  18: ; c: [SP+1]
+;  19: ;===================================
+;  20: putchar:
+putchar:
+;  21:   move A, [SP+1]
+  move A, [SP+1]
+;  22:   out  #0, A
+  out  #0, A
+;  23:   ret
+  ret
+;  25: ;===================================
+;  26: ; [02] putstr(s)
+;  27: ; s: [SP+1]
+;  28: ;===================================
+;  29: putstr:
+putstr:
+;  30:   move X, [SP+1]
+  move X, [SP+1]
+;  31:   move A, #80  ; max string size
+  move A, #80  ; max string size
+;  33: loop02:
+loop02:
+;  34:   move B, [X]
+  move B, [X]
+;  35:   bze  B, exit02
+  bze  B, exit02
+;  36:   dec  A
+  dec  A
+;  37:   bze  A, exit02
+  bze  A, exit02
+;  39:   out #0, B
+  out #0, B
+;  40:   inc X
+  inc X
+;  41:   jump loop02
+  jump loop02
+;  43: exit02:
+exit02:
+;  44:   ret
+  ret
+;  46: ;===================================
+;  47: ; [03] putnum(val)
+;  48: ; val: [SP+1]
+;  49: ;===================================
+;  50: putnum:
+putnum:
+;  51:   move A, [SP+1]
+  move A, [SP+1]
+;  52:   push #0        ; end-of-string
+  push #0        ; end-of-string
+;  54: loop03:
+loop03:
+;  55:   move B, A
+  move B, A
+;  56:   div  B, #10    ; rest in B
+  div  B, #10    ; rest in B
+;  57:   move C, A
+  move C, A
+;  58:   mod  C, #10    ; digit in C
+  mod  C, #10    ; digit in C
+;  59:   add  C, #48
+  add  C, #48
+;  60:   push C         ; store on stack
+  push C         ; store on stack
+;  61:   move A, B
+  move A, B
+;  62:   bnze A, loop03 ; next digit
+  bnze A, loop03 ; next digit
+;  64: output03:
+output03:
+;  65:   pop  B
+  pop  B
+;  66:   bze  B, exit03
+  bze  B, exit03
+;  67:   out  #0, B
+  out  #0, B
+;  68:   jump output03
+  jump output03
+;  70: exit03:
+exit03:
+;  71:   ret
+  ret
+;  73: ;===================================
+;  74: ; [04] puthex(val)
+;  75: ; val: [SP+1]
+;  76: ;===================================
+;  77: puthex:
+puthex:
+;  78:   move A, [SP+1]
+  move A, [SP+1]
+;  79:   push #0        ; end-of-string
+  push #0        ; end-of-string
+;  80:   move C, #4     ; num digits
+  move C, #4     ; num digits
+;  82: loop04:
+loop04:
+;  83:   move B, A
+  move B, A
+;  84:   div  B, #$10   ; rest in B
+  div  B, #$10   ; rest in B
+;  85:   mod  A, #$10   ; digit in C
+  mod  A, #$10   ; digit in C
+;  86:   sklt A, #10    ; C < 10 => jmp +2
+  sklt A, #10    ; C < 10 => jmp +2
+;  87:   add  A, #7     ; A-F offset
+  add  A, #7     ; A-F offset
+;  88:   add  A, #48    ; 0-9 offset
+  add  A, #48    ; 0-9 offset
+;  89:   push A         ; store on stack
+  push A         ; store on stack
+;  90:   move A, B
+  move A, B
+;  91:   dbnz C, loop04 ; next digit
+  dbnz C, loop04 ; next digit
+;  93: output04:
+output04:
+;  94:   pop  B
+  pop  B
+;  95:   bze  B, exit04
+  bze  B, exit04
+;  96:   out  #0, B
+  out  #0, B
+;  97:   jump output04
+  jump output04
+;  99: exit04:
+exit04:
+; 100:   ret
+  ret
+;##### test08.c #####
+newfile test08.c
+;   1: import "stdio.asm"
+;   3: func main() {
+  .code
+main:
+;   4:   var a = 1;
+  push #1
+;   5:   var b = 2;
+  push #2
+;   7:   if((a == 0) or (b == 2)) {
+  move A, [SP+1]
+  skeq A, #0
+  jump +4
+  jump @lbl1
+  move B, [SP+0]
+  skeq B, #2
+  jump @lbl2
+@lbl1:
+;   8:     putstr("ok");
+  push #@s1
+  call putstr
+  add SP, #1
+;   9:   } else {
+  jump @lbl3
+@lbl2:
+;  10:     putstr("error");
+  push #@s2
+  call putstr
+  add SP, #1
+@lbl3:
+;  11:   }
+;  13:   if((a == 1) and (b == 2)) {
+  move A, [SP+1]
+  skeq A, #1
+  jump @lbl5
+  move B, [SP+0]
+  skeq B, #2
+  jump @lbl5
+@lbl4:
+;  14:     putstr("ok");
+  push #@s3
+  call putstr
+  add SP, #1
+;  15:   } else {
+  jump @lbl6
+@lbl5:
+;  16:     putstr("error");
+  push #@s4
+  call putstr
+  add SP, #1
+@lbl6:
+;  17:   }
+;  19:   if((a == 0) || (b == 2)) {
+  move A, [SP+1]
+  skeq A, #0
+  jump +4
+  jump @lbl7
+  move B, [SP+0]
+  skeq B, #2
+  jump @lbl8
+@lbl7:
+;  20:     putstr("ok");
+  push #@s5
+  call putstr
+  add SP, #1
+;  21:   }
+@lbl8:
+;  23:   if((a == 1) && (b == 2)) {
+  move A, [SP+1]
+  skeq A, #1
+  jump @lbl10
+  move B, [SP+0]
+  skeq B, #2
+  jump @lbl10
+@lbl9:
+;  24:     putstr("ok");
+  push #@s6
+  call putstr
+  add SP, #1
+;  25:   }
+@lbl10:
+  add SP, #2
+  ret
+  .ctext
+  @s1: "ok\0"
+  @s2: "error\0"
+  @s3: "ok\0"
+  @s4: "error\0"
+  @s5: "ok\0"
+  @s6: "ok\0"
+;  26: }
 #### Code ####
  file   0 0000: test08.c
  code   0 0000: 1600 0048
@@ -861,6 +2068,105 @@ brnch  23 009D: "@lbl10"
  endf  27 00B0: "test08.c"
 
  #### Compile 'loop': test09.c ####
+;##### test09.c #####
+newfile test09.c
+  .code
+  global buff@3
+  global send_msg
+  global idx@4
+  global init
+  global loop
+  jump 8
+  .org 8
+  call @init
+  call init
+@loop:
+  call loop
+  nop
+  jump @loop
+@init:
+;   1: import "comm.c"
+;   2: static var idx = 0;
+  move idx@4, #0
+  ret
+;##### comm.c #####
+newfile comm.c
+;   1: const SEND_MSG = 2;
+;   2: static var buff[3];
+;   4: static func test(a) {
+  .code
+test:
+;   5:   return;
+  move A, #0
+  ret
+;   6: }
+;   8: func send_msg(port, topic, size, ptr) {
+send_msg:
+;   9:   buff[0] = topic;
+  move A, #buff@3
+  add A, #0
+  move X, A
+  move [X], [SP+3]
+;  10:   buff[1] = size;
+  move A, #buff@3
+  add A, #1
+  move X, A
+  move [X], [SP+2]
+;  11:   buff[2] = ptr;
+  move A, #buff@3
+  add A, #2
+  move X, A
+  move [X], [SP+1]
+;  12:   system(SEND_MSG, port, buff);
+  move A, [SP+4]
+  move B, #buff@3
+  sys #2
+;  13:   test(2);
+  push #2
+  call test
+  add SP, #1
+  ret
+;##### test09.c #####
+newfile test09.c
+;   1: import "comm.c"
+;   2: static var idx = 0;
+;   5: func init() {
+  .code
+init:
+;   6:   system(0, 'In');
+  move A, #18798
+  sys #0
+;   7:   system(0, 'it');
+  move A, #26996
+  sys #0
+  ret
+;   8: }
+;  10: func loop() {
+loop:
+;  11:   if(input(1) == 1) {
+  in A, #1
+  skeq A, #1
+  jump @lbl2
+@lbl1:
+;  12:     output(1, idx);
+  out #1, idx@4
+;  13:     idx = (idx + 1) % 64;
+  move A, idx@4
+  add A, #1
+  mod A, #64
+  move idx@4, A
+;  14:   } else {
+  jump @lbl3
+@lbl2:
+;  15:     output(1, 0);
+  out #1, #0
+@lbl3:
+;  16:   }
+  ret
+;  17: }
+  .data
+buff@3: 0,0,0
+idx@4: 0
 #### Code ####
  file   0 0000: test09.c
  code   0 0000: 1200 0008
@@ -939,6 +2245,274 @@ brnch  14 004B: "@lbl3"
  endf  18 0050: "test09.c"
 
  #### Compile 'main': test10.c ####
+;##### test10.c #####
+newfile test10.c
+  .code
+  global test1
+  global test2
+  global main
+  call main
+  halt
+@init:
+  ret
+;##### stdio.asm #####
+newfile stdio.asm
+;   1: ;===================================
+;   2: ; Standard I/O v1.0
+;   3: ; - putchar(c)
+;   4: ; - putstr(s)
+;   5: ; - putnum(val)  -- decimal output
+;   6: ; - puthex(val)  -- hexadecimal output
+;   7: ;===================================
+;   9: global putchar
+  .code
+  global putchar
+;  10: global putstr
+  global putstr
+;  11: global putnum
+  global putnum
+;  12: global puthex
+  global puthex
+;  14:   .code
+;  16: ;===================================
+;  17: ; [01] putchar(c)
+;  18: ; c: [SP+1]
+;  19: ;===================================
+;  20: putchar:
+putchar:
+;  21:   move A, [SP+1]
+  move A, [SP+1]
+;  22:   out  #0, A
+  out  #0, A
+;  23:   ret
+  ret
+;  25: ;===================================
+;  26: ; [02] putstr(s)
+;  27: ; s: [SP+1]
+;  28: ;===================================
+;  29: putstr:
+putstr:
+;  30:   move X, [SP+1]
+  move X, [SP+1]
+;  31:   move A, #80  ; max string size
+  move A, #80  ; max string size
+;  33: loop02:
+loop02:
+;  34:   move B, [X]
+  move B, [X]
+;  35:   bze  B, exit02
+  bze  B, exit02
+;  36:   dec  A
+  dec  A
+;  37:   bze  A, exit02
+  bze  A, exit02
+;  39:   out #0, B
+  out #0, B
+;  40:   inc X
+  inc X
+;  41:   jump loop02
+  jump loop02
+;  43: exit02:
+exit02:
+;  44:   ret
+  ret
+;  46: ;===================================
+;  47: ; [03] putnum(val)
+;  48: ; val: [SP+1]
+;  49: ;===================================
+;  50: putnum:
+putnum:
+;  51:   move A, [SP+1]
+  move A, [SP+1]
+;  52:   push #0        ; end-of-string
+  push #0        ; end-of-string
+;  54: loop03:
+loop03:
+;  55:   move B, A
+  move B, A
+;  56:   div  B, #10    ; rest in B
+  div  B, #10    ; rest in B
+;  57:   move C, A
+  move C, A
+;  58:   mod  C, #10    ; digit in C
+  mod  C, #10    ; digit in C
+;  59:   add  C, #48
+  add  C, #48
+;  60:   push C         ; store on stack
+  push C         ; store on stack
+;  61:   move A, B
+  move A, B
+;  62:   bnze A, loop03 ; next digit
+  bnze A, loop03 ; next digit
+;  64: output03:
+output03:
+;  65:   pop  B
+  pop  B
+;  66:   bze  B, exit03
+  bze  B, exit03
+;  67:   out  #0, B
+  out  #0, B
+;  68:   jump output03
+  jump output03
+;  70: exit03:
+exit03:
+;  71:   ret
+  ret
+;  73: ;===================================
+;  74: ; [04] puthex(val)
+;  75: ; val: [SP+1]
+;  76: ;===================================
+;  77: puthex:
+puthex:
+;  78:   move A, [SP+1]
+  move A, [SP+1]
+;  79:   push #0        ; end-of-string
+  push #0        ; end-of-string
+;  80:   move C, #4     ; num digits
+  move C, #4     ; num digits
+;  82: loop04:
+loop04:
+;  83:   move B, A
+  move B, A
+;  84:   div  B, #$10   ; rest in B
+  div  B, #$10   ; rest in B
+;  85:   mod  A, #$10   ; digit in C
+  mod  A, #$10   ; digit in C
+;  86:   sklt A, #10    ; C < 10 => jmp +2
+  sklt A, #10    ; C < 10 => jmp +2
+;  87:   add  A, #7     ; A-F offset
+  add  A, #7     ; A-F offset
+;  88:   add  A, #48    ; 0-9 offset
+  add  A, #48    ; 0-9 offset
+;  89:   push A         ; store on stack
+  push A         ; store on stack
+;  90:   move A, B
+  move A, B
+;  91:   dbnz C, loop04 ; next digit
+  dbnz C, loop04 ; next digit
+;  93: output04:
+output04:
+;  94:   pop  B
+  pop  B
+;  95:   bze  B, exit04
+  bze  B, exit04
+;  96:   out  #0, B
+  out  #0, B
+;  97:   jump output04
+  jump output04
+;  99: exit04:
+exit04:
+; 100:   ret
+  ret
+;##### test10.c #####
+newfile test10.c
+;   1: import "stdio.asm"
+;   3: func test1() {
+  .code
+test1:
+;   4:   var i = 0;
+  push #0
+;   5:   var j = 0;
+  push #0
+;   7:   for(j = 0; j < 5; j++) {
+  move [SP+0], #0
+@lbl1:
+  move A, [SP+0]
+  sklt A, #5
+  jump @lbl2
+;   8:     for(i = 0; i < 5; i++) {
+  move [SP+1], #0
+@lbl4:
+  move A, [SP+1]
+  sklt A, #5
+  jump @lbl5
+;   9:       putnum(i);
+  push [SP+1]
+  call putnum
+  add SP, #1
+;  10:       if(i < 2) {
+  move A, [SP+1]
+  sklt A, #2
+  jump @lbl8
+@lbl7:
+;  11:         continue;
+  jump @lbl6
+;  12:       }
+@lbl8:
+;  13:       putstr("i >= 2");
+  push #@s1
+  call putstr
+  add SP, #1
+;  14:       if(i == 4) {
+  move A, [SP+1]
+  skeq A, #4
+  jump @lbl10
+@lbl9:
+;  15:         break;
+  jump @lbl5
+;  16:       }
+@lbl10:
+@lbl6:
+  inc [SP+1]
+  jump @lbl4
+@lbl5:
+;  17:     }
+@lbl3:
+  inc [SP+0]
+  jump @lbl1
+@lbl2:
+;  18:   }
+;  20:   i = 0;
+  move [SP+1], #0
+;  21:   while(1) {
+@lbl11:
+  move A, #1
+  skgt A, #00
+  jump @lbl12
+;  22:     if(i>3) {
+  move A, [SP+1]
+  skgt A, #3
+  jump @lbl14
+@lbl13:
+;  23:       break;
+  jump @lbl12
+;  24:     }
+@lbl14:
+;  25:     putnum(i);
+  push [SP+1]
+  call putnum
+  add SP, #1
+;  26:     i++;
+  inc [SP+1]
+  jump @lbl11
+@lbl12:
+;  27:   }
+  add SP, #2
+  ret
+;  28: }
+;  30: func test2() {
+test2:
+;  31:   putstr("Should not happen");
+  push #@s2
+  call putstr
+  add SP, #1
+  ret
+;  32: }
+;  34: func main() {
+main:
+;  35:   test1();
+  call test1
+;  37:   goto exit;
+  jump exit
+;  38:   test2();
+  call test2
+;  39:   exit:
+exit:
+  ret
+  .ctext
+  @s1: "i >= 2\0"
+  @s2: "Should not happen\0"
+;  40: }
 #### Code ####
  file   0 0000: test10.c
  code   0 0000: 1600 009D
@@ -1085,6 +2659,40 @@ brnch  37 00A3: "exit"
  endf  42 00B2: "test10.c"
 
  #### Compile 'main': test11.c ####
+;##### test11.c #####
+newfile test11.c
+  .code
+  global s0
+  global s1
+  global s2
+  global buff
+  global main
+  call main
+  halt
+@init:
+;   1: var s0 = "error";
+  move s0, #@s1
+;   2: var s1 = "\123\145";
+  move s1, #@s2
+;   3: var s2 = "\001\002\003";
+  move s2, #@s3
+  ret
+;   4: var buff[] = {0x1FF, 0777, 511};
+;   6: func main() {
+main:
+;   7:   output(0, 0);  
+  out #0, #0
+  ret
+;   8: }
+  .data
+s0: 0
+s1: 0
+s2: 0
+buff: 511,511,511
+  .ctext
+  @s1: "error\0"
+  @s2: "\123\145\0"
+  @s3: "\001\002\003\0"
 #### Code ####
  file   0 0000: test11.c
  code   0 0000: 1600 000D
@@ -1113,6 +2721,65 @@ brnch  37 00A3: "exit"
  endf   9 0025: "test11.c"
 
  #### Compile 'loop': test12.c ####
+;##### test12.c #####
+newfile test12.c
+  .code
+  global buff
+  global a
+  global init
+  global loop
+  jump 8
+  .org 8
+  call @init
+  call init
+@loop:
+  call loop
+  nop
+  jump @loop
+@init:
+  ret
+;   1: var buff[] = {65, 66, 67};
+;   2: var a;
+;   4: func init() {
+init:
+;   5:   var p = buff;
+  push #buff
+;   6:   var b;
+  push #0
+;   7:   var c;
+  push #0
+;   9:   system(0, *p);
+  move X, [SP+2]
+  move A, [X]
+  sys #0
+;  10:   system(0, p[1]);
+  move A, [SP+2]
+  add A, #1
+  move X, A
+  move A, [X]
+  sys #0
+;  11:   system(0, p[2]);
+  move A, [SP+2]
+  add A, #2
+  move X, A
+  move A, [X]
+  sys #0
+;  12:   system(0, &a);
+  move A, #a
+  sys #0
+;  13:   system(0, &b);
+  move A, SP
+  add A, #1
+  sys #0
+  add SP, #3
+  ret
+;  15: }
+;  17: func loop() {
+loop:
+;  18: }
+  .data
+buff: 65,66,67
+a: 0
 #### Code ####
  file   0 0000: test12.c
  code   0 0000: 1200 0008
@@ -1161,6 +2828,95 @@ brnch  37 00A3: "exit"
  endf  19 0034: "test12.c"
 
  #### Compile 'loop': test13.c ####
+;##### test13.c #####
+newfile test13.c
+  .code
+  global foo1
+  global foo2
+  global foo3
+  global init
+  global loop
+  jump 8
+  .org 8
+  call @init
+  call init
+@loop:
+  call loop
+  nop
+  jump @loop
+@init:
+  ret
+;   1: func foo1(a) {
+foo1:
+;   2:   return a[2];
+  move A, [SP+1]
+  add A, #2
+  move X, A
+  move A, [X]
+  ret
+;   3: }
+;   5: func foo2(a, b) {
+foo2:
+;   6:   return b[2];
+  move A, [SP+1]
+  add A, #2
+  move X, A
+  move A, [X]
+  ret
+;   7: }
+;   9: func foo3(a, b, c) {
+foo3:
+;  10:   return c[2];
+  move A, [SP+1]
+  add A, #2
+  move X, A
+  move A, [X]
+  ret
+;  11: }
+;  13: func init() {
+init:
+;  14:   var arr1[2];
+  sub SP, #2
+;  15:   var c;
+  push #0
+;  17:   arr1[0] = 1;
+  move A, SP+1
+  add A, #0
+  move X, A
+  move [X], #1
+;  18:   c = arr1;
+  move [SP+0], SP+1
+;  19:   c = *arr1;
+  move X, SP+1
+  move [SP+0], [X]
+;  20:   c = arr1[1];
+  move A, SP+1
+  add A, #1
+  move X, A
+  move [SP+0], [X]
+;  21:   foo1(arr1);
+  push SP+1
+  call foo1
+  add SP, #1
+;  22:   foo2(1, arr1);
+  push #1
+  push SP+2
+  call foo2
+  add SP, #2
+;  23:   foo3(1, 2, arr1);
+  push #1
+  push #2
+  push SP+3
+  call foo3
+  add SP, #3
+  add SP, #3
+  ret
+;  24: }
+;  26: func loop() {
+loop:
+;  27: }
+  .data
+arr1: 0
 #### Code ####
  file   0 0000: test13.c
  code   0 0000: 1200 0008
@@ -1242,54 +2998,110 @@ brnch  37 00A3: "exit"
  endf  28 0055: "test13.c"
 
  #### Compile 'loop': test14.c ####
+;##### test14.c #####
+newfile test14.c
+  .code
+  global route
+  global c
+  global init
+  global calc_height2
+  global move_lift
+  global loop
+  jump 8
+  .org 8
+  call @init
+  call init
+@loop:
+  call loop
+  nop
+  jump @loop
+@init:
+  ret
+;   1: var route[] = {0,0,0};
+;   2: var c;
+;   4: func init() {
+init:
+;   5:   c = 1;
+  move c, #1
+  ret
+;   6: }
+;   8: func calc_height2(dest_floor) {
+calc_height2:
+;   9:   return dest_floor;
+  move A, [SP+1]
+  ret
+;  10: }
+;  12: func move_lift(floor) {
+move_lift:
+;  13:   route[1] = calc_height2(floor);
+  move A, #route
+  add A, #1
+  move X, A
+  push A
+  push [SP+2]
+  call calc_height2
+  add SP, #1
+  move B, A
+  pop  A
+  move [X], B
+  ret
+;  14: }
+;  16: func loop() {
+loop:
+;  17:   move_lift(2);
+  push #2
+  call move_lift
+  add SP, #1
+  ret
+;  18: }
+  .data
+route: 0,0,0
+c: 0
 #### Code ####
  file   0 0000: test14.c
  code   0 0000: 1200 0008
  code   0 0008: 1600 0011
- code   0 000A: 1600 0014
- code   0 000C: 1600 0029
+ code   0 000A: 1600 0012
+ code   0 000C: 1600 0025
  code   0 000E: 0000
  code   0 000F: 1200 000C
- code   2 0011: 222C 0032
- code   0 0013: 1800
- code   5 0014: 1800
- code   9 0015: 2013 0001
- code   9 0017: 1800
- code  13 0018: 2010 002F
- code  13 001A: 300D
- code  13 001B: 2080
- code  13 001C: 6800
- code  13 001D: 6A60 0002
- code  13 001F: 1600 0015
- code  13 0021: 30ED
- code  13 0022: 2020
- code  13 0023: 6C00
- code  13 0024: 2101
- code  14 0025: 2233 0032 0001
- code  14 0028: 1800
- code  18 0029: 6A00 0002
- code  18 002B: 1600 0018
- code  18 002D: 30ED
- code  18 002E: 1800
- code   1 002F: 0000 0000 0000
- code   2 0032: 0000
- code   3 0033: 0004 0005
+ code   0 0011: 1800
+ code   5 0012: 204D
+ code   5 0013: 1800
+ code   9 0014: 2013 0001
+ code   9 0016: 1800
+ code  13 0017: 2010 002B
+ code  13 0019: 300D
+ code  13 001A: 2080
+ code  13 001B: 6800
+ code  13 001C: 6A60 0002
+ code  13 001E: 1600 0014
+ code  13 0020: 30ED
+ code  13 0021: 2020
+ code  13 0022: 6C00
+ code  13 0023: 2101
+ code  13 0024: 1800
+ code  17 0025: 6A00 0002
+ code  17 0027: 1600 0017
+ code  17 0029: 30ED
+ code  17 002A: 1800
+ code   1 002B: 0000 0000 0000
+ code   2 002E: 0000
 #### Debug ####
  file   0 0000: "test14.c"
- gvar   1 002F: "route[]"
- gvar   2 0032: "last_floor"
- gvar   3 0033: "heights[]"
- func   5 0014: "init"
+ gvar   1 002B: "route[]"
+ gvar   2 002E: "c"
+ func   4 0012: "init"
  svar   5    0: "@num_stack_var@"
- func   8 0015: "calc_height2"
+ func   8 0014: "calc_height2"
   ret   9 0000: "0"
  svar   9    1: "dest_floor"
  svar   9    0: "@num_stack_var@"
- func  12 0018: "move_lift"
- call  13 0015: "calc_height2"
- svar  14    1: "floor"
- svar  14    0: "@num_stack_var@"
- func  17 0029: "loop"
- call  18 0018: "move_lift"
- svar  18    0: "@num_stack_var@"
- endf  19 0035: "test14.c"
+ func  12 0017: "move_lift"
+ call  13 0014: "calc_height2"
+ svar  13    1: "floor"
+ svar  13    0: "@num_stack_var@"
+ func  16 0025: "loop"
+ call  17 0017: "move_lift"
+ svar  17    0: "@num_stack_var@"
+ endf  18 002F: "test14.c"
