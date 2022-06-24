@@ -91,7 +91,7 @@ end
 
 local function test_lookup(filename)
 	local pos = {x=0, y=0, z=0}
-	
+
 	local sts, res = vm16.compile(pos, filename, read_file)
 	if sts then
 		print("######################### LST ############################")
@@ -106,7 +106,7 @@ local function test_lookup(filename)
 		local lut = vm16.Lut:new()
 		lut:init(res)
 		for _,item in ipairs(lut.items) do
-			print(string.format("%-20s:  %04X/%04X", item.file .. ":" .. item.func, 
+			print(string.format("%-20s:  %04X/%04X", item.file .. ":" .. item.func,
 					item.addresses[1], item.addresses[2]))
 		end
 	else
@@ -149,7 +149,7 @@ local function compile(filename)
 		print(res)
 		return
 	end
-	
+
 	sts, res = vm16.compile(pos, filename, read_file, {startup_code = startup_code1, gen_parser_output = true})
 	if sts then
 		print("######################### Parser ############################")
@@ -158,7 +158,7 @@ local function compile(filename)
 		print(res)
 		return
 	end
-	
+
 	sts, res = vm16.compile(pos, filename, read_file, {startup_code = startup_code1, gen_token_list = true})
 	if sts then
 		print("######################### Tokenlist ############################")
@@ -176,7 +176,7 @@ local function compile(filename)
 		print(res)
 		return
 	end
-	
+
 	sts, res = vm16.compile(pos, filename, read_file, {startup_code = startup_code1})
 	if sts then
 		print("######################### BIN ############################")

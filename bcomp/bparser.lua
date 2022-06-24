@@ -204,7 +204,7 @@ function BPars:const_list(ident, size)
 	size = size - 1
 	while self:tk_peek().val == ',' do
 		self:tk_match(",")
-		
+
 		if self:tk_peek().val == '-' then
 			self:tk_match()
 			local tok = self:tk_match(T_NUMBER)
@@ -259,7 +259,7 @@ function BPars:lvar_def_list()
 	while val and val == "var" do
 		self:tk_match("var")
 		local ident = self:ident()
-		
+
 		if self:tk_peek().val == "[" then
 			self:tk_match("[")
 			local size = self:number()

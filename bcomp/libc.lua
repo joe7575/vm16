@@ -296,8 +296,8 @@ loop04:
   bnze [X], loop04
 
   move [SP+2], X
-  jump strcpy  
-  
+  jump strcpy
+
 ;===================================
 ; [05] strpack(str)
 ; str: [SP+1]
@@ -351,13 +351,15 @@ exit05:
 -------------------------------------------------------------------------------
 vm16.libc.math_asm = [[
 ;===================================
-; math v1.0
+; math v1.1
 ; - min(a, b)
 ; - max(a, b)
+; - abs(a)
 ;===================================
 
 global min
 global max
+global abs
 
   .code
 
@@ -388,6 +390,19 @@ max:
   ret
 
 else02:
+  move A, [SP+1]
+  ret
+
+;===================================
+; [03] abs(a)
+; a: [SP+1]
+;===================================
+abs:
+  bpos [SP+1], exit03
+  not  [SP+1]
+  inc  [SP+1]
+
+exit03:
   move A, [SP+1]
   ret
 

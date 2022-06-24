@@ -267,7 +267,7 @@ function BScan:move_code2()
 		while #self.lCode > self.marker_code do
 			table.remove(self.lCode, self.marker_code + 1)
 		end
-		
+
 		-- extract tokens
 		local n = self.tk_idx - self.marker_token
 		self.token_tbl = {}
