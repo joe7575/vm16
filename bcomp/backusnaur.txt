@@ -15,7 +15,7 @@ var_def:
     | array_def ';'
 
 const_def:
-    = ident '=' expression ';' def_list
+    = ident '=' number ';' def_list
 
 array_def:
     = '[' ']' '=' '{' const_list '}'
@@ -31,6 +31,7 @@ func_def:
 
 lvar_def_list:
     = 'var' ident [ '=' expression ] ';'  local_def_list
+    | 'var' ident '[' number ']' ';'
 
 stmnt_list:
     = { statement }
@@ -49,6 +50,10 @@ statement:
     | asm_declaration
     | assignment ";"
     | expression ";"
+    | "goto" ident ";"
+    | "break" ";"
+    | "continue" ";"
+    | ident ":"
 
 if_statement:
     = 'if' '(' condition ')' '{' stmnt_list '}' [ 'else' '{' stmnt_list '}' ]

@@ -104,3 +104,4 @@ compile1("test11.c")  -- Strings with hex escape sequences
 compile2("test12.c")  -- Pointers
 compile2("test13.c")  -- Function local arrays
 compile2("test14.c")  -- Function local arrays
+compile2("test15.c")  -- comparison vs. expression

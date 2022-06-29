@@ -223,4 +223,4 @@ end
 --test_lookup("test08.c")
 --compile_and_assemble("test01.c")
 --beduino_compile("test09.c")
-beduino_compile("test14.c")
+beduino_compile("test15.c")

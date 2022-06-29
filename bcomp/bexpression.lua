@@ -33,6 +33,17 @@ expression:
     | shift_expr '^' expression
 ]]--
 function BExpr:expression()
+--	local opnd1
+--	local val = self:tk_peek().val
+--	if val == "(" then
+--		self:tk_match("(")
+--		opnd1 = self:expression()
+--		self:tk_match(")")
+--		return opnd1
+--	else
+--		opnd1 = self:shift_expr()
+--	end
+--	val = self:tk_peek().val
 	local opnd1 = self:shift_expr()
 	local val = self:tk_peek().val
 	if val == "&" then

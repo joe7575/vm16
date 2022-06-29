@@ -40,6 +40,12 @@ local tScannedFiles = {}
 local InvalidOperands = {
 	[",-"] = true, ["=-"] = true, ["/-"] = true, ["*-"] = true, ["|-"] = true, ["&-"] = true,
 	["<-"] = true, [">-"] = true, [";-"] = true}
+local OperandTypes = {
+	["and"] = "condition", ["&&"] = "condition", ["or"] = "condition", ["||"] = "condition",
+	["<"] = "comparison", [">"] = "comparison", ["=="] = "comparison", ["!="] = "comparison",
+	["&"] = "expression", ["|"] = "expression", ["^"] = "expression",
+	["<<"] = "expression", [">>"] = "expression", ["+"] = "expression", ["-"] = "expression",
+	["*"] = "expression", ["/"] = "expression", ["%"] = "expression", ["mod"] = "expression"}
 
 local function file_ext(filename)
 	local _, ext = unpack(string.split(filename, ".", true, 1))
@@ -237,6 +243,18 @@ end
 
 function BScan:tk_next()
 	return self.lTok[self.tk_idx + 1] or {}
+end
+
+function BScan:type_of_next_operand()
+	local i = self.tk_idx
+	while true do
+		if not self.lTok[i] then
+			return
+		elseif OperandTypes[self.lTok[i].val] then
+			return OperandTypes[self.lTok[i].val]
+		end
+		i = i + 1
+	end
 end
 
 function BScan:scan_dbg_dump()

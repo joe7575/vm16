@@ -607,16 +607,19 @@ comparison:
 function BPars:comparison()
 	local val = self:tk_peek().val
 	if val == "true" then
-		self:add_instr("move", "A", "#1")
+		self:tk_match("true")
+		self:add_instr("jump", "+4")
 		return
 	elseif val == "false" then
-		self:add_instr("move", "A", "#0")
+		self:tk_match("false")
 		return
 	elseif val == "(" then
-		self:tk_match("(")
-		self:comparison()
-		self:tk_match(")")
-		return
+		if self:type_of_next_operand() == "comparison" then
+			self:tk_match("(")
+			self:comparison()
+			self:tk_match(")")
+			return
+		end
 	end
 	local left = self:expression()
 	val = self:tk_peek().val

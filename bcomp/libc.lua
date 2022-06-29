@@ -414,8 +414,8 @@ exit03:
 vm16.libc.stdlib_asm = [[
 ;===================================
 ; stdlib v1.0
-; - itoa(c, str)
-; - itoha(c, str)
+; - itoa(val, str)
+; - itoha(val, str)
 ; - halt()
 ;===================================
 
