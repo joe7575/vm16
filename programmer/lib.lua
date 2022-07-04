@@ -79,7 +79,7 @@ function vm16.dump_compiler_output(output)
 
 	local out = {}
 	out[#out + 1] = "#### Code ####"
-	for idx,tok in ipairs(output.lCode) do
+	for idx,tok in ipairs(output.lCode or {}) do
 		local ctype, lineno, address, info = tok[1], tok[2], tok[3],tok[4]
 		if ctype == "file" then
 			out[#out + 1] = string.format("%5s %3d %04X: %s", ctype, lineno, address, info)
@@ -89,7 +89,7 @@ function vm16.dump_compiler_output(output)
 	end
 
 	out[#out + 1] = "#### Debug ####"
-	for idx,tok in ipairs(output.lDebug) do
+	for idx,tok in ipairs(output.lDebug or {}) do
 		local ctype, lineno, address, ident = tok[1], tok[2], tok[3], tok[4]
 		if ctype == "svar" then
 			out[#out + 1] = string.format('%5s %3d  %3d: "%s"', ctype, lineno, address or -1000, ident or "oops")

@@ -117,7 +117,11 @@ end
 local function assemble(filename)
 	local pos = {x=0, y=0, z=0}
 	local sts, res = vm16.assemble(pos, filename, read_file)
-	print(vm16.dump_compiler_output(res))
+	if sts then
+		print(vm16.dump_compiler_output(res))
+	else
+		print(res)
+	end
 end
 
 local function compile_and_assemble(filename)

@@ -229,6 +229,7 @@ function BExpr:factor()
 	elseif tok.type == T_STRING then
 		local lbl = self:get_string_lbl()
 		self:add_string(lbl, tok.val)
+		self:set_global(lbl)
 		self:tk_match(T_STRING)
 		return "#" .. lbl
 	else
