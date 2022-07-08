@@ -122,6 +122,11 @@ Licensed under the GNU GPLv3 (See LICENSE.txt)
 
 ## History
 
+### API v3.5 / Core v2.7.4 / ASM v2.5 / Compiler v1.7 / Debugger v1.3 (2022-07-08)
+
+- Add file popup menu to the debugger
+- Fix some debugger bugs
+
 ### API v3.5 / Core v2.7.4 / ASM v2.5 / Compiler v1.7 / Debugger v1.3 (2022-06-12)
 
 - Add support for function-local arrays (core, asm, compiler, debugger)
