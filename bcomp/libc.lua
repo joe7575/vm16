@@ -305,6 +305,7 @@ loop04:
 strpack:
   move X, [SP+1]
   move Y, [SP+1]
+  move B, #0
 loop05:
   move A, [X]+
   bnze A, elseif ; if A == 0 then
