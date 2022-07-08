@@ -135,7 +135,7 @@ function vm16.edit.on_receive_fields(pos, fields, mem)
 			local def = prog.get_cpu_def(mem.cpu_pos)
 			if def then
 				local prog_pos = def.on_check_connection(mem.cpu_pos)
-				if vector.equals(pos, prog_pos) then
+				if prog_pos and vector.equals(pos, prog_pos) then
 					local options = {
 						gen_asm_code = true,
 						startup_code = def.startup_code
@@ -157,7 +157,7 @@ function vm16.edit.on_receive_fields(pos, fields, mem)
 			local def = prog.get_cpu_def(mem.cpu_pos)
 			if def then
 				local prog_pos = def.on_check_connection(mem.cpu_pos)
-				if vector.equals(pos, prog_pos) then
+				if prog_pos and vector.equals(pos, prog_pos) then
 					local options = {
 						startup_code = def.startup_code
 					}
@@ -175,7 +175,7 @@ function vm16.edit.on_receive_fields(pos, fields, mem)
 			local def = prog.get_cpu_def(mem.cpu_pos)
 			if def then
 				local prog_pos = def.on_check_connection(mem.cpu_pos)
-				if vector.equals(pos, prog_pos) then
+				if prog_pos and vector.equals(pos, prog_pos) then
 					local sts, res = vm16.assemble(mem.server_pos, mem.file_name, server.read_file, true)
 					if sts then
 						vm16.debug.init(pos, mem, res)
