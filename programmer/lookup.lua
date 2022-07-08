@@ -91,6 +91,7 @@ function Lut:init(obj)
 			self.step_in[file] = self.step_in[file] or {}
 			self.step_in[file][lineno] = address
 		elseif ctype == "ret" then
+			self.step_out[file] = self.step_out[file] or {}
 			self.step_out[lineno] = true
 		elseif ctype == "gvar" then
 			table.insert(self.globals, {name = ident, addr = address, type = "global"})
@@ -105,6 +106,14 @@ function Lut:init(obj)
 	end
 
 	table.sort(self.globals, function(a,b) return a.name < b.name end)
+end
+
+function Lut:get_files()
+	local tbl = {}
+	for file,_  in pairs(self.file_locals) do
+		tbl[#tbl + 1] = file
+	end
+	return tbl
 end
 
 function Lut:get_globals()
@@ -199,11 +208,11 @@ function Lut:get_next_line(address)
 	DBG("Lut:get_next_line", "oops")
 end
 
-function Lut:is_return_line(address)
+function Lut:is_return_line(file, address)
 	DBG("Lut:is_return_line", address)
 	if address then
 		local lineno = self.addr2lineno[address]
-		return lineno and self.step_out[lineno]
+		return lineno and self.step_out[file][lineno]
 	end
 	DBG("Lut:is_return_line", "oops")
 end
