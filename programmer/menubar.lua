@@ -25,17 +25,17 @@ end
 function vm16.menubar.add_button(name, label, size)
 	size = size or t.size
 	table.insert(t.out, "button[" .. t.x .. "," .. t.y .. ";" .. size .. ",0.8;" .. name .. ";" .. label .. "]")
-	t.x = t.x + size + 0.2
+	t.x = t.x + size + 0.1
 end
 
 function vm16.menubar.add_separator()
 	table.insert(t.out, "box[" .. t.x .. "," .. t.y .. ";" .. "0.05" .. ",0.8;#FFF]")
-	t.x = t.x + 0.3
+	t.x = t.x + 0.2
 end
 
 function vm16.menubar.add_textfield(name, label, text, size)
 	table.insert(t.out, "field[" .. t.x .. "," .. (t.y + 0.1) .. ";" .. size .. ",0.6;" .. name .. ";" .. label .. ";" .. text .. "]")
-	t.x = t.x + size + 0.2
+	t.x = t.x + size + 0.1
 end
 
 function vm16.menubar.finalize()

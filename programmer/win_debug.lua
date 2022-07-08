@@ -127,22 +127,36 @@ local function reset_temp_breakpoint(pos, mem)
 	end
 end
 
+local function load_file(mem, filename)
+	if filename then
+		mem.file_name = filename
+		mem.file_ext = file_ext(mem.file_name)
+		mem.file_text = server.read_file(mem.server_pos, mem.file_name)
+		return true
+	end
+end
 local function loadfile_by_address(mem, addr)
 	if mem.lut then
 		local filename = (mem.lut:get_item(addr) or {}).file or mem.lut.main_file
-		if filename then
-			mem.file_name = filename
-			mem.file_ext = file_ext(mem.file_name)
-			mem.file_text = server.read_file(mem.server_pos, mem.file_name)
-			return true
+		return load_file(mem, filename)
+	end
+end
+
+
+local function walk_to_ret_address(mem)
+	for i = 1, 20 do
+		local pc = vm16.get_pc(mem.cpu_pos)
+		if vm16.peek(mem.cpu_pos, pc) ~= 0x1800 then  -- ret instruction
+			vm16.run(mem.cpu_pos, mem.cpu_def, mem.breakpoints, 1)
 		end
 	end
 end
 
 -- return from subroutine
 local function step_out(pos, mem)
+	walk_to_ret_address(mem)
 	local cpu = vm16.get_cpu_reg(mem.cpu_pos)
-	local addr = (vm16.peek(mem.cpu_pos, cpu.BP) or 2) - 2
+	local addr = (vm16.peek(mem.cpu_pos, cpu.SP) or 2) - 2
 	addr = mem.lut:find_next_address(addr)
 	if loadfile_by_address(mem, addr) then
 		local lineno = mem.lut:get_line(addr)
@@ -210,6 +224,15 @@ function vm16.debug.on_update(pos, mem, resp)
 	end
 end
 
+local function fs_popup(pos, files)
+	local s = table.concat(files, ",")
+	--return "box[4,4;6,4;#000]" ..
+	return "image[4,4;6,4;vm16_fs_win.png]" ..
+		"label[4.6,4.76;Files:]" ..
+		"dropdown[4.5,5.0;5.0;prj_file;" .. s .. ";1]" ..
+		"button[7.5,6.8;2,0.8;load;Load]"
+end
+
 local function fs_window(pos, mem, x, y, xsize, ysize, fontsize, text)
 	local color = mem.running and "#AAA" or "#FFF"
 	local filename = mem.file_name or ""
@@ -228,6 +251,7 @@ local function fs_window(pos, mem, x, y, xsize, ysize, fontsize, text)
 end
 
 function vm16.debug.formspec(pos, mem, textsize)
+	local popup = ""
 	if mem.running then
 		vm16.menubar.add_button("stop", "Stop")
 		vm16.menubar.add_button("term", "Terminal", 2.4)
@@ -241,7 +265,11 @@ function vm16.debug.formspec(pos, mem, textsize)
 			end
 			vm16.menubar.add_button("runto", "Run to C")
 			vm16.menubar.add_button("run", "Run")
+			vm16.menubar.add_button("file", "File")
 			vm16.menubar.add_button("reset", "Reset")
+			if mem.prj_files then
+				popup = fs_popup(pos, mem.prj_files)
+			end
 		end
 	end
 	mem.status = mem.running and "Running..." or minetest.formspec_escape("Debug  |  Output: " .. (mem.output or ""))
@@ -251,7 +279,8 @@ function vm16.debug.formspec(pos, mem, textsize)
 				vm16.memory.fs_window(pos, mem, 8.8, 0.6, 6, 9.6, textsize)
 		elseif mem.file_ext == "c" then
 			return fs_window(pos, mem, 0.2, 0.6, 11.4, 9.6, textsize, mem.file_text) ..
-				vm16.watch.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize)
+				vm16.watch.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize) ..
+				popup
 		end
 	end
 end
@@ -279,7 +308,7 @@ function vm16.debug.on_receive_fields(pos, fields, mem)
 				mem.curr_lineno = mem.cursorline
 			elseif mem.file_ext == "c" then
 				local addr = vm16.get_pc(mem.cpu_pos)
-				if mem.lut:is_return_line(addr) then
+				if mem.lut:is_return_line(mem.file_name, addr) then
 					step_out(pos, mem)
 				else
 					local lineno = mem.lut:get_next_line(addr)
@@ -306,6 +335,10 @@ function vm16.debug.on_receive_fields(pos, fields, mem)
 		if vm16.is_loaded(mem.cpu_pos) and mem.lut then
 			set_temp_breakpoint(pos, mem, mem.cursorline)
 			start_cpu(mem)
+		end
+	elseif fields.file then
+		if vm16.is_loaded(mem.cpu_pos) and mem.lut then
+			mem.prj_files = mem.lut:get_files()
 		end
 	elseif fields.run then
 		if vm16.is_loaded(mem.cpu_pos) and mem.lut then
@@ -338,6 +371,10 @@ function vm16.debug.on_receive_fields(pos, fields, mem)
 		if not mem.lut then
 			vm16.destroy(mem.cpu_pos)
 		end
+	elseif fields.load then
+		load_file(mem, fields.prj_file)
+		mem.cursorline = 1
+		mem.prj_files = nil
 	elseif fields.term then
 		mem.term_active = true
 	elseif fields.inc then

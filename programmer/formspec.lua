@@ -24,7 +24,7 @@ function prog.formspec(pos, mem)
 		textsize = tostring(textsize)
 	end
 
-	vm16.menubar.init(0.2, 10.4, 2.0)
+	vm16.menubar.init(0.2, 10.4, 1.9)
 
 	local windows
 	if not mem.cpu_pos or not mem.server_pos then
