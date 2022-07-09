@@ -37,6 +37,13 @@ local function preserve_cpu_server_pos(pos, itemstack)
 	end
 end
 
+local function programmer_present(prog_pos)
+	if prog_pos then
+		local node = minetest.get_node(prog_pos)
+		return node and (node.name == "vm16:programmer" or node.name == "vm16:programmer2")
+	end
+end
+
 local function init(pos, mem)
 	if mem.cpu_pos and mem.server_pos then
 		local def = prog.get_cpu_def(mem.cpu_pos)
@@ -185,9 +192,11 @@ minetest.register_lbm({
 -- CPU API
 -------------------------------------------------------------------------------
 function vm16.load_cpu(cpu_pos, prog_pos, cpu_def)
-	if cpu_pos and prog_pos then
-		local mem = prog.get_mem(prog_pos)
-		mem.cpu_def = cpu_def
+	if cpu_pos then
+		if programmer_present(prog_pos) then
+			local mem = prog.get_mem(prog_pos)
+			mem.cpu_def = cpu_def
+		end
 		vm16.on_load(cpu_pos)
 	end
 end
@@ -203,11 +212,16 @@ function vm16.write_file(pos, filename, text)
 end
 
 function vm16.keep_running(cpu_pos, prog_pos, cpu_def)
-	local mem = prog.get_mem(prog_pos)
-	mem.cpu_def = cpu_def
-
+	local mem
+	
+	if programmer_present(prog_pos) then
+		mem = prog.get_mem(prog_pos)
+		mem.cpu_def = cpu_def
+		mem.running = vm16.is_loaded(cpu_pos)
+	else
+		mem = {}
+	end
 	if vm16.is_loaded(cpu_pos) then
-		mem.running = true
 		local t = minetest.get_us_time()
 		local resp = vm16.run(cpu_pos, cpu_def, mem.breakpoints)
 		CpuTime = CpuTime + (minetest.get_us_time() - t)
@@ -221,7 +235,7 @@ function vm16.keep_running(cpu_pos, prog_pos, cpu_def)
 end
 
 function vm16.update_programmer(cpu_pos, prog_pos, resp)
-	if cpu_pos and prog_pos then
+	if programmer_present(prog_pos) then
 		local mem = prog.get_mem(prog_pos)
 		debug.on_update(prog_pos, mem, resp)
 		M(prog_pos):set_string("formspec", prog.formspec(prog_pos, mem))
@@ -229,15 +243,17 @@ function vm16.update_programmer(cpu_pos, prog_pos, resp)
 end
 
 function vm16.putchar(prog_pos, val)
-	local mem = prog.get_mem(prog_pos)
-	if mem.term_active then
-		term.putchar(prog_pos, val)
-		return
-	end
-	if val == 0 then
-		mem.output = ""
-	elseif mem.output and #mem.output < 80 then
-		mem.output = mem.output .. prog.to_string(val)
+	if programmer_present(prog_pos) then
+		local mem = prog.get_mem(prog_pos)
+		if mem.term_active then
+			term.putchar(prog_pos, val)
+			return
+		end
+		if val == 0 then
+			mem.output = ""
+		elseif mem.output and #mem.output < 80 then
+			mem.output = mem.output .. prog.to_string(val)
+		end
 	end
 end
 
