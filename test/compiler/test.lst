@@ -3500,3 +3500,382 @@ brnch  25 009D: "@lbl10"
  func  30 00A0: "loop"
  svar  30    0: "@num_stack_var@"
  endf  32 00AB: "test15.c"
+
+ #### Compile 'loop': test16.c ####
+;##### test16.c #####
+newfile test16.c
+  .code
+  global arr1
+  global arr2
+  global arr3@4
+  global init
+  global loop
+  jump 8
+  .org 8
+  call @init
+  call init
+@loop:
+  call loop
+  nop
+  jump @loop
+@init:
+  ret
+;##### stdio.asm #####
+newfile stdio.asm
+;   1: ;===================================
+;   2: ; Standard I/O v1.0
+;   3: ; - putchar(c)
+;   4: ; - putstr(s)
+;   5: ; - putnum(val)  -- decimal output
+;   6: ; - puthex(val)  -- hexadecimal output
+;   7: ;===================================
+;   9: global putchar
+  .code
+  global putchar
+;  10: global putstr
+  global putstr
+;  11: global putnum
+  global putnum
+;  12: global puthex
+  global puthex
+;  14:   .code
+;  16: ;===================================
+;  17: ; [01] putchar(c)
+;  18: ; c: [SP+1]
+;  19: ;===================================
+;  20: putchar:
+putchar:
+;  21:   move A, [SP+1]
+  move A, [SP+1]
+;  22:   out  #0, A
+  out  #0, A
+;  23:   ret
+  ret
+;  25: ;===================================
+;  26: ; [02] putstr(s)
+;  27: ; s: [SP+1]
+;  28: ;===================================
+;  29: putstr:
+putstr:
+;  30:   move X, [SP+1]
+  move X, [SP+1]
+;  31:   move A, #80  ; max string size
+  move A, #80  ; max string size
+;  33: loop02:
+loop02:
+;  34:   move B, [X]
+  move B, [X]
+;  35:   bze  B, exit02
+  bze  B, exit02
+;  36:   dec  A
+  dec  A
+;  37:   bze  A, exit02
+  bze  A, exit02
+;  39:   out #0, B
+  out #0, B
+;  40:   inc X
+  inc X
+;  41:   jump loop02
+  jump loop02
+;  43: exit02:
+exit02:
+;  44:   ret
+  ret
+;  46: ;===================================
+;  47: ; [03] putnum(val)
+;  48: ; val: [SP+1]
+;  49: ;===================================
+;  50: putnum:
+putnum:
+;  51:   move A, [SP+1]
+  move A, [SP+1]
+;  52:   push #0        ; end-of-string
+  push #0        ; end-of-string
+;  54: loop03:
+loop03:
+;  55:   move B, A
+  move B, A
+;  56:   div  B, #10    ; rest in B
+  div  B, #10    ; rest in B
+;  57:   move C, A
+  move C, A
+;  58:   mod  C, #10    ; digit in C
+  mod  C, #10    ; digit in C
+;  59:   add  C, #48
+  add  C, #48
+;  60:   push C         ; store on stack
+  push C         ; store on stack
+;  61:   move A, B
+  move A, B
+;  62:   bnze A, loop03 ; next digit
+  bnze A, loop03 ; next digit
+;  64: output03:
+output03:
+;  65:   pop  B
+  pop  B
+;  66:   bze  B, exit03
+  bze  B, exit03
+;  67:   out  #0, B
+  out  #0, B
+;  68:   jump output03
+  jump output03
+;  70: exit03:
+exit03:
+;  71:   ret
+  ret
+;  73: ;===================================
+;  74: ; [04] puthex(val)
+;  75: ; val: [SP+1]
+;  76: ;===================================
+;  77: puthex:
+puthex:
+;  78:   move A, [SP+1]
+  move A, [SP+1]
+;  79:   push #0        ; end-of-string
+  push #0        ; end-of-string
+;  80:   move C, #4     ; num digits
+  move C, #4     ; num digits
+;  82: loop04:
+loop04:
+;  83:   move B, A
+  move B, A
+;  84:   div  B, #$10   ; rest in B
+  div  B, #$10   ; rest in B
+;  85:   mod  A, #$10   ; digit in C
+  mod  A, #$10   ; digit in C
+;  86:   sklt A, #10    ; C < 10 => jmp +2
+  sklt A, #10    ; C < 10 => jmp +2
+;  87:   add  A, #7     ; A-F offset
+  add  A, #7     ; A-F offset
+;  88:   add  A, #48    ; 0-9 offset
+  add  A, #48    ; 0-9 offset
+;  89:   push A         ; store on stack
+  push A         ; store on stack
+;  90:   move A, B
+  move A, B
+;  91:   dbnz C, loop04 ; next digit
+  dbnz C, loop04 ; next digit
+;  93: output04:
+output04:
+;  94:   pop  B
+  pop  B
+;  95:   bze  B, exit04
+  bze  B, exit04
+;  96:   out  #0, B
+  out  #0, B
+;  97:   jump output04
+  jump output04
+;  99: exit04:
+exit04:
+; 100:   ret
+  ret
+;##### test16.c #####
+newfile test16.c
+;   1: import "stdio.asm"
+;   3: const MAX1 = 10;
+;   4: const MAX2 = 2 * MAX1;
+;   5: static const MAX3 = (MAX2 + 1) / 2;
+;   7: var arr1[MAX1];
+;   8: var arr2[MAX3+1] = {0,0,0,0};
+;   9: static var arr3[2] = {0,0,0,0};
+;  11: func init() {
+  .code
+init:
+;  12:   var arr4[3];
+  sub SP, #3
+;  14:   putnum(MAX1);
+  push #10
+  call putnum
+  add SP, #1
+;  15:   putchar(' ');
+  push #32
+  call putchar
+  add SP, #1
+;  16:   putnum(MAX2);
+  push #20
+  call putnum
+  add SP, #1
+;  17:   putchar(' ');
+  push #32
+  call putchar
+  add SP, #1
+;  18:   putnum(MAX3);
+  push #10
+  call putnum
+  add SP, #1
+;  19:   putchar(' ');
+  push #32
+  call putchar
+  add SP, #1
+;  20:   putnum(sizeof(arr1));
+  push #10
+  call putnum
+  add SP, #1
+;  21:   putchar(' ');
+  push #32
+  call putchar
+  add SP, #1
+;  22:   putnum(sizeof(arr2));
+  push #11
+  call putnum
+  add SP, #1
+;  23:   putchar(' ');
+  push #32
+  call putchar
+  add SP, #1
+;  24:   putnum(sizeof(arr3));
+  push #4
+  call putnum
+  add SP, #1
+;  25:   putchar(' ');
+  push #32
+  call putchar
+  add SP, #1
+;  26:   putnum(sizeof(arr4));
+  push #3
+  call putnum
+  add SP, #1
+  add SP, #3
+  ret
+;  27: }
+;  29: func loop() {
+loop:
+;  30: }
+  .data
+arr1: 0,0,0,0,0,0,0,0,0,0
+arr2: 0,0,0,0,0,0,0,0,0,0,0
+arr3@4: 0,0,0,0
+arr4: 0
+#### Code ####
+ file   0 0000: test16.c
+ code   0 0000: 1200 0008
+ code   0 0008: 1600 0011
+ code   0 000A: 1600 0056
+ code   0 000C: 1600 009C
+ code   0 000E: 0000
+ code   0 000F: 1200 000C
+ code   0 0011: 1800
+ file   0 0012: stdio.asm
+ code  21 0012: 2013 0001
+ code  22 0014: 6580
+ code  23 0015: 1800
+ code  30 0016: 2093 0001
+ code  31 0018: 2010 0050
+ code  34 001A: 2028
+ code  35 001B: 5430 0024
+ code  36 001D: 2C00
+ code  37 001E: 5410 0024
+ code  39 0020: 6581
+ code  40 0021: 2880
+ code  41 0022: 1200 001A
+ code  44 0024: 1800
+ code  51 0025: 2013 0001
+ code  52 0027: 6980
+ code  55 0028: 2020
+ code  56 0029: 3C30 000A
+ code  57 002B: 2040
+ code  58 002C: 7850 000A
+ code  59 002E: 3050 0030
+ code  60 0030: 6840
+ code  61 0031: 2001
+ code  62 0032: 5010 0028
+ code  65 0034: 6C20
+ code  66 0035: 5430 003A
+ code  67 0037: 6581
+ code  68 0038: 1200 0034
+ code  71 003A: 1800
+ code  78 003B: 2013 0001
+ code  79 003D: 6980
+ code  80 003E: 2050 0004
+ code  83 0040: 2020
+ code  84 0041: 3C30 0010
+ code  85 0043: 7810 0010
+ code  86 0045: 9410 000A
+ code  87 0047: 3010 0007
+ code  88 0049: 3010 0030
+ code  89 004B: 6800
+ code  90 004C: 2001
+ code  91 004D: 7450 0040
+ code  94 004F: 6C20
+ code  95 0050: 5430 0055
+ code  96 0052: 6581
+ code  97 0053: 1200 004F
+ code 100 0055: 1800
+ file   1 0056: test16.c
+ code  12 0056: 34F0 0003
+ code  14 0058: 6A00 000A
+ code  14 005A: 1600 0025
+ code  14 005C: 30ED
+ code  15 005D: 6A00 0020
+ code  15 005F: 1600 0012
+ code  15 0061: 30ED
+ code  16 0062: 6A00 0014
+ code  16 0064: 1600 0025
+ code  16 0066: 30ED
+ code  17 0067: 6A00 0020
+ code  17 0069: 1600 0012
+ code  17 006B: 30ED
+ code  18 006C: 6A00 000A
+ code  18 006E: 1600 0025
+ code  18 0070: 30ED
+ code  19 0071: 6A00 0020
+ code  19 0073: 1600 0012
+ code  19 0075: 30ED
+ code  20 0076: 6A00 000A
+ code  20 0078: 1600 0025
+ code  20 007A: 30ED
+ code  21 007B: 6A00 0020
+ code  21 007D: 1600 0012
+ code  21 007F: 30ED
+ code  22 0080: 6A00 000B
+ code  22 0082: 1600 0025
+ code  22 0084: 30ED
+ code  23 0085: 6A00 0020
+ code  23 0087: 1600 0012
+ code  23 0089: 30ED
+ code  24 008A: 6A00 0004
+ code  24 008C: 1600 0025
+ code  24 008E: 30ED
+ code  25 008F: 6A00 0020
+ code  25 0091: 1600 0012
+ code  25 0093: 30ED
+ code  26 0094: 6A00 0003
+ code  26 0096: 1600 0025
+ code  26 0098: 30ED
+ code  26 0099: 30F0 0003
+ code  26 009B: 1800
+ code   7 009C: 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000
+ code   8 00A6: 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000
+ code   9 00B1: 0000 0000 0000 0000
+ code  12 00B5: 0000
+#### Debug ####
+ file   0 0056: "test16.c"
+ file   0 0012: "stdio.asm"
+ func   9 0012: "putchar"
+ func  10 0016: "putstr"
+ func  11 0025: "putnum"
+ func  12 003B: "puthex"
+ endf 101 0055: "stdio.asm"
+ file   1 0056: "test16.c"
+ gvar   7 009C: "arr1[]"
+ gvar   8 00A6: "arr2[]"
+ lvar   9 00B1: "arr3[]"
+ func  11 0056: "init"
+ call  14 0025: "putnum"
+ call  15 0012: "putchar"
+ call  16 0025: "putnum"
+ call  17 0012: "putchar"
+ call  18 0025: "putnum"
+ call  19 0012: "putchar"
+ call  20 0025: "putnum"
+ call  21 0012: "putchar"
+ call  22 0025: "putnum"
+ call  23 0012: "putchar"
+ call  24 0025: "putnum"
+ call  25 0012: "putchar"
+ call  26 0025: "putnum"
+ svar  26   -3: "arr4"
+ svar  26    1: "@num_stack_var@"
+ func  29 009C: "loop"
+ svar  29    0: "@num_stack_var@"
+ endf  31 00B6: "test16.c"
