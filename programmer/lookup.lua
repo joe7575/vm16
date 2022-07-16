@@ -212,7 +212,7 @@ function Lut:is_return_line(file, address)
 	DBG("Lut:is_return_line", address)
 	if address then
 		local lineno = self.addr2lineno[address]
-		return lineno and self.step_out[file][lineno]
+		return lineno and self.step_out[file] and self.step_out[file][lineno]
 	end
 	DBG("Lut:is_return_line", "oops")
 end

@@ -138,6 +138,7 @@ unary:
     | '~' postfix
     | '*' postfix
     | '&' postfix
+    | 'sizeof' '(' variable ')'
 ]]--
 function BExpr:unary()
 	local val = self:tk_peek().val
@@ -171,6 +172,16 @@ function BExpr:unary()
 			return reg
 		end
 		return "#" .. opnd
+	elseif val == "sizeof" then
+		self:tk_match("sizeof")
+		self:tk_match("(")
+		local ident = (self:tk_match(T_IDENT) or {}).val
+		if not self:sym_get_var(ident) then
+			self:error_msg(string.format("Unknown variable '%s'", ident or ""))
+		end
+		local size = self:sym_get_var_size(ident)
+		self:tk_match(")")
+		return "#" .. size
 	end
 	return self:postfix()
 end

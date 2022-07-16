@@ -17,7 +17,7 @@ local KEYWORDS = {var=1, func=1, ["while"]=1, ["return"]=1, input=1, output=1,
                   ["for"]=1, ["switch"]=1, ["case"]=1, ["break"]=1, ["continue"]=1, ["goto"]=1,
                   ["and"]=1, ["or"]=1, ["not"]=1, ["xor"]=1, ["mod"]=1,
                   A=1, B=1, C=1, D=1, X=1, Y=1, PC=1, SP=1,
-                  import=1, pragma=1, _asm_=1}
+                  import=1, pragma=1, _asm_=1, sizeof=1}
 
 local BSym = vm16.BScan:new({})
 
@@ -47,9 +47,9 @@ function BSym:sym_add_local(ident, array_size)
 	end
 	self.stack_size = self.stack_size + 1
 	if array_size then
-		self.locals[ident] = {type = "array", ref = self.stack_size, offs = array_size - 1}
+		self.locals[ident] = {type = "array", ref = self.stack_size, offs = array_size - 1, size = array_size}
 	else
-		self.locals[ident] = {type = "var", ref = self.stack_size}
+		self.locals[ident] = {type = "var", ref = self.stack_size, size = 1}
 	end
 end
 
@@ -73,13 +73,13 @@ end
 -------------------------------------------------------------------------------
 -- Globals
 -------------------------------------------------------------------------------
-function BSym:sym_add_global(ident, is_array)
+function BSym:sym_add_global(ident, is_array, array_size)
 	if self.globals[ident] then
 		self:error_msg(string.format("Redefinition of '%s'", ident))
 	elseif KEYWORDS[ident] then
 		self:error_msg(string.format("'%s' is a protected keyword", ident))
 	end
-	self.globals[ident] = {type = is_array and "array" or "var"}
+	self.globals[ident] = {type = is_array and "array" or "var", size = array_size or 1}
 end
 
 function BSym:sym_is_global(val)
@@ -107,14 +107,19 @@ function BSym:next_file_for_local_vars()
 	self.file_locals = {}
 end
 
-function BSym:sym_add_filelocal(ident, is_array)
+function BSym:sym_add_filelocal(ident, is_array, array_size)
 	if self.file_locals[ident] then
 		self:error_msg(string.format("Redefinition of '%s'", ident))
 	elseif KEYWORDS[ident] then
 		self:error_msg(string.format("'%s' is a protected keyword", ident))
 	end
-	self.file_locals[ident] = {type = is_array and "array" or "var", ref = ident .. "@" .. self.file_locals_cnt}
+	self.file_locals[ident] = {type = is_array and "array" or "var",
+		ref = ident .. "@" .. self.file_locals_cnt, size = array_size or 1}
 	return self.file_locals[ident].ref
+end
+
+function BSym:sym_get_filelocal_ref(ident)
+	return ident .. "@" .. self.file_locals_cnt
 end
 
 function BSym:sym_get_filelocal(ident)
@@ -230,6 +235,16 @@ function BSym:sym_get_var(ident)
 		return ident
 	end
 	return self:sym_get_local(ident) or self:sym_get_filelocal(ident) or self:sym_get_global(ident)
+end
+
+function BSym:sym_get_var_size(ident)
+	if self:sym_get_local(ident) then
+		return self.locals[ident].size 
+	elseif self:sym_get_filelocal(ident) then
+		return self.file_locals[ident].size 
+	elseif self:sym_get_global(ident) then
+		return self.globals[ident].size 
+	end
 end
 
 vm16.BSym = BSym

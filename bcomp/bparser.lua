@@ -20,10 +20,10 @@ local T_NEWFILE = vm16.T_NEWFILE
 local T_STRING  = vm16.T_STRING
 local T_ENDFILE = vm16.T_ENDFILE
 
-local BPars = vm16.BExpr:new({})
+local BPars = vm16.BConstEx:new({})
 
 function BPars:bpars_init()
-	self:bexpr_init()
+	self:bconstex_init()
 end
 
 --[[
@@ -43,6 +43,7 @@ definition:
     = 'var' var_def
     | 'static' 'var' var_def
     | 'const' const_def
+    | 'static' 'const' const_def
     | 'func' func_def
     | 'static' 'func' func_def
     | T_NEWFILE
@@ -62,6 +63,9 @@ function BPars:definition()
 		elseif tok.val == "func" then
 			self:tk_match("func")
 			self:func_def(true)
+		elseif tok.val == "const" then
+			self:tk_match("const")
+			self:const_def(true)
 		else
 			self:error_msg(string.format("Unexpected item '%s'", tok.val))
 		end
@@ -105,10 +109,12 @@ function BPars:var_def(static)
 	local ident = self:ident()
 	local val = self:tk_peek().val
 	local is_array = val == "["
+	local old_ident
+	
 	if static then
-		local old_ident = ident
+		old_ident = ident
 		local postfix = is_array and "[]" or ""
-		ident = self:sym_add_filelocal(ident, is_array)
+		ident = self:sym_get_filelocal_ref(ident)
 		self:add_debugger_info("lvar", self.lineno, ident, old_ident .. postfix)
 	else
 		local postfix = is_array and "[]" or ""
@@ -117,17 +123,21 @@ function BPars:var_def(static)
 	self:switch_to_var_def()
 	self:set_global(ident)
 	if is_array then
+		local size = self:array_def(ident)
 		if static then
-			self:sym_add_filelocal(ident, true)
+			-- post-define array size
+			self:sym_add_filelocal(old_ident, true, size)  -- name without postfix
+			self:sym_add_filelocal(ident, true, size)
 		else
-			self:sym_add_global(ident, true)
+			self:sym_add_global(ident, true, size)
 		end
-		self:array_def(ident)
 		self:tk_match(";")
 		self:reset_reg_use()
 	else
 		if static then
-			self:sym_add_filelocal(ident)
+			-- post-define array size
+			self:sym_add_filelocal(old_ident, false, 1)  -- name without postfix
+			self:sym_add_filelocal(ident, false, 1)
 		else
 			self:sym_add_global(ident)
 		end
@@ -145,14 +155,14 @@ end
 
 --[[
 const_def:
-    = ident '=' number ';' def_list
+    = ident '=' const_expression ';' def_list
 ]]--
-function BPars:const_def()
+function BPars:const_def(static)
 	self:switch_to_var_def()
 	local ident = self:ident()
 	self:tk_match("=")
-	local right = '#' .. self:number()
-	self:sym_add_const(ident, right, "global")
+	local right = '#' .. self:const_expression()
+	self:sym_add_const(ident, right, static and "local" or "global")
 	self:tk_match(";")
 	self:reset_reg_use()
 	self:switch_to_func_def()
@@ -162,23 +172,24 @@ end
 array_def:
     = '[' ']' '=' '{' const_list '}'
    = '[' ']' '=' STRING
-    = '[' number ']' '=' '{' const_list '}'
-    = '[' number ']'
+    = '[' const_expression ']' '=' '{' const_list '}'
+    = '[' const_expression ']'
 ]]--
 function BPars:array_def(ident)
 	self:tk_match("[")
 	local size = 0
 	if self:tk_peek().val ~= ']' then
-		size = self:number()
+		size = self:const_expression()
 	end
 	self:tk_match("]")
 	if self:tk_peek().val ~= '=' and size > 0 then
 		self:add_data(ident)
-		while size > 1 do
+		local num = size
+		while num > 1 do
 			self:append_val(0)
-			size = size - 1
+			num = num - 1
 		end
-		return
+		return size
 	end
 	self:tk_match("=")
 	if self:tk_peek().type == T_STRING then
@@ -189,19 +200,21 @@ function BPars:array_def(ident)
 		self:add_string(ident, tok.val)
 	else
 		self:tk_match("{")
-		self:const_list(ident, size)
+		size = self:const_list(ident, size)
 		self:tk_match("}")
 	end
+	return size
 end
 
 --[[
 const_list:
-    number { ',' const_list }
+    const_expression { ',' const_list }
 ]]--
 function BPars:const_list(ident, size)
-	local num = self:number()
+	local num = self:const_expression()
 	self:add_data(ident, num)
 	size = size - 1
+	local realsize = 1
 	while self:tk_peek().val == ',' do
 		self:tk_match(",")
 
@@ -214,12 +227,16 @@ function BPars:const_list(ident, size)
 			self:append_val(tok.val)
 		end
 		size = size - 1
+		realsize = realsize + 1
 	end
 
 	while size > 0 do
 		self:append_val(0)
 		size = size - 1
+		realsize = realsize + 1
 	end
+	return realsize
+
 end
 
 --[[

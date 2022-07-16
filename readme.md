@@ -122,6 +122,12 @@ Licensed under the GNU GPLv3 (See LICENSE.txt)
 
 ## History
 
+### API v3.5 / Core v2.7.4 / ASM v2.5 / Compiler v1.8 / Debugger v1.3 (2022-07-08)
+
+- Compiler: Add constant expressions
+- Compiler: Add sizeof operator
+- Compiler: Add static constants
+
 ### API v3.5 / Core v2.7.4 / ASM v2.5 / Compiler v1.7 / Debugger v1.3 (2022-07-08)
 
 - Add file popup menu to the debugger

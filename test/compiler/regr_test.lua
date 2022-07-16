@@ -24,6 +24,7 @@ dofile(MP.."/bcomp/bgenerator.lua")
 dofile(MP.."/bcomp/bscanner.lua")
 dofile(MP.."/bcomp/bsymbols.lua")
 dofile(MP.."/bcomp/bexpression.lua")
+dofile(MP.."/bcomp/bconst_expr.lua")
 dofile(MP.."/bcomp/bparser.lua")
 dofile(MP.."/bcomp/bcompiler.lua")
 dofile(MP.."/programmer/lib.lua")
@@ -105,3 +106,4 @@ compile2("test12.c")  -- Pointers
 compile2("test13.c")  -- Function local arrays
 compile2("test14.c")  -- Function local arrays
 compile2("test15.c")  -- comparison vs. expression
+compile2("test16.c")  -- const-expr, sizeof
