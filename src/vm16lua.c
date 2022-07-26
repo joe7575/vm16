@@ -153,7 +153,7 @@ static int write_mem(lua_State *L) {
     vm16_t *C = check_vm(L);
     uint16_t addr = (uint16_t)luaL_checkinteger(L, 2);
     if(lua_istable(L, 3)) {
-        size_t num = lua_objlen(L, 3);
+        size_t num = lua_rawlen(L, 3);
         uint16_t *p_data = (uint16_t*)malloc(num * 2);
         if((C != NULL) && (p_data != NULL)) {
             for(size_t i = 0; i < num; i++) {
@@ -350,14 +350,14 @@ static int set_cpu_reg(lua_State *L) {
         // -3 = Y
         // -2 = PC
         // -1 = SP
-        C->areg = luaL_checkint(L, -8);
-        C->breg = luaL_checkint(L, -7);
-        C->creg = luaL_checkint(L, -6);
-        C->dreg = luaL_checkint(L, -5);
-        C->xreg = luaL_checkint(L, -4);
-        C->yreg = luaL_checkint(L, -3);
-        C->pcnt = luaL_checkint(L, -2);
-        C->sptr = luaL_checkint(L, -1);
+        C->areg = luaL_checkinteger(L, -8);
+        C->breg = luaL_checkinteger(L, -7);
+        C->creg = luaL_checkinteger(L, -6);
+        C->dreg = luaL_checkinteger(L, -5);
+        C->xreg = luaL_checkinteger(L, -4);
+        C->yreg = luaL_checkinteger(L, -3);
+        C->pcnt = luaL_checkinteger(L, -2);
+        C->sptr = luaL_checkinteger(L, -1);
         C->p_in_dest = &C->areg;
         lua_settop(L, 0);
     }
@@ -389,9 +389,9 @@ static int set_io_reg(lua_State *L) {
         // -3 = A
         // -2 = B
         // -1 = data
-        C->areg = luaL_checkint(L, -3);
-        C->breg = luaL_checkint(L, -2);
-        *C->p_in_dest = luaL_checkint(L, -1);
+        C->areg = luaL_checkinteger(L, -3);
+        C->breg = luaL_checkinteger(L, -2);
+        *C->p_in_dest = luaL_checkinteger(L, -1);
         lua_settop(L, 0);
     }
     return 0;
@@ -482,9 +482,9 @@ static int hash_node_position(lua_State *L) {
         lua_getfield(L, 1, "x");
         lua_getfield(L, 1, "y");
         lua_getfield(L, 1, "z");
-        x = luaL_checkint(L, -3);
-        y = luaL_checkint(L, -2);
-        z = luaL_checkint(L, -1);
+        x = luaL_checkinteger(L, -3);
+        y = luaL_checkinteger(L, -2);
+        z = luaL_checkinteger(L, -1);
         lua_settop(L, 0);
 
         ptr = hash_uint16(x + 32768, ptr);
@@ -537,6 +537,6 @@ static const luaL_Reg R[] = {
 
 LUALIB_API int luaopen_vm16lib(lua_State *L) {
     luaL_newmetatable(L, "vm16.cpu_dump");
-    luaL_register(L, NULL, R);
+    lua_register(L, NULL, R);
     return 1;
 }
