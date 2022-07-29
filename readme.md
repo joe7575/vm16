@@ -38,13 +38,13 @@ into your Minetest `mods` folder.
 Change your directory  to `mods/vm16-master` and install the Lua library with:
 
 ```
-luarocks make
+luarocks make --lua-version 5.1
 ```
 
 For Linux like systems, use:
 
 ```
-sudo luarocks make
+sudo luarocks make --lua-version 5.1
 ```
 
 The program output should look like this:
