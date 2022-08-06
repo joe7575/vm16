@@ -573,7 +573,7 @@ condition:
     | and_condition '||' condition
 ]]--
 function BPars:condition(lbl_then, lbl_else)
-	local opnd1 = self:and_condition(lbl_else)
+	local opnd1 = self:and_condition(lbl_then, lbl_else)
 	local val = self:tk_peek().val
 	if val == "or" then
 		self:tk_match()
@@ -595,17 +595,17 @@ and_condition:
     | comparison 'and' and_condition
     | comparison '&&' and_condition
 ]]--
-function BPars:and_condition(lbl)
-	local opnd1 = self:comparison()
+function BPars:and_condition(lbl_then, lbl_else)
+	local opnd1 = self:comparison(lbl_then)
 	local val = self:tk_peek().val
 	if val == "and" then
 		self:tk_match()
-		self:add_instr("jump", lbl)
+		self:add_instr("jump", lbl_else)
 		self:and_condition(lbl)
 	elseif val == "&&" then
 		self:tk_match()
-		self:add_instr("jump", lbl)
-		self:and_condition(lbl)
+		self:add_instr("jump", lbl_else)
+		self:and_condition(lbl_then)
 	end
 end
 
@@ -621,7 +621,7 @@ comparison:
     | expression '!=' expression
     | expression
 ]]--
-function BPars:comparison()
+function BPars:comparison(lbl_then)
 	local val = self:tk_peek().val
 	if val == "true" then
 		self:tk_match("true")
@@ -648,6 +648,18 @@ function BPars:comparison()
 		self:tk_match(">")
 		local right = self:expression()
 		self:add_instr("skgt", left, right)
+	elseif val == "<=" then
+		self:tk_match("<=")
+		local right = self:expression()
+		left = self:add_instr("sklt", left, right)
+		self:add_instr("skne", left, right)
+		self:add_instr("jump", lbl_then)
+	elseif val == ">=" then
+		self:tk_match(">=")
+		local right = self:expression()
+		left = self:add_instr("skgt", left, right)
+		self:add_instr("skne", left, right)
+		self:add_instr("jump", lbl_then)
 	elseif val == "==" then
 		self:tk_match("==")
 		local right = self:expression()

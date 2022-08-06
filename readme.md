@@ -6,8 +6,6 @@ compiler, assembler and debugger.
 It enables simulation of computers in the game Minetest and is capable of
 executing real binary code at a remarkable speed.
 
-**The mod is currently under construction. Not all files and documents are always updated !!!**
-
 ![screenshot](https://github.com/joe7575/vm16/blob/master/screenshot.png)
 
 Browse on: [GitHub](https://github.com/joe7575/vm16)
@@ -23,7 +21,7 @@ This mod consists of several parts:
 
 - C files to be compiled and installed as LuaRocks package (the core VM)
 - Lua files as API to the VM (low level interface)
-- Programmer and server blocks as development environment to be used to be used
+- Programmer and server blocks as development environment to be used
   by other Minetest mods (high level interface)
 - Some demo blocks showing the usage of programmer and server. These blocks have
   to be enabled via `vm16_testblocks_enabled` (see `settingtypes.txt`)
@@ -121,6 +119,10 @@ Licensed under the GNU GPLv3 (See LICENSE.txt)
 
 
 ## History
+
+### API v3.5 / Core v2.7.4 / ASM v2.5 / Compiler v1.09 / Debugger v1.3 (2022-08-06)
+
+- Compiler: Add >= and <= operators
 
 ### API v3.5 / Core v2.7.4 / ASM v2.5 / Compiler v1.8 / Debugger v1.3 (2022-07-08)
 
