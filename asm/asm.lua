@@ -350,6 +350,9 @@ function Asm:decode_text(tok)
 	if codestr:byte(1) == 34 and codestr:byte(-1) == 34 then
 		codestr = codestr:gsub("\\0", "\0")
 		codestr = codestr:gsub("\\n", "\n")
+		codestr = codestr:gsub("\\t", "\t")
+		codestr = codestr:gsub("\\b", "\b")
+		codestr = codestr:gsub("\\a", "\a")
 		codestr = codestr:sub(2, -2)
 		local ln = #codestr
 
@@ -375,6 +378,9 @@ function Asm:decode_ctext(tok)
 		codestr = handle_escape_sequence(codestr)
 		codestr = codestr:gsub('\\0"', '\0\0"')
 		codestr = codestr:gsub("\\n", "\n")
+		codestr = codestr:gsub("\\t", "\t")
+		codestr = codestr:gsub("\\b", "\b")
+		codestr = codestr:gsub("\\a", "\a")
 		codestr = codestr:sub(2, -2)
 		local ln = #codestr
 
