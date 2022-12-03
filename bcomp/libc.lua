@@ -17,13 +17,15 @@ vm16.libc = {}
 -------------------------------------------------------------------------------
 vm16.libc.stdio_asm = [[
 ;===================================
-; stdio v1.0
+; stdio v1.1
+; - setstdout(val) -- 1 for terminal
 ; - putchar(c)
 ; - putstr(s)
 ; - putnum(val)  -- decimal output
 ; - puthex(val)  -- hexadecimal output
 ;===================================
 
+global setstdout
 global putchar
 global putstr
 global putnum
@@ -118,6 +120,15 @@ output04:
   jump output04
 
 exit04:
+  ret
+
+;===================================
+; [05] setstdout(val)
+; val: [SP+1]
+;===================================
+setstdout:
+  move A, [SP+1]
+  sys  #1
   ret
 ]]
 
