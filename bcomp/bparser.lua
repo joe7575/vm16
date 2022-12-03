@@ -313,6 +313,11 @@ function BPars:stmnt_list(lbl_loop, lbl_end)
 	self:push_var("lbl_loop", lbl_loop)
 	self:push_var("lbl_end", lbl_end)
 	local val = self:tk_peek().val
+	-- Function without code
+	if val == "}" then
+		-- Code is needed for 'sym_func_return'
+		self:add_instr("move", "A", "A")
+	end
 	while val and val ~= "}" do
 		self:statement()
 		val = self:tk_peek().val
