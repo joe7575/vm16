@@ -242,17 +242,24 @@ function vm16.update_programmer(cpu_pos, prog_pos, resp)
 	end
 end
 
+function vm16.set_stdout(prog_pos, val)
+	if programmer_present(prog_pos) then
+		local mem = prog.get_mem(prog_pos)
+		mem.stdout = val
+	end
+end
+
 function vm16.putchar(prog_pos, val)
 	if programmer_present(prog_pos) then
 		local mem = prog.get_mem(prog_pos)
-		if mem.term_active then
+		if mem.stdout == 1 then
 			term.putchar(prog_pos, val)
-			return
-		end
-		if val == 0 then
-			mem.output = ""
-		elseif mem.output and #mem.output < 80 then
-			mem.output = mem.output .. prog.to_string(val)
+		else
+			if val == 0 then
+				mem.output = ""
+			elseif mem.output and #mem.output < 80 then
+				mem.output = mem.output .. prog.to_string(val)
+			end
 		end
 	end
 end
