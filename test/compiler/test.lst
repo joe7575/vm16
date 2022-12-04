@@ -2790,6 +2790,8 @@ init:
 ;  15: }
 ;  17: func loop() {
 loop:
+  move A, A
+  ret
 ;  18: }
   .data
 buff: 65,66,67
@@ -2803,7 +2805,7 @@ a: 0
  code   0 000E: 0000
  code   0 000F: 1200 000C
  code   0 0011: 1800
- code   5 0012: 6A00 0030
+ code   5 0012: 6A00 0032
  code   6 0014: 6980
  code   7 0015: 6980
  code   9 0016: 2093 0002
@@ -2819,19 +2821,21 @@ a: 0
  code  11 0024: 2080
  code  11 0025: 2008
  code  11 0026: 0800
- code  12 0027: 2010 0033
+ code  12 0027: 2010 0035
  code  12 0029: 0800
  code  13 002A: 2007
  code  13 002B: 300D
  code  13 002C: 0800
  code  13 002D: 30F0 0003
  code  13 002F: 1800
- code   1 0030: 0041 0042 0043
- code   2 0033: 0000
+ code  17 0030: 2000
+ code  17 0031: 1800
+ code   1 0032: 0041 0042 0043
+ code   2 0035: 0000
 #### Debug ####
  file   0 0000: "test12.c"
- gvar   1 0030: "buff[]"
- gvar   2 0033: "a"
+ gvar   1 0032: "buff[]"
+ gvar   2 0035: "a"
  func   4 0012: "init"
  svar  13   -3: "c"
  svar  13   -1: "p"
@@ -2839,7 +2843,7 @@ a: 0
  svar  13    3: "@num_stack_var@"
  func  17 0030: "loop"
  svar  17    0: "@num_stack_var@"
- endf  19 0034: "test12.c"
+ endf  19 0036: "test12.c"
 
  #### Compile 'loop': test13.c ####
 ;##### test13.c #####
@@ -2928,6 +2932,8 @@ init:
 ;  24: }
 ;  26: func loop() {
 loop:
+  move A, A
+  ret
 ;  27: }
   .data
 arr1: 0
@@ -2982,7 +2988,9 @@ arr1: 0
  code  23 004F: 30F0 0003
  code  23 0051: 30F0 0003
  code  23 0053: 1800
- code  14 0054: 0000
+ code  26 0054: 2000
+ code  26 0055: 1800
+ code  14 0056: 0000
 #### Debug ####
  file   0 0000: "test13.c"
  func   1 0012: "foo1"
@@ -3004,12 +3012,12 @@ arr1: 0
  call  21 0012: "foo1"
  call  22 0019: "foo2"
  call  23 0020: "foo3"
- svar  23   -2: "c"
+ svar  23   -3: "c"
  svar  23   -2: "arr1"
- svar  23    2: "@num_stack_var@"
+ svar  23    3: "@num_stack_var@"
  func  26 0054: "loop"
  svar  26    0: "@num_stack_var@"
- endf  28 0055: "test13.c"
+ endf  28 0057: "test13.c"
 
  #### Compile 'loop': test14.c ####
 ;##### test14.c #####
@@ -3362,6 +3370,8 @@ init:
 ;  28: }
 ;  30: func loop() {
 loop:
+  move A, A
+  ret
   .ctext
   @s1: "ok\0"
   @s2: "ok\0"
@@ -3435,14 +3445,14 @@ loop:
  code   9 0063: 7810 000A
  code   9 0065: 9010 0002
  code   9 0067: 1200 006E
- code  10 0069: 6A00 00A0
+ code  10 0069: 6A00 00A2
  code  10 006B: 1600 0016
  code  10 006D: 30ED
  code  13 006E: 2013 0000
  code  13 0070: 7810 000A
  code  13 0072: 9010 0002
  code  13 0074: 1200 007B
- code  14 0076: 6A00 00A2
+ code  14 0076: 6A00 00A4
  code  14 0078: 1600 0016
  code  14 007A: 30ED
  code  17 007B: 2013 0001
@@ -3452,25 +3462,27 @@ loop:
  code  17 0082: 2033 0000
  code  17 0084: 9030 0002
  code  17 0086: 1200 008D
- code  18 0088: 6A00 00A4
+ code  18 0088: 6A00 00A6
  code  18 008A: 1600 0016
  code  18 008C: 30ED
  code  21 008D: 1280 0004
  code  21 008F: 1200 0096
- code  22 0091: 6A00 00A6
+ code  22 0091: 6A00 00A8
  code  22 0093: 1600 0016
  code  22 0095: 30ED
  code  25 0096: 1200 009D
- code  26 0098: 6A00 00A8
+ code  26 0098: 6A00 00AA
  code  26 009A: 1600 0016
  code  26 009C: 30ED
  code  27 009D: 30F0 0002
  code  27 009F: 1800
- code  10 00A0: 6F6B 0000
- code  14 00A2: 6F6B 0000
- code  18 00A4: 6F6B 0000
- code  22 00A6: 6F6B 0000
- code  26 00A8: 6572 0072 0000
+ code  30 00A0: 2000
+ code  30 00A1: 1800
+ code  10 00A2: 6F6B 0000
+ code  14 00A4: 6F6B 0000
+ code  18 00A6: 6F6B 0000
+ code  22 00A8: 6F6B 0000
+ code  26 00AA: 6572 0072 0000
 #### Debug ####
  file   0 0056: "test15.c"
  file   0 0012: "stdio.asm"
@@ -3499,7 +3511,7 @@ brnch  25 009D: "@lbl10"
  svar  27    2: "@num_stack_var@"
  func  30 00A0: "loop"
  svar  30    0: "@num_stack_var@"
- endf  32 00AB: "test15.c"
+ endf  32 00AD: "test15.c"
 
  #### Compile 'loop': test16.c ####
 ;##### test16.c #####
@@ -3740,6 +3752,8 @@ init:
 ;  27: }
 ;  29: func loop() {
 loop:
+  move A, A
+  ret
 ;  30: }
   .data
 arr1: 0,0,0,0,0,0,0,0,0,0
@@ -3844,10 +3858,12 @@ arr4: 0
  code  26 0098: 30ED
  code  26 0099: 30F0 0003
  code  26 009B: 1800
- code   7 009C: 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000
- code   8 00A6: 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000
- code   9 00B1: 0000 0000 0000 0000
- code  12 00B5: 0000
+ code  29 009C: 2000
+ code  29 009D: 1800
+ code   7 009E: 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000
+ code   8 00A8: 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000
+ code   9 00B3: 0000 0000 0000 0000
+ code  12 00B7: 0000
 #### Debug ####
  file   0 0056: "test16.c"
  file   0 0012: "stdio.asm"
@@ -3857,9 +3873,9 @@ arr4: 0
  func  12 003B: "puthex"
  endf 101 0055: "stdio.asm"
  file   1 0056: "test16.c"
- gvar   7 009C: "arr1[]"
- gvar   8 00A6: "arr2[]"
- lvar   9 00B1: "arr3[]"
+ gvar   7 009E: "arr1[]"
+ gvar   8 00A8: "arr2[]"
+ lvar   9 00B3: "arr3[]"
  func  11 0056: "init"
  call  14 0025: "putnum"
  call  15 0012: "putchar"
@@ -3875,7 +3891,7 @@ arr4: 0
  call  25 0012: "putchar"
  call  26 0025: "putnum"
  svar  26   -3: "arr4"
- svar  26    1: "@num_stack_var@"
+ svar  26    3: "@num_stack_var@"
  func  29 009C: "loop"
  svar  29    0: "@num_stack_var@"
- endf  31 00B6: "test16.c"
+ endf  31 00B8: "test16.c"
