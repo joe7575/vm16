@@ -68,7 +68,9 @@ end
 local function clear_screen(pos, mem)
 	mem.term_text = ">"
 	mem.last_line = ""
-	M(pos):set_string("formspec", vm16.prog.formspec(pos, mem))
+	if mem.ttl and mem.ttl > minetest.get_gametime() then
+		M(pos):set_string("formspec", vm16.prog.formspec(pos, mem))
+	end
 end
 
 local function new_line(pos, mem)
@@ -79,34 +81,40 @@ local function new_line(pos, mem)
 	end
 	mem.term_text = limit_num_lines(mem.term_text)
 	mem.last_line = ""
-	M(pos):set_string("formspec", vm16.prog.formspec(pos, mem))
+	if mem.ttl and mem.ttl > minetest.get_gametime() then
+		M(pos):set_string("formspec", vm16.prog.formspec(pos, mem))
+	end
+end
+
+local function putchar(pos, mem, val)
+	if val == 0 then
+		return
+	elseif val == 7 then  -- bell ('\a')
+		bell(pos, mem)
+	elseif val == 8 then  -- backspace ('\b')
+		clear_screen(pos, mem)
+	elseif val == 9 then  -- tab ('\t')
+		local n = 8 - (#mem.last_line % 8)
+		for i = 1,n do
+			mem.last_line = mem.last_line .. " "
+		end
+	elseif val == 10 then  -- line feed ('\n')
+		new_line(pos, mem)
+	elseif #mem.last_line < MAX_STR_LEN then
+		mem.last_line = mem.last_line .. prog.to_char(val)
+	end
 end
 
 function vm16.term.putchar(pos, val)
 	local mem = prog.get_mem(pos)
-	if mem.ttl and mem.ttl > minetest.get_gametime() then
-		mem.term_text = mem.term_text or ""
-		mem.last_line = mem.last_line or ""
-		if val == 0 then
-			return
-		elseif val == 7 then  -- bell ('\a')
-			bell(pos, mem)
-		elseif val == 8 then  -- backspace ('\b')
-			clear_screen(pos, mem)
-		elseif val == 9 then  -- tab ('\t')
-			local n = 8 - (#mem.last_line % 8)
-			for i = 1,n do
-				mem.last_line = mem.last_line .. " "
-			end
-		elseif val == 10 then  -- line feed ('\n')
-			new_line(pos, mem)
-		elseif #mem.last_line < MAX_STR_LEN then
-			mem.last_line = mem.last_line .. prog.to_string(val)
-		end
-	elseif mem.ttl then
-		mem.last_line = (mem.last_line or "") .. "\nZZzzz..."
-		new_line(pos, mem)
-		mem.ttl = nil
+	mem.term_text = mem.term_text or ""
+	mem.last_line = mem.last_line or ""
+
+	if val > 255 then
+		putchar(pos, mem, val / 256)
+		putchar(pos, mem, val % 256)
+	else
+		putchar(pos, mem, val)
 	end
 end
 
