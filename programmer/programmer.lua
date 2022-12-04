@@ -244,17 +244,17 @@ end
 
 function vm16.set_stdout(prog_pos, val)
 	if programmer_present(prog_pos) then
-		local mem = prog.get_mem(prog_pos)
-		mem.stdout = val
+		M(prog_pos):set_int("stdout", val)
 	end
 end
 
 function vm16.putchar(prog_pos, val)
 	if programmer_present(prog_pos) then
-		local mem = prog.get_mem(prog_pos)
-		if mem.stdout == 1 then
+		local stdout = M(prog_pos):get_int("stdout")
+		if stdout == 1 then
 			term.putchar(prog_pos, val)
 		else
+			local mem = prog.get_mem(prog_pos)
 			if val == 0 then
 				mem.output = ""
 			elseif mem.output and #mem.output < 80 then
