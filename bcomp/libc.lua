@@ -23,6 +23,7 @@ vm16.libc.stdio_asm = [[
 ; - putstr(s)
 ; - putnum(val)  -- decimal output
 ; - puthex(val)  -- hexadecimal output
+; - putnumf(val) -- dec. output with leading zeros
 ;===================================
 
 global setstdout
@@ -30,6 +31,7 @@ global putchar
 global putstr
 global putnum
 global puthex
+global putnumf
 
   .code
 
@@ -129,6 +131,34 @@ exit04:
 setstdout:
   move A, [SP+1]
   sys  #1
+  ret
+
+;===================================
+; [06] putnumf(val)
+; val: [SP+1]
+;===================================
+putnumf:
+  move A, [SP+1]
+  push #0        ; end-of-string
+  move C, #5     ; num digits
+
+loop06:
+  move B, A
+  div  B, #10    ; rest in B
+  mod  A, #10    ; digit in C
+  add  A, #48    ; 0-9 offset
+  push A         ; store on stack
+  move A, B
+  dbnz C, loop06 ; next digit
+
+output06:
+  pop  B
+  bze  B, exit06
+  move A, B
+  sys  #0
+  jump output06
+
+exit06:
   ret
 ]]
 
