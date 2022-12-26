@@ -265,14 +265,7 @@ function vm16.putchar(prog_pos, val)
 end
 
 function vm16.getchar(prog_pos)
-	if programmer_present(prog_pos) then
-		local stdout = M(prog_pos):get_int("stdout")
-		if stdout == 1 then
-			return term.getchar(prog_pos)
-		else
-			return 0  -- no char
-		end
-	end
+	return 0  -- no char
 end
 
 function vm16.unload_cpu(cpu_pos, prog_pos)

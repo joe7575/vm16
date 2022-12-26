@@ -48,11 +48,6 @@ local function fs_window(pos, mem, textsize)
 end
 
 function vm16.term.formspec(pos, mem, textsize)
-	vm16.menubar.add_button("esc", "ESC")
-	vm16.menubar.add_button("f1", "F1", 1.2)
-	vm16.menubar.add_button("f2", "F2", 1.2)
-	vm16.menubar.add_button("f3", "F3", 1.2)
-	vm16.menubar.add_button("f4", "F4", 1.2)
 	vm16.menubar.add_button("close", "Close")
 	mem.term_text = mem.term_text or ">"
 	return fs_window(pos, mem, textsize)
@@ -84,16 +79,6 @@ local function new_line(pos, mem)
 	if mem.ttl and mem.ttl > minetest.get_gametime() then
 		M(pos):set_string("formspec", vm16.prog.formspec(pos, mem))
 	end
-end
-
-function vm16.term.getchar(pos)
-	local mem = prog.get_mem(pos)
-	local val = 0
-	if mem.input and mem.input ~= "" then
-		val = string.byte(mem.input, 1)
-		mem.input = string.sub(mem.input, 2)
-	end
-	return val
 end
 
 local function putchar(pos, mem, val)
@@ -128,38 +113,8 @@ function vm16.term.putchar(pos, val)
 	end
 end
 
-local function function_keys(fields)
-	if fields.esc then
-		fields.command = "\027"
-		fields.enter = true
-	elseif fields.f1 then
-		fields.command = "\028"
-		fields.enter = true
-	elseif fields.f2 then
-		fields.command = "\029"
-		fields.enter = true
-	elseif fields.f3 then
-		fields.command = "\030"
-		fields.enter = true
-	elseif fields.f4 then
-		fields.command = "\031"
-		fields.enter = true
-	end
-	return fields
-end
-
 function vm16.term.on_receive_fields(pos, fields, mem)
-	fields = function_keys(fields)
-
-	if fields.key_enter_field or fields.enter then
---		mem.input = string.sub(fields.command or "", 1, STR_LEN)
---		if mem.input == "" then
---			mem.input = "\026"
---		end
---		vm16.historybuffer_add(pos, fields.command or "")
---		mem.command = ""
-		M(pos):set_string("formspec", vm16.prog.formspec(pos, mem))
-	elseif fields.close then
+	if fields.close then
 		mem.term_active = false
 	end
 end
