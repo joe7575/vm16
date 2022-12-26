@@ -63,6 +63,8 @@ local function char_to_val(char)
 		return 9
 	elseif char == "\\n" then
 		return 10
+	elseif char == "\\r" then
+		return 13
 	elseif #char == 2 then
 		return char:byte(1) * 256 + char:byte(2)
 	else
