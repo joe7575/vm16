@@ -86,6 +86,16 @@ local function new_line(pos, mem)
 	end
 end
 
+function vm16.term.getchar(pos)
+	local mem = prog.get_mem(pos)
+	local val = 0
+	if mem.input and mem.input ~= "" then
+		val = string.byte(mem.input, 1)
+		mem.input = string.sub(mem.input, 2)
+	end
+	return val
+end
+
 local function putchar(pos, mem, val)
 	if val == 0 then
 		return
