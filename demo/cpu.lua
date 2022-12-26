@@ -91,6 +91,9 @@ local cpu_def = {
 		elseif address == 1 then
 			local prog_pos = S2P(M(pos):get_string("prog_pos"))
 			return vm16.set_stdout(prog_pos, val1) or 0xffff, 500  -- costs for call
+		elseif address == 2 then
+			local prog_pos = S2P(M(pos):get_string("prog_pos"))
+			return vm16.getchar(prog_pos) or 0, 500  -- costs for call
 		else
 			-- Add your own system command here
 			print("on_system")
