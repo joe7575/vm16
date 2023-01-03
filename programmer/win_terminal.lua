@@ -47,6 +47,14 @@ local function fs_window(pos, mem, textsize)
 		"textarea[" .. TERM_SIZE .. ";;Terminal;" .. mem.term_text .. "]"
 end
 
+function vm16.term.init(pos, mem)
+	-- init terminal
+	M(pos):set_int("stdout", 0)
+	mem.term_text = ">"
+	mem.last_line = ""
+	mem.output = ""
+end
+
 function vm16.term.formspec(pos, mem, textsize)
 	if mem.executing then
 		vm16.menubar.add_button("stop", "Stop CPU")

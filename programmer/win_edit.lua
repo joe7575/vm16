@@ -130,7 +130,7 @@ function vm16.edit.on_load_file(mem, name, text)
 	mem.error = nil
 end
 
-local function start_cpu(mem, obj)
+local function start_cpu(pos, mem, obj)
 	mem.cpu_def = prog.get_cpu_def(mem.cpu_pos)
 	local mem_size = mem.cpu_def and mem.cpu_def.on_mem_size(mem.cpu_pos) or 3
 	vm16.create(mem.cpu_pos, mem_size)
@@ -149,6 +149,7 @@ local function start_cpu(mem, obj)
 		local def = prog.get_cpu_def(mem.cpu_pos)
 		def.on_start(mem.cpu_pos)
 		mem.executing = true
+		vm16.term.init(pos, mem)
 		minetest.get_node_timer(mem.cpu_pos):start(mem.cpu_def.cycle_time)
 		vm16.run(mem.cpu_pos, mem.cpu_def, mem.breakpoints)
 	end
@@ -222,7 +223,7 @@ function vm16.edit.on_receive_fields(pos, fields, mem)
 					}
 					local sts, res = vm16.compile(mem.server_pos, mem.file_name, server.read_file, options)
 					if sts then
-						start_cpu(mem, res)
+						start_cpu(pos, mem, res)
 						mem.error = nil
 					else
 						mem.error = res

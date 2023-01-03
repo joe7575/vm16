@@ -175,6 +175,7 @@ function vm16.debug.init(pos, mem, obj)
 
 	mem.cpu_def = prog.get_cpu_def(mem.cpu_pos)
 	local mem_size = mem.cpu_def and mem.cpu_def.on_mem_size(mem.cpu_pos) or 3
+	vm16.term.init(pos, mem)
 	vm16.create(mem.cpu_pos, mem_size)
 
 	for _, item in ipairs(obj.lCode) do
