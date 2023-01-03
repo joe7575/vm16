@@ -34,11 +34,16 @@ editor, debugger, file server and more.
  - Assembler v%s
  - vm16 API v%s
 
-Be inspired...
+Instructions:
+ - First click on "Init" to initialize the computer
+ - Double-click on a file on the right to open the editor
+ - Click "Execute" to start the program
+ - or click "Debug" to single-step the program
+ - Use "+", "-" buttons to change the font size
+ - Enter a file name and click "New" to generate a new file
+ - Copy/paste code from given (read-only) examples
 
-
-
-(First click on "Init", to initialize the computer, then double click on a file to start the editor)
+Have fun! 
 ]], version, vm16.Comp.version, vm16.Asm.version, vm16.version)
 
 vm16.edit = {}
@@ -57,51 +62,63 @@ local function add_lineno(pos, text, err)
 end
 
 
-local function fs_editor(pos, mem, fontsize, file, text)
-	return "box[" .. EDIT_SIZE .. ";#000]" ..
-		"style_type[textarea;font=mono;textcolor=#FFF;border=false;font_size="  .. fontsize .. "]" ..
+local function fs_editor(pos, mem, fontsize, file, text, background_color)
+	local textcolor = server.is_ro_file(mem.server_pos, mem.file_name) and "#AAA" or "#FFF"
+	background_color = background_color or "#000"
+	-- Also the list-only window needs "editing rights" to be able to copy text
+	return "box[" .. EDIT_SIZE .. ";" .. background_color .. "]" ..
+		"style_type[textarea;font=mono;textcolor=" .. textcolor .. ";border=false;font_size="  .. fontsize .. "]" ..
 		"textarea[" .. EDIT_SIZE .. ";code;File: " .. file .. ";" ..
 		minetest.formspec_escape(text) .. "]"
 end
 
 local function fs_listing(pos, mem, fontsize, file, text, err)
 	return "box[" .. EDIT_SIZE .. ";#000]" ..
-		"style_type[textarea;font=mono;textcolor=#FFF;border=false;font_size="  .. fontsize .. "]" ..
+		"style_type[textarea;font=mono;textcolor=#AAA;border=false;font_size="  .. fontsize .. "]" ..
 		"textarea[" .. EDIT_SIZE .. ";;Listing: " .. file .. ";" ..
 		minetest.formspec_escape(add_lineno(pos, text, err)) .. "]"
 end
 
 function vm16.edit.formspec(pos, mem, textsize)
 	if mem.file_name and mem.file_text and mem.server_pos then
+		local background_color = "#000"
 		if mem.error then
 			-- Output listing + error
 			mem.status = "Error !!!"
 			vm16.menubar.add_button("edit", "Edit")
 			return fs_listing(pos, mem, textsize, "out.lst", mem.file_text , mem.error) ..
 				vm16.files.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize)
+		elseif mem.file_name == "info.txt" then
+			vm16.menubar.add_button("cancel", "Close File", 2.2)
+			background_color = "#141"
 		elseif mem.file_ext == "asm" then
 			mem.status = "Edit"
-			vm16.menubar.add_button("cancel", "Cancel")
+			vm16.menubar.add_button("cancel", "Close File", 2.2)
 			if not server.is_ro_file(mem.server_pos, mem.file_name) then
 				vm16.menubar.add_button("save", "Save")
 			end
+			vm16.menubar.add_button("execute", "Execute")
 			vm16.menubar.add_button("asmdbg", "Debug")
 		elseif mem.file_ext == "c" then
 			mem.status = "Edit"
-			vm16.menubar.add_button("cancel", "Cancel")
+			vm16.menubar.add_button("cancel", "Close File", 2.2)
 			if not server.is_ro_file(mem.server_pos, mem.file_name) then
 				vm16.menubar.add_button("save", "Save")
 			end
-			vm16.menubar.add_button("compile", "Compile")
+			vm16.menubar.add_button("execute", "Execute")
 			vm16.menubar.add_button("debug", "Debug")
+			vm16.menubar.add_button("compile", "Compile")
 		else
-			vm16.menubar.add_button("cancel", "Cancel")
+			vm16.menubar.add_button("cancel", "Close File", 2.2)
+			if not server.is_ro_file(mem.server_pos, mem.file_name) then
+				vm16.menubar.add_button("save", "Save")
+			end
 		end
-		return fs_editor(pos, mem, textsize, mem.file_name, mem.file_text) ..
+		return fs_editor(pos, mem, textsize, mem.file_name, mem.file_text, background_color) ..
 			vm16.files.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize)
 	else
 		vm16.menubar.add_button("init", "Init")
-		return fs_editor(pos, mem, textsize, "-", Splashscreen) ..
+		return fs_editor(pos, mem, textsize, "-", Splashscreen, "#145") ..
 			vm16.files.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize)
 	end
 end
@@ -111,6 +128,30 @@ function vm16.edit.on_load_file(mem, name, text)
 	mem.file_text = text
 	mem.file_ext = file_ext(mem.file_name)
 	mem.error = nil
+end
+
+local function start_cpu(mem, obj)
+	mem.cpu_def = prog.get_cpu_def(mem.cpu_pos)
+	local mem_size = mem.cpu_def and mem.cpu_def.on_mem_size(mem.cpu_pos) or 3
+	vm16.create(mem.cpu_pos, mem_size)
+	if vm16.is_loaded(mem.cpu_pos) then
+		for _, item in ipairs(obj.lCode) do
+			local ctype, lineno, address, opcodes = unpack(item)
+			if ctype == "code" then
+				for i, opc in pairs(opcodes or {}) do
+					vm16.poke(mem.cpu_pos, address + i - 1, opc)
+				end
+			end
+		end
+
+		vm16.set_pc(mem.cpu_pos, 0)
+
+		local def = prog.get_cpu_def(mem.cpu_pos)
+		def.on_start(mem.cpu_pos)
+		mem.executing = true
+		minetest.get_node_timer(mem.cpu_pos):start(mem.cpu_def.cycle_time)
+		vm16.run(mem.cpu_pos, mem.cpu_def, mem.breakpoints)
+	end
 end
 
 function vm16.edit.on_receive_fields(pos, fields, mem)
@@ -126,7 +167,7 @@ function vm16.edit.on_receive_fields(pos, fields, mem)
 		mem.error = nil
 	elseif fields.init then
 		minetest.registered_nodes["vm16:programmer"].on_init(pos, mem)
-		local text = server.read_file(mem.server_pos, "info.txt") or "File error"
+		local text = (server.read_file(mem.server_pos, "info.txt") or "File error") .. "\n\nDone."
 		vm16.edit.on_load_file(mem, "info.txt", text)
 	elseif fields.edit then
 		mem.error = nil
@@ -165,6 +206,23 @@ function vm16.edit.on_receive_fields(pos, fields, mem)
 					if sts then
 						vm16.debug.init(pos, mem, res)
 						vm16.watch.init(pos, mem, res)
+						mem.error = nil
+					else
+						mem.error = res
+					end
+				end
+			end
+		elseif fields.execute then
+			local def = prog.get_cpu_def(mem.cpu_pos)
+			if def then
+				local prog_pos = def.on_check_connection(mem.cpu_pos)
+				if prog_pos and vector.equals(pos, prog_pos) then
+					local options = {
+						startup_code = def.startup_code
+					}
+					local sts, res = vm16.compile(mem.server_pos, mem.file_name, server.read_file, options)
+					if sts then
+						start_cpu(mem, res)
 						mem.error = nil
 					else
 						mem.error = res

@@ -42,13 +42,17 @@ local function limit_num_lines(text)
 end
 
 local function fs_window(pos, mem, textsize)
-	return "box[" .. TERM_SIZE .. ";#000]" ..
-		"style_type[textarea;font=mono;textcolor=#FFF;border=false;font_size="  .. textsize .. "]" ..
+	return "box[" .. TERM_SIZE .. ";#FFF]" ..
+		"style_type[textarea;font=mono;textcolor=#000;border=false;font_size="  .. textsize .. "]" ..
 		"textarea[" .. TERM_SIZE .. ";;Terminal;" .. mem.term_text .. "]"
 end
 
 function vm16.term.formspec(pos, mem, textsize)
-	vm16.menubar.add_button("close", "Close")
+	if mem.executing then
+		vm16.menubar.add_button("stop", "Stop CPU")
+	else
+		vm16.menubar.add_button("close", "Close")
+	end
 	mem.term_text = mem.term_text or ">"
 	return fs_window(pos, mem, textsize)
 end
@@ -116,5 +120,9 @@ end
 function vm16.term.on_receive_fields(pos, fields, mem)
 	if fields.close then
 		mem.term_active = false
+	elseif fields.stop then
+		minetest.get_node_timer(mem.cpu_pos):stop()
+		vm16.destroy(mem.cpu_pos)
+		mem.executing = nil
 	end
 end
