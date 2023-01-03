@@ -52,15 +52,14 @@ putchar:
 ;===================================
 putstr:
   move X, [SP+1]
-  move A, #80  ; max string size
+  move C, #80  ; max string size
 
 loop02:
-  move B, [X]
-  bze  B, exit02
-  dec  A
+  move A, [X]
   bze  A, exit02
+  dec  C
+  bze  C, exit02
 
-  move A, B
   sys #0
   inc X
   jump loop02
