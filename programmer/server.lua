@@ -99,9 +99,8 @@ function vm16.server.read_file(pos, filename)
 		end
 		local s = M(pos):get_string("files")
 		local files = minetest.deserialize(s) or {}
-		return files[filename] or ""
+		return files[filename]
 	end
-	return ""
 end
 
 function vm16.server.write_file(pos, filename, text)
