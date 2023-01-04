@@ -2852,6 +2852,7 @@ newfile test13.c
   global foo1
   global foo2
   global foo3
+  global foo4
   global init
   global loop
   jump 8
@@ -2891,58 +2892,107 @@ foo3:
   move A, [X]
   ret
 ;  11: }
-;  13: func init() {
-init:
-;  14:   var arr1[2];
-  sub SP, #2
-;  15:   var c;
+;  13: func foo4() {
+foo4:
+;  14:   var c;
   push #0
-;  17:   arr1[0] = 1;
+;  15:   var arr[4];
+  sub SP, #4
+;  17:   arr[0] = 0x11;
+  move A, SP+0
+  add A, #0
+  move X, A
+  move [X], #17
+;  18:   arr[1] = 0x22;
+  move A, SP+0
+  add A, #1
+  move X, A
+  move [X], #34
+;  19:   arr[2] = 0x33;
+  move A, SP+0
+  add A, #2
+  move X, A
+  move [X], #51
+;  20:   arr[3] = 0x44;
+  move A, SP+0
+  add A, #3
+  move X, A
+  move [X], #68
+;  22:   c = arr[2] + arr[3];
+  move A, SP+0
+  add A, #2
+  move X, A
+  move B, SP+0
+  add B, #3
+  move Y, B
+  move C, [X]
+  add C, [Y]
+  move [SP+4], C
+;  23:   arr[0] = c;
+  move A, SP+0
+  add A, #0
+  move X, A
+  move [X], [SP+4]
+;  24:   return arr[0];
+  move A, SP+0
+  add A, #0
+  move X, A
+  move A, [X]
+  add SP, #5
+  ret
+;  25: }
+;  27: func init() {
+init:
+;  28:   var arr1[2];
+  sub SP, #2
+;  29:   var c;
+  push #0
+;  31:   arr1[0] = 1;
   move A, SP+1
   add A, #0
   move X, A
   move [X], #1
-;  18:   c = arr1;
+;  32:   c = arr1;
   move [SP+0], SP+1
-;  19:   c = *arr1;
+;  33:   c = *arr1;
   move X, SP+1
   move [SP+0], [X]
-;  20:   c = arr1[1];
+;  34:   c = arr1[1];
   move A, SP+1
   add A, #1
   move X, A
   move [SP+0], [X]
-;  21:   foo1(arr1);
+;  35:   foo1(arr1);
   push SP+1
   call foo1
   add SP, #1
-;  22:   foo2(1, arr1);
+;  36:   foo2(1, arr1);
   push #1
   push SP+2
   call foo2
   add SP, #2
-;  23:   foo3(1, 2, arr1);
+;  37:   foo3(1, 2, arr1);
   push #1
   push #2
   push SP+3
   call foo3
   add SP, #3
+;  38:   foo4();
+  call foo4
   add SP, #3
   ret
-;  24: }
-;  26: func loop() {
+;  39: }
+;  41: func loop() {
 loop:
   move A, A
   ret
-;  27: }
-  .data
-arr1: 0
+;  42: }
 #### Code ####
  file   0 0000: test13.c
  code   0 0000: 1200 0008
  code   0 0008: 1600 0011
- code   0 000A: 1600 0027
- code   0 000C: 1600 0054
+ code   0 000A: 1600 0060
+ code   0 000C: 1600 008F
  code   0 000E: 0000
  code   0 000F: 1200 000C
  code   0 0011: 1800
@@ -2961,36 +3011,73 @@ arr1: 0
  code  10 0024: 2080
  code  10 0025: 2008
  code  10 0026: 1800
- code  14 0027: 34F0 0002
- code  15 0029: 6980
- code  17 002A: 2017 0001
+ code  14 0027: 6980
+ code  15 0028: 34F0 0004
+ code  17 002A: 2017 0000
  code  17 002C: 300C
  code  17 002D: 2080
- code  17 002E: 210D
- code  18 002F: 2277 0000 0001
- code  19 0032: 2097 0001
- code  19 0034: 2268 0000
- code  20 0036: 2017 0001
- code  20 0038: 300D
- code  20 0039: 2080
- code  20 003A: 2268 0000
- code  21 003C: 6AE0 0001
- code  21 003E: 1600 0012
- code  21 0040: 30ED
- code  22 0041: 69A0
- code  22 0042: 6AE0 0002
- code  22 0044: 1600 0019
- code  22 0046: 30F0 0002
- code  23 0048: 69A0
- code  23 0049: 6A00 0002
- code  23 004B: 6AE0 0003
- code  23 004D: 1600 0020
- code  23 004F: 30F0 0003
- code  23 0051: 30F0 0003
- code  23 0053: 1800
- code  26 0054: 2000
- code  26 0055: 1800
- code  14 0056: 0000
+ code  17 002E: 2110 0011
+ code  18 0030: 2017 0000
+ code  18 0032: 300D
+ code  18 0033: 2080
+ code  18 0034: 2110 0022
+ code  19 0036: 2017 0000
+ code  19 0038: 3010 0002
+ code  19 003A: 2080
+ code  19 003B: 2110 0033
+ code  20 003D: 2017 0000
+ code  20 003F: 3010 0003
+ code  20 0041: 2080
+ code  20 0042: 2110 0044
+ code  22 0044: 2017 0000
+ code  22 0046: 3010 0002
+ code  22 0048: 2080
+ code  22 0049: 2037 0000
+ code  22 004B: 3030 0003
+ code  22 004D: 20A1
+ code  22 004E: 2048
+ code  22 004F: 3049
+ code  22 0050: 2262 0004
+ code  23 0052: 2017 0000
+ code  23 0054: 300C
+ code  23 0055: 2080
+ code  23 0056: 2113 0004
+ code  24 0058: 2017 0000
+ code  24 005A: 300C
+ code  24 005B: 2080
+ code  24 005C: 2008
+ code  24 005D: 30F0 0005
+ code  24 005F: 1800
+ code  28 0060: 34F0 0002
+ code  29 0062: 6980
+ code  31 0063: 2017 0001
+ code  31 0065: 300C
+ code  31 0066: 2080
+ code  31 0067: 210D
+ code  32 0068: 2277 0000 0001
+ code  33 006B: 2097 0001
+ code  33 006D: 2268 0000
+ code  34 006F: 2017 0001
+ code  34 0071: 300D
+ code  34 0072: 2080
+ code  34 0073: 2268 0000
+ code  35 0075: 6AE0 0001
+ code  35 0077: 1600 0012
+ code  35 0079: 30ED
+ code  36 007A: 69A0
+ code  36 007B: 6AE0 0002
+ code  36 007D: 1600 0019
+ code  36 007F: 30F0 0002
+ code  37 0081: 69A0
+ code  37 0082: 6A00 0002
+ code  37 0084: 6AE0 0003
+ code  37 0086: 1600 0020
+ code  37 0088: 30F0 0003
+ code  38 008A: 1600 0027
+ code  38 008C: 30F0 0003
+ code  38 008E: 1800
+ code  41 008F: 2000
+ code  41 0090: 1800
 #### Debug ####
  file   0 0000: "test13.c"
  func   1 0012: "foo1"
@@ -3008,16 +3095,22 @@ arr1: 0
  svar  10    1: "c"
  svar  10    2: "b"
  svar  10    0: "@num_stack_var@"
- func  13 0027: "init"
- call  21 0012: "foo1"
- call  22 0019: "foo2"
- call  23 0020: "foo3"
- svar  23   -3: "c"
- svar  23   -2: "arr1"
- svar  23    3: "@num_stack_var@"
- func  26 0054: "loop"
- svar  26    0: "@num_stack_var@"
- endf  28 0057: "test13.c"
+ func  13 0027: "foo4"
+  ret  24 0000: "0"
+ svar  24   -5: "arr"
+ svar  24   -1: "c"
+ svar  24    5: "@num_stack_var@"
+ func  27 0060: "init"
+ call  35 0012: "foo1"
+ call  36 0019: "foo2"
+ call  37 0020: "foo3"
+ call  38 0027: "foo4"
+ svar  38   -3: "c"
+ svar  38   -2: "arr1"
+ svar  38    3: "@num_stack_var@"
+ func  41 008F: "loop"
+ svar  41    0: "@num_stack_var@"
+ endf  43 0091: "test13.c"
 
  #### Compile 'loop': test14.c ####
 ;##### test14.c #####
@@ -3759,7 +3852,6 @@ loop:
 arr1: 0,0,0,0,0,0,0,0,0,0
 arr2: 0,0,0,0,0,0,0,0,0,0,0
 arr3@4: 0,0,0,0
-arr4: 0
 #### Code ####
  file   0 0000: test16.c
  code   0 0000: 1200 0008
@@ -3863,7 +3955,6 @@ arr4: 0
  code   7 009E: 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000
  code   8 00A8: 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000
  code   9 00B3: 0000 0000 0000 0000
- code  12 00B7: 0000
 #### Debug ####
  file   0 0056: "test16.c"
  file   0 0012: "stdio.asm"
@@ -3894,4 +3985,4 @@ arr4: 0
  svar  26    3: "@num_stack_var@"
  func  29 009C: "loop"
  svar  29    0: "@num_stack_var@"
- endf  31 00B8: "test16.c"
+ endf  31 00B7: "test16.c"
