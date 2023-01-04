@@ -46,7 +46,7 @@ local function format_files(pos, mem)
 		local names = server.get_filelist(mem.server_pos)
 		local out = {}
 		for _, item in ipairs(names or {}) do
-			local s = string.format("%-16s %s", item.name, item.attr)
+			local s = string.format("%-20s %s", item.name, item.attr)
 			out[#out + 1] = s
 		end
 		return table.concat(out, ",")

@@ -16,18 +16,28 @@ local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
 local S2P = function(s) return minetest.string_to_pos(s) end
 local prog = vm16.prog
 
+local function split_filename(s)
+	local _, _, name, ext = string.find(s, "(.+)%.(.*)")
+	name = name or s
+	ext = ext or ""
+	local _, _, path, base = string.find(name, "(.-)/(.+)")
+	path = path or ""
+	base = base or name
+	return path, base, ext
+end
+
 local function order(a, b)
-	local name1, ext1 = unpack(string.split(a.name, ".", true, 1))
-	local name2, ext2 = unpack(string.split(b.name, ".", true, 1))
-	if a.attr ~= b.attr then
+	local path1, name1, ext1 = split_filename(a.name)
+	local path2, name2, ext2 = split_filename(b.name)
+	
+	if path1 ~= path2 then
+		return path1 < path2
+	elseif a.attr ~= b.attr then
 		return a.attr > b.attr
-	elseif ext1 and ext2 then
-		if ext1 == ext2 then
-			return name1 < name2
-		else
-			return ext1 < ext2
-		end
+	elseif ext1 ~= ext2 then
+		return ext1 < ext2
 	end
+	return name1 < name2
 end
 
 local ReadOnlyFiles = {}   -- [cpu_type][file_name] = text
@@ -53,6 +63,7 @@ local function get_filelist(pos)
 		end
 	end
 	table.sort(out, order)
+	print(dump(out))
 	return out
 end
 
