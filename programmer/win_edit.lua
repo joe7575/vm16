@@ -10,7 +10,7 @@
 	Editor window for the debugger
 ]]--
 
-local version = "1.3"
+local version = "1.4"
 
 -- for lazy programmers
 local M = minetest.get_meta
@@ -221,7 +221,12 @@ function vm16.edit.on_receive_fields(pos, fields, mem)
 					local options = {
 						startup_code = def.startup_code
 					}
-					local sts, res = vm16.compile(mem.server_pos, mem.file_name, server.read_file, options)
+					local sts, res
+					if mem.file_ext == "asm" then
+						sts, res = vm16.assemble(mem.server_pos, mem.file_name, server.read_file)
+					else
+						sts, res = vm16.compile(mem.server_pos, mem.file_name, server.read_file, options)
+					end
 					if sts then
 						start_cpu(pos, mem, res)
 						mem.error = nil

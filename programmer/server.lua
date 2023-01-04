@@ -63,7 +63,6 @@ local function get_filelist(pos)
 		end
 	end
 	table.sort(out, order)
-	print(dump(out))
 	return out
 end
 
