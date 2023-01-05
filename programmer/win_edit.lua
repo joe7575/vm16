@@ -156,7 +156,8 @@ local function start_cpu(pos, mem, obj)
 end
 
 function vm16.edit.on_receive_fields(pos, fields, mem)
-	if fields.code and (fields.save or fields.compile or fields.assemble or fields.debug) then
+	if fields.code and (fields.save or fields.compile or fields.assemble or
+				fields.debug or fields.larger or fields.smaller) then
 		if mem.file_name and mem.server_pos then
 			mem.file_text = fields.code
 			server.write_file(mem.server_pos, mem.file_name, mem.file_text)

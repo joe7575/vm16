@@ -64,7 +64,8 @@ function prog.on_receive_fields(pos, formname, fields, player)
 		M(pos):set_int("textsize", math.min(M(pos):get_int("textsize") + 1, 8))
 	elseif fields.smaller then
 		M(pos):set_int("textsize", math.max(M(pos):get_int("textsize") - 1, -8))
-	elseif mem.term_active or mem.executing then
+	end
+	if mem.term_active or mem.executing then
 		vm16.term.on_receive_fields(pos, fields, mem)
 	elseif mem.cpu_pos and vm16.is_loaded(mem.cpu_pos) then
 		vm16.debug.on_receive_fields(pos, fields, mem)
