@@ -1,5 +1,7 @@
 const MAX = 32;
 
+var cnt = 0;
+
 func main() {
   var i = 1;
   var ptr = 0x100;
@@ -11,8 +13,9 @@ func main() {
 
     _asm_ {
       move A, #3
+      move A, cnt ; global variable
+      move A, i   ; local variable
       xor $100, [X]++
-      jump 0
     }
   }
 }

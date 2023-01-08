@@ -800,77 +800,88 @@ brnch  34 003F: "@lbl7"
 ;##### test04.c #####
 newfile test04.c
   .code
+  global cnt
   global main
   call main
   halt
 @init:
-  ret
 ;   1: const MAX = 32;
-;   3: func main() {
+;   3: var cnt = 0;
+  move cnt, #0
+  ret
+;   5: func main() {
 main:
-;   4:   var i = 1;
+;   6:   var i = 1;
   push #1
-;   5:   var ptr = 0x100;
+;   7:   var ptr = 0x100;
   push #256
-;   7:   output(1, i);
+;   9:   output(1, i);
   out #1, [SP+1]
-;   8:   while(i < MAX) {
+;  10:   while(i < MAX) {
 @lbl1:
   move A, [SP+1]
   sklt A, #32
   jump @lbl2
-;   9:     i = i + 1;
+;  11:     i = i + 1;
   move A, [SP+1]
   add A, #1
   move [SP+1], A
-;  10:     i = *ptr;
+;  12:     i = *ptr;
   move X, [SP+0]
   move [SP+1], [X]
-;  12:     _asm_ {
-;  13:       move A, #3
+;  14:     _asm_ {
+;  15:       move A, #3
   move A, #3
-;  14:       xor $100, [X]++
+;  16:       move A, cnt ; global variable
+  move A, cnt ; global variable
+;  17:       move A, i   ; local variable
+  move A, [SP+1]
+;  18:       xor $100, [X]++
   xor $100, [X]++
-;  15:       jump 0
-  jump 0
   jump @lbl1
 @lbl2:
-;  16:     }
-;  17:   }
+;  19:     }
+;  20:   }
   add SP, #2
   ret
-;  18: }
+;  21: }
+  .data
+cnt: 0
 #### Code ####
  file   0 0000: test04.c
- code   0 0000: 1600 0004
+ code   0 0000: 1600 0006
  code   0 0002: 1C00
- code   0 0003: 1800
- code   4 0004: 69A0
- code   5 0005: 6A00 0100
- code   7 0007: 65B3 0001
- code   8 0009: 2013 0001
- code   8 000B: 9410 0020
- code   8 000D: 1200 0020
- code   9 000F: 2013 0001
- code   9 0011: 300D
- code   9 0012: 2260 0001
- code  10 0014: 2093 0000
- code  10 0016: 2268 0001
- code  13 0018: 2010 0003
- code  14 001A: 4A20 0100
- code  15 001C: 1200 0000
- code  15 001E: 1200 0009
- code  17 0020: 30F0 0002
- code  17 0022: 1800
+ code   3 0003: 222C 0027
+ code   0 0005: 1800
+ code   6 0006: 69A0
+ code   7 0007: 6A00 0100
+ code   9 0009: 65B3 0001
+ code  10 000B: 2013 0001
+ code  10 000D: 9410 0020
+ code  10 000F: 1200 0024
+ code  11 0011: 2013 0001
+ code  11 0013: 300D
+ code  11 0014: 2260 0001
+ code  12 0016: 2093 0000
+ code  12 0018: 2268 0001
+ code  15 001A: 2010 0003
+ code  16 001C: 2011 0027
+ code  17 001E: 2013 0001
+ code  18 0020: 4A20 0100
+ code  18 0022: 1200 000B
+ code  20 0024: 30F0 0002
+ code  20 0026: 1800
+ code   3 0027: 0000
 #### Debug ####
  file   0 0000: "test04.c"
- func   3 0004: "main"
-brnch   8 0020: "@lbl2"
-brnch  15 0009: "@lbl1"
- svar  17   -1: "i"
- svar  17   -2: "ptr"
- svar  17    2: "@num_stack_var@"
- endf  19 0023: "test04.c"
+ gvar   3 0027: "cnt"
+ func   5 0006: "main"
+brnch  10 0024: "@lbl2"
+brnch  18 000B: "@lbl1"
+ svar  20   -1: "i"
+ svar  20   -2: "ptr"
+ svar  20    2: "@num_stack_var@"
+ endf  22 0028: "test04.c"
 
  #### Compile 'main': test05.c ####
 ;##### test05.c #####
@@ -3986,3 +3997,299 @@ arr3@4: 0,0,0,0
  func  29 009C: "loop"
  svar  29    0: "@num_stack_var@"
  endf  31 00B7: "test16.c"
+
+ #### Compile 'loop': test17.c ####
+;##### test17.c #####
+newfile test17.c
+  .code
+  global test1
+  global test2
+  global test3
+  global tbl
+  global init
+  global loop
+  jump 8
+  .org 8
+  call @init
+  call init
+@loop:
+  call loop
+  nop
+  jump @loop
+@init:
+  ret
+;   1: const MAX = 100;
+;   2: const MIN = 0;
+;   4: func test1() {
+test1:
+;   5:   system(0, 0x31);
+  move A, #49
+  sys #0
+;   6:   return 1;
+  move A, #1
+  ret
+;   7: }
+;   9: func test2() {
+test2:
+;  10:   system(0, 0x32);
+  move A, #50
+  sys #0
+;  11:   return 2;
+  move A, #2
+  ret
+;  12: }
+;  14: func test3() {
+test3:
+;  15:   system(0, 0x33);
+  move A, #51
+  sys #0
+;  16:   return 3;
+  move A, #3
+  ret
+;  17: }
+;  19: var tbl[] = {test1, test2, test3, MIN, MAX};
+;  21: func init() {
+init:
+;  22:   var c = test1;
+  push #test1
+  move A, A
+  add SP, #1
+  ret
+;  23: }
+;  25: func loop() {
+loop:
+;  26:   var val;
+  push #0
+;  27:   var res = 0;
+  push #0
+;  28:   var i;
+  push #0
+;  30:   res = res + tbl[0]();
+  move A, #tbl
+  add A, #0
+  move X, A
+  push A
+  call [X]
+  move B, A
+  pop  A
+  move C, [SP+1]
+  add C, B
+  move [SP+1], C
+;  31:   res = res + tbl[1]();
+  move A, #tbl
+  add A, #1
+  move X, A
+  push A
+  call [X]
+  move B, A
+  pop  A
+  move C, [SP+1]
+  add C, B
+  move [SP+1], C
+;  32:   res = res + tbl[2]();
+  move A, #tbl
+  add A, #2
+  move X, A
+  push A
+  call [X]
+  move B, A
+  pop  A
+  move C, [SP+1]
+  add C, B
+  move [SP+1], C
+;  34:   val = tbl[0];
+  move A, #tbl
+  add A, #0
+  move X, A
+  move [SP+2], [X]
+;  35:   res = res + val();
+  move A, [SP+2]
+  call A
+  move B, [SP+1]
+  add B, A
+  move [SP+1], B
+;  37:   val = tbl[1];
+  move A, #tbl
+  add A, #1
+  move X, A
+  move [SP+2], [X]
+;  38:   res = res + val();
+  move A, [SP+2]
+  call A
+  move B, [SP+1]
+  add B, A
+  move [SP+1], B
+;  40:   val = tbl[2];
+  move A, #tbl
+  add A, #2
+  move X, A
+  move [SP+2], [X]
+;  41:   res = res + val();
+  move A, [SP+2]
+  call A
+  move B, [SP+1]
+  add B, A
+  move [SP+1], B
+;  43:   for(i = 0; i < 3; i++) {
+  move [SP+0], #0
+@lbl1:
+  move A, [SP+0]
+  sklt A, #3
+  jump @lbl2
+;  44:     res = res + tbl[i]();
+  move A, #tbl
+  add A, [SP+0]
+  move X, A
+  push A
+  call [X]
+  move B, A
+  pop  A
+  move C, [SP+1]
+  add C, B
+  move [SP+1], C
+;  45:     ; // dbg line
+@lbl3:
+  inc [SP+0]
+  jump @lbl1
+@lbl2:
+;  46:   }
+;  47:   ; // dbg line
+  add SP, #3
+  ret
+;  48: }
+  .data
+tbl: test1,test2,test3,0,100
+#### Code ####
+ file   0 0000: test17.c
+ code   0 0000: 1200 0008
+ code   0 0008: 1600 0011
+ code   0 000A: 1600 0023
+ code   0 000C: 1600 0028
+ code   0 000E: 0000
+ code   0 000F: 1200 000C
+ code   0 0011: 1800
+ code   5 0012: 2010 0031
+ code   5 0014: 0800
+ code   6 0015: 200D
+ code   6 0016: 1800
+ code  10 0017: 2010 0032
+ code  10 0019: 0800
+ code  11 001A: 2010 0002
+ code  11 001C: 1800
+ code  15 001D: 2010 0033
+ code  15 001F: 0800
+ code  16 0020: 2010 0003
+ code  16 0022: 1800
+ code  22 0023: 6A00 0012
+ code  22 0025: 2000
+ code  22 0026: 30ED
+ code  22 0027: 1800
+ code  26 0028: 6980
+ code  27 0029: 6980
+ code  28 002A: 6980
+ code  30 002B: 2010 009B
+ code  30 002D: 300C
+ code  30 002E: 2080
+ code  30 002F: 6800
+ code  30 0030: 1500
+ code  30 0031: 2020
+ code  30 0032: 6C00
+ code  30 0033: 2053 0001
+ code  30 0035: 3041
+ code  30 0036: 2262 0001
+ code  31 0038: 2010 009B
+ code  31 003A: 300D
+ code  31 003B: 2080
+ code  31 003C: 6800
+ code  31 003D: 1500
+ code  31 003E: 2020
+ code  31 003F: 6C00
+ code  31 0040: 2053 0001
+ code  31 0042: 3041
+ code  31 0043: 2262 0001
+ code  32 0045: 2010 009B
+ code  32 0047: 3010 0002
+ code  32 0049: 2080
+ code  32 004A: 6800
+ code  32 004B: 1500
+ code  32 004C: 2020
+ code  32 004D: 6C00
+ code  32 004E: 2053 0001
+ code  32 0050: 3041
+ code  32 0051: 2262 0001
+ code  34 0053: 2010 009B
+ code  34 0055: 300C
+ code  34 0056: 2080
+ code  34 0057: 2268 0002
+ code  35 0059: 2013 0002
+ code  35 005B: 1400
+ code  35 005C: 2033 0001
+ code  35 005E: 3020
+ code  35 005F: 2261 0001
+ code  37 0061: 2010 009B
+ code  37 0063: 300D
+ code  37 0064: 2080
+ code  37 0065: 2268 0002
+ code  38 0067: 2013 0002
+ code  38 0069: 1400
+ code  38 006A: 2033 0001
+ code  38 006C: 3020
+ code  38 006D: 2261 0001
+ code  40 006F: 2010 009B
+ code  40 0071: 3010 0002
+ code  40 0073: 2080
+ code  40 0074: 2268 0002
+ code  41 0076: 2013 0002
+ code  41 0078: 1400
+ code  41 0079: 2033 0001
+ code  41 007B: 3020
+ code  41 007C: 2261 0001
+ code  43 007E: 226C 0000
+ code  43 0080: 2013 0000
+ code  43 0082: 9410 0003
+ code  43 0084: 1200 0098
+ code  44 0086: 2010 009B
+ code  44 0088: 3013 0000
+ code  44 008A: 2080
+ code  44 008B: 6800
+ code  44 008C: 1500
+ code  44 008D: 2020
+ code  44 008E: 6C00
+ code  44 008F: 2053 0001
+ code  44 0091: 3041
+ code  44 0092: 2262 0001
+ code  43 0094: 2A60 0000
+ code  45 0096: 1200 0080
+ code  47 0098: 30F0 0003
+ code  47 009A: 1800
+ code  19 009B: 0012 0017 001D 0000 0064
+#### Debug ####
+ file   0 0000: "test17.c"
+ func   4 0012: "test1"
+  ret   6 0000: "0"
+ svar   6    0: "@num_stack_var@"
+ func   9 0017: "test2"
+  ret  11 0000: "0"
+ svar  11    0: "@num_stack_var@"
+ func  14 001D: "test3"
+  ret  16 0000: "0"
+ svar  16    0: "@num_stack_var@"
+ gvar  19 009B: "tbl[]"
+ func  21 0023: "init"
+ svar  22   -1: "c"
+ svar  22    1: "@num_stack_var@"
+ func  25 0028: "loop"
+ call  30 0000: "X"
+ call  31 0000: "X"
+ call  32 0000: "X"
+ call  35 0000: "val"
+ call  38 0000: "val"
+ call  41 0000: "val"
+brnch  43 0098: "@lbl2"
+ call  44 0000: "X"
+brnch  45 0080: "@lbl1"
+ svar  47   -3: "i"
+ svar  47   -2: "res"
+ svar  47   -1: "val"
+ svar  47    3: "@num_stack_var@"
+ endf  49 00A0: "test17.c"

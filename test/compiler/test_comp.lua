@@ -222,10 +222,11 @@ local function beduino_compile(filename)
 	end
 end
 
---assemble("stdio.asm")
+--assemble("test2.asm")
 --compile("comm.c")
---compile("test05.c")
+--compile("test21.c")
 --test_lookup("test08.c")
 --compile_and_assemble("test01.c")
 --beduino_compile("test09.c")
-beduino_compile("test16.c")
+--beduino_compile("test_test.c")
+beduino_compile("test17.c")

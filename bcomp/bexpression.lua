@@ -190,6 +190,7 @@ end
 postfix:
     = factor
     | variable '[' expression ']'
+    | variable '[' expression ']' func_call
 ]]--
 function BExpr:postfix()
 	if self:tk_next().val == "[" then
@@ -200,7 +201,11 @@ function BExpr:postfix()
 		opnd1 = self:add_instr("add", opnd1, opnd2)
 		local reg = self:next_free_indexreg()
 		self:add_instr("move", reg, opnd1)
-		return "[" .. reg .. "]"
+		if self:tk_peek().val == "(" then
+			return self:func_call(reg, true)
+		else
+			return "[" .. reg .. "]"
+		end
 	end
 	return self:factor()
 end
@@ -311,11 +316,12 @@ func_call:
     | address '(' ')'
     | address '(' expression { ',' expression } ')'
 ]]--
-function BExpr:func_call(ident)
+function BExpr:func_call(ident, inReg)
 	self:push_regs()
 	-- A function call as parameter is a recursive call to 'func_call'
 	local base_val = self.num_param
-	local addr = self:address()
+	-- If address is already calculated and stored in reg
+	local addr = inReg and ident or self:address()
 	self:tk_match("(")
 	if self:tk_peek().val ~= ")" then
 		while true do
@@ -331,7 +337,11 @@ function BExpr:func_call(ident)
 	end
 	self:tk_match(")")
 	self:add_debugger_info("call", self.lineno, ident, ident)
-	self:add_instr("call", addr)
+	if inReg then
+		self:add_instr("call", "[" .. addr .. "]")
+	else
+		self:add_instr("call", addr)
+	end
 	if self.num_param > base_val then
 		self:add_instr("add", "SP", "#" .. (self.num_param - base_val))
 	end

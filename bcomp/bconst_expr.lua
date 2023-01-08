@@ -76,6 +76,9 @@ function BConstEx:const_factor()
 	elseif self:sym_is_const(tok.val) then
 		self:tk_match()
 		return tonumber(string.sub(self:sym_get_const(tok.val), 2))
+	elseif self:sym_is_func(tok.val) then
+		self:tk_match()
+		return tok.val
 	elseif tok.val == "(" then
 		self:tk_match("(")
 		local res = self:const_expression()

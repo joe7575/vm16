@@ -220,11 +220,11 @@ function BPars:const_list(ident, size)
 
 		if self:tk_peek().val == '-' then
 			self:tk_match()
-			local tok = self:tk_match(T_NUMBER)
-			self:append_val(0x10000 - tok.val)
+			local num = self:const_expression()
+			self:append_val(0x10000 - num)
 		else
-			local tok = self:tk_match(T_NUMBER)
-			self:append_val(tok.val)
+			local num = self:const_expression()
+			self:append_val(num)
 		end
 		size = size - 1
 		realsize = realsize + 1
