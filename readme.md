@@ -120,6 +120,10 @@ Licensed under the GNU GPLv3 (See LICENSE.txt)
 
 ## History
 
+### API v3.5 / Core v2.7.4 / ASM v2.5 / Compiler v1.10 / Debugger v1.4 (2023-01-08)
+
+- Compiler: Enable jump tables via: `var tbl[] = {func1, func2}; ... tbl[idx]();`
+
 ### API v3.5 / Core v2.7.4 / ASM v2.5 / Compiler v1.09 / Debugger v1.3 (2022-08-06)
 
 - Compiler: Add >= and <= operators
