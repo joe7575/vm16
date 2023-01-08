@@ -182,6 +182,17 @@ function BGen:add_label(lbl)
 	table.insert(self.lCode, {"code", self.lineno, lbl .. ":"})
 end
 
+local function replace_localvariables(self, codestr)
+	local _, _, s = codestr:find("([^;]+)")
+	local opc, opnd1, opnd2 = vm16.Asm.tokenize(s)
+	if self:sym_get_local(opnd1 or "") or self:sym_get_local(opnd2 or "") then
+		opnd1 = opnd1 and self:sym_get_local(opnd1) or opnd1
+		opnd2 = opnd2 and self:sym_get_local(opnd2) or opnd2
+		return vm16.Asm.reassemble(opc, opnd1, opnd2)
+	end
+	return codestr
+end
+
 function BGen:add_asm_token(tok)
 	local _, _, codestr = tok.val:find("(.+);?")
 	codestr = string.trim(codestr or "")
@@ -189,6 +200,7 @@ function BGen:add_asm_token(tok)
 		self.ctype = string.sub(codestr, 2)
 	elseif codestr ~= "" and string.byte(codestr, 1) ~= 59 then -- ';'
 		if self.ctype == "code" then
+			codestr = replace_localvariables(self, codestr)
 			table.insert(self.lCode, {"code", tok.lineno, codestr})
 		elseif self.ctype == "data" then
 			table.insert(self.lData, {"data", tok.lineno, codestr})
