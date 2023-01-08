@@ -156,6 +156,23 @@ local function extend(into, from)
 	end
 end
 
+-- Used by the compiler to replace local variables
+local function tokenize(codestr)
+	local words = strsplit(codestr)
+	return words[1], words[2], words[3]
+end
+
+local function reassemble(opc, opnd1, opnd2)
+	opc = string.sub(opc .. "  ", 1, 4)
+	if opnd2 then
+		return opc .. " " .. opnd1 .. ", " .. opnd2
+	elseif opnd1 then
+		return opc .. " " .. opnd1
+	else
+		return opc
+	end
+end
+
 -------------------------------------------------------------------------------
 -- Assembler
 -------------------------------------------------------------------------------
@@ -422,7 +439,7 @@ function Asm:handle_label(tok, i, label)
 	elseif self.globals[label] then
 		tok[OPCODES][i] = self.globals[label]
 	else
-		self:err_msg("Function '" .. label .. "' is missing")
+		self:err_msg("Unknown label '" .. label .. "'")
 	end
 end
 
@@ -521,4 +538,5 @@ vm16.Asm.LINENO  = LINENO
 vm16.Asm.CODESTR = CODESTR
 vm16.Asm.ADDRESS = ADDRESS
 vm16.Asm.OPCODES = OPCODES
-
+vm16.Asm.tokenize = tokenize
+vm16.Asm.reassemble = reassemble
