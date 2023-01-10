@@ -12,8 +12,6 @@
 
 -- for lazy programmers
 local M = minetest.get_meta
-local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
-local S2P = function(s) return minetest.string_to_pos(s) end
 
 function vm16.sdcard.get_data(pos, list, idx)
 	local inv = M(pos):get_inventory()
@@ -45,24 +43,7 @@ function vm16.sdcard.set_data(pos, list, idx, descr, fname, text)
 	end
 end
 
-
-local function on_place(itemstack, placer, pointed_thing)
-	if pointed_thing.type == "node" then
-		local pos = pointed_thing.under
-		local playername = placer:get_player_name()
-		if placer:get_player_control().sneak then
-			local node = minetest.get_node(pos)
-			local inv = M(pos):get_inventory()
-			if inv:get_size("vm16_sdcard") == 1 and inv:is_empty("vm16_sdcard") then
-				itemstack:set_count(0)
-				inv:add_item("vm16_sdcard", ItemStack("vm16:sdcard"))
-				return itemstack
-			end
-		end
-	end
-end
-
-minetest.register_tool("vm16:sdcard", {
+minetest.register_craftitem("vm16:sdcard", {
 	description = "VM16 SD Card",
 	inventory_image = "vm16_sdcard.png",
 	wield_image = "vm16_sdcard.png",
@@ -70,5 +51,4 @@ minetest.register_tool("vm16:sdcard", {
 	on_use = function() end,
 	on_place = function() end,
 	node_placement_prediction = "",
-	stack_max = 1,
 })

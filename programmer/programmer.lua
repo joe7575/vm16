@@ -113,6 +113,16 @@ local function preserve_metadata(pos, oldnode, oldmetadata, drops)
 	meta:set_string("server_pos", oldmetadata.server_pos)
 end
 
+local function allow_metadata_inventory_put(pos, listname, index, stack, player)
+	if minetest.is_protected(pos, player:get_player_name()) then
+		return 0
+	end
+	if stack:get_name() == "vm16:sdcard" then
+		return 1
+	end
+	return 0
+end
+
 minetest.register_node("vm16:programmer", {
 	description = "VM16 Programmer",
 	drawtype = "nodebox",
@@ -145,6 +155,7 @@ minetest.register_node("vm16:programmer", {
 	on_init = init,
 	on_use = on_use,
 	preserve_metadata = preserve_metadata,
+	allow_metadata_inventory_put = allow_metadata_inventory_put,
 	stack_max = 1,
 	groups = {cracky=2, crumbly=2, choppy=2},
 	is_ground_content = false,
@@ -168,6 +179,7 @@ minetest.register_node("vm16:programmer2", {
 	after_dig_node = after_dig_node,
 	on_use = on_use,
 	preserve_metadata = preserve_metadata,
+	allow_metadata_inventory_put = allow_metadata_inventory_put,
 	stack_max = 1,
 	groups = {cracky=2, crumbly=2, choppy=2},
 	is_ground_content = false,
