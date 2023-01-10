@@ -2,12 +2,12 @@
 	vm16
 	====
 
-	Copyright (C) 2019-2022 Joachim Stolberg
+	Copyright (C) 2019-2023 Joachim Stolberg
 
 	GPL v3
 	See LICENSE.txt for more information
 
-	VM16 Programming Station
+	VM16 SD Card
 ]]--
 
 -- for lazy programmers
@@ -69,23 +69,6 @@ minetest.register_tool("vm16:sdcard", {
 	groups = {cracky=1, book=1},
 	on_use = function() end,
 	on_place = function() end,
---	on_drop = function(itemstack, dropper, pos)
---		local inv = minetest.get_inventory({type="player", name=dropper:get_player_name()})
---		if inv then
---			inv:add_item("main", itemstack)
---			itemstack:set_count(0)
---			return itemstack
---		end
---	end,
 	node_placement_prediction = "",
 	stack_max = 1,
 })
-
---minetest.register_craft({
---	output = "techage:end_wrench",
---	recipe = {
---		{"", "", "default:steel_ingot"},
---		{"", "techage:iron_ingot", ""},
---		{"default:steel_ingot", "", ""},
---	},
---})
