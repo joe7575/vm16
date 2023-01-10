@@ -2,7 +2,7 @@
 	vm16
 	====
 
-	Copyright (C) 2019-2022 Joachim Stolberg
+	Copyright (C) 2019-2023 Joachim Stolberg
 
 	GPL v3
 	See LICENSE.txt for more information
@@ -118,6 +118,7 @@ function vm16.edit.formspec(pos, mem, textsize)
 			vm16.files.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize)
 	else
 		vm16.menubar.add_button("init", "Init")
+		vm16.menubar.add_button("sdcard", "SD Card")
 		return fs_editor(pos, mem, textsize, "-", Splashscreen, "#145") ..
 			vm16.files.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize)
 	end
@@ -171,6 +172,8 @@ function vm16.edit.on_receive_fields(pos, fields, mem)
 		minetest.registered_nodes["vm16:programmer"].on_init(pos, mem)
 		local text = (server.read_file(mem.server_pos, "info.txt") or "File error") .. "\n\nDone."
 		vm16.edit.on_load_file(mem, "info.txt", text)
+	elseif fields.sdcard then
+		mem.sdcard_active = true
 	elseif fields.edit then
 		mem.error = nil
 	elseif mem.file_name and mem.file_text then

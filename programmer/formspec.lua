@@ -2,7 +2,7 @@
 	vm16
 	====
 
-	Copyright (C) 2019-2022 Joachim Stolberg
+	Copyright (C) 2019-2023 Joachim Stolberg
 
 	GPL v3
 	See LICENSE.txt for more information
@@ -36,6 +36,9 @@ function prog.formspec(pos, mem)
 	elseif vm16.is_loaded(mem.cpu_pos) then
 		mem.status = "Debug"
 		windows = vm16.debug.formspec(pos, mem, textsize) or ""
+	elseif mem.sdcard_active then
+		mem.status = "SD Card"
+		windows = vm16.sdcard.formspec(pos, mem, textsize) or ""
 	else
 		mem.status = "Edit"
 		windows = vm16.edit.formspec(pos, mem, textsize) or ""
@@ -70,8 +73,11 @@ function prog.on_receive_fields(pos, formname, fields, player)
 	elseif mem.cpu_pos and vm16.is_loaded(mem.cpu_pos) then
 		vm16.debug.on_receive_fields(pos, fields, mem)
 		vm16.watch.on_receive_fields(pos, fields, mem)
+	elseif mem.sdcard_active then
+		vm16.sdcard.on_receive_fields(pos, fields, mem)
 	else
 		mem.running = nil
+		mem.sdcard_active = nil
 		mem.executing = nil
 		vm16.edit.on_receive_fields(pos, fields, mem)
 	end

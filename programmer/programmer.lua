@@ -56,6 +56,8 @@ local function init(pos, mem)
 end
 
 local function after_place_node(pos, placer, itemstack, pointed_thing)
+	local inv = M(pos):get_inventory()
+	inv:set_size('vm16_sdcard', 1)
 	local mem = prog.get_mem(pos)
 	preserve_cpu_server_pos(pos, itemstack)
 	local meta = M(pos)
@@ -68,9 +70,7 @@ end
 
 local function on_rightclick(pos)
 	local mem = prog.get_mem(pos)
-	if cpu_server_pos(pos, mem) and mem.running then
-		M(pos):set_string("formspec", vm16.prog.formspec(pos, mem))
-	end
+	M(pos):set_string("formspec", vm16.prog.formspec(pos, mem))
 end
 
 local function on_receive_fields(pos, formname, fields, player)

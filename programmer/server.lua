@@ -123,7 +123,7 @@ function vm16.server.write_file(pos, filename, text)
 	end
 end
 
-function vm16.server.rename_file(pos, files, old_name, new_name)
+function vm16.server.rename_file(pos, old_name, new_name)
 	local name = minetest.get_node(pos).name
 	if name == "vm16:server" or name == "vm16:server2" then
 		local mem = prog.get_mem(pos)

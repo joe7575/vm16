@@ -2,7 +2,7 @@
 	vm16
 	====
 
-	Copyright (C) 2019-2022 Joachim Stolberg
+	Copyright (C) 2019-2023 Joachim Stolberg
 
 	GPL v3
 	See LICENSE.txt for more information
@@ -51,8 +51,10 @@ dofile(MP.."/programmer/win_debug.lua")
 dofile(MP.."/programmer/win_watch.lua")
 dofile(MP.."/programmer/win_memory.lua")
 dofile(MP.."/programmer/win_terminal.lua")
+dofile(MP.."/programmer/win_sdcard.lua")
 dofile(MP.."/programmer/formspec.lua")
 dofile(MP.."/programmer/programmer.lua")
+dofile(MP.."/programmer/sdcard.lua")
 dofile(MP.."/demo/files.lua")
 
 -- for testing purposes
