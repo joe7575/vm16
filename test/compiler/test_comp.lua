@@ -221,7 +221,7 @@ local function beduino_compile(filename)
 		print(res)
 		return
 	end
-	
+
 	local first, last, size, h16 = vm16.Asm.generate_h16(res.lCode)
 	print("Code start address: " .. string.format("$%04X", first))
 	print("Last used address:  " .. string.format("$%04X", last))

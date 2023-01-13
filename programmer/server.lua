@@ -29,7 +29,7 @@ end
 local function order(a, b)
 	local path1, name1, ext1 = split_filename(a.name)
 	local path2, name2, ext2 = split_filename(b.name)
-	
+
 	if path1 ~= path2 then
 		return path1 < path2
 	elseif a.attr ~= b.attr then

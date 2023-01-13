@@ -110,7 +110,7 @@ function BPars:var_def(static)
 	local val = self:tk_peek().val
 	local is_array = val == "["
 	local old_ident
-	
+
 	if static then
 		old_ident = ident
 		local postfix = is_array and "[]" or ""

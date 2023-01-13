@@ -239,11 +239,11 @@ end
 
 function BSym:sym_get_var_size(ident)
 	if self:sym_get_local(ident) then
-		return self.locals[ident].size 
+		return self.locals[ident].size
 	elseif self:sym_get_filelocal(ident) then
-		return self.file_locals[ident].size 
+		return self.file_locals[ident].size
 	elseif self:sym_get_global(ident) then
-		return self.globals[ident].size 
+		return self.globals[ident].size
 	end
 end
 

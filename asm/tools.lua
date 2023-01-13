@@ -44,7 +44,7 @@ function vm16.Asm.generate_h16(lToken)
 	local size = 0
 	local nextaddr  -- next expected address (without gap)
 	local curraddr  -- currently writing to
-	
+
 	local t = {}
 	for _,tok in ipairs(lToken) do
 		local ctype, lineno, address, opcodes = unpack(tok)
@@ -52,7 +52,7 @@ function vm16.Asm.generate_h16(lToken)
 			first = math.min(first, address)
 			last = math.max(last, address + #opcodes)
 			curraddr = curraddr or address  -- initial value
-			
+
 --			if ttype == asm.CODESYMSEC then
 --				if not asm.tSymbols[code[2]] then
 --					asm.err_msg(pos, "Invalid symbol: "..code[2])
@@ -60,7 +60,7 @@ function vm16.Asm.generate_h16(lToken)
 --				end
 --				code[2] = asm.tSymbols[code[2]]
 --			end
-			
+
 			if nextaddr == address then
 				-- append code
 				tbl_append(curr, opcodes)
@@ -72,7 +72,7 @@ function vm16.Asm.generate_h16(lToken)
 				nextaddr = address
 				curraddr = address
 			end
-			
+
 			-- next calculated addess
 			nextaddr = nextaddr + #opcodes
 			size = size + #opcodes
@@ -80,10 +80,10 @@ function vm16.Asm.generate_h16(lToken)
 			print("ctype", ctype)
 		end
 	end
-	
+
 	-- write the rest
 	add_h16lines(t, curraddr, curr, true)
-	
+
 	last = last - 1
 	local s = string.format(":2000001%04X%04X", first, last)
 	table.insert(t, 1, s)
@@ -95,7 +95,7 @@ end
 function vm16.Asm.listing(pos, lToken2, filename)
 	filename = filename .. ".lst"
 	asm.outp(pos, " - write " .. filename .. "...")
-	
+
 	local dump = function(tbl)
 		local t = {}
 		for _,e in ipairs(tbl) do
@@ -106,10 +106,10 @@ function vm16.Asm.listing(pos, lToken2, filename)
 			end
 		end
 		return table.concat(t, " ")
-	end	
+	end
 
 	local t = {asm.TITLE, ""}
-	for _,tok in ipairs(lToken2) do 
+	for _,tok in ipairs(lToken2) do
 		if tok[5] then
 			if tok[1] == 3 then
 				table.insert(t, string.format('%3u  %04X  "%s"', tok[2], tok[3], tok[5]))

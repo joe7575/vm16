@@ -39,7 +39,7 @@ function vm16.sdcard.formspec(pos, mem, textsize)
 		vm16.menubar.add_button("save", "Save")
 		return "box[" .. WIN_SIZE .. ";#145]" ..
 			"box[5.5,2;1,1;#222]" ..
-			"item_image[5.5,2;1,1;vm16:sdcard]" .. 
+			"item_image[5.5,2;1,1;vm16:sdcard]" ..
 			"textarea[3,3.5;6,1.2;descr;Description:;" .. descr .. "]" ..
 			vm16.files.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize)
 	else
@@ -48,7 +48,7 @@ function vm16.sdcard.formspec(pos, mem, textsize)
 		vm16.menubar.add_button("edit", "Edit")
 		return "box[" .. WIN_SIZE .. ";#145]" ..
 			"box[5.5,2;1,1;#222]" ..
-			"item_image[5.5,2;1,1;vm16:sdcard]" .. 
+			"item_image[5.5,2;1,1;vm16:sdcard]" ..
 			vm16.files.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize)
 	end
 end

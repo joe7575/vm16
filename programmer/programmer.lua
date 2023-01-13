@@ -225,7 +225,7 @@ end
 
 function vm16.keep_running(cpu_pos, prog_pos, cpu_def)
 	local mem
-	
+
 	if programmer_present(prog_pos) then
 		mem = prog.get_mem(prog_pos)
 		mem.cpu_def = cpu_def

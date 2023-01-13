@@ -44,7 +44,7 @@ Instructions:
  - Enter a file name and click "New" to generate a new file
  - Copy/paste code from given (read-only) examples
 
-Have fun! 
+Have fun!
 ]], version, vm16.Comp.version, vm16.Asm.version, vm16.version)
 
 vm16.edit = {}
