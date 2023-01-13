@@ -55,10 +55,10 @@ end
 
 function vm16.sdcard.on_receive_fields(pos, fields, mem)
 	if fields.mount then
-		mem.card_mounted = true
-		mem.card_edited = false
 		mem.sdcard_descr, mem.sdcard_text = vm16.sdcard.get_data(pos, "vm16_sdcard", 1)
 		if mem.sdcard_descr then
+			mem.card_mounted = true
+			mem.card_edited = false
 			vm16.files.create_file(mem, "mnt/sdcard", mem.sdcard_text)
 		end
 	elseif fields.unmount then

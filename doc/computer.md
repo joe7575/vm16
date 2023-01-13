@@ -1,6 +1,8 @@
 # VM16 Computer
 
-The vm16 mod comes with a computer, a lamp, and a switch block for training purposes. It can be used to get familiar with the programming environment. The VM16 CPU is a 16-bit CPU with 1024 words memory. This should be sufficient to learn the programming basics. 
+The vm16 mod comes with a computer, a lamp, and a switch block for training purposes. It can be used to get familiar with the programming environment. The VM16 demo CPU is a 16-bit CPU with 1024 words memory. This should be sufficient to learn the programming basics. 
+
+A more demanding CPU/Controller environment is [Beduino](https://github.com/joe7575/beduino).
 
 
 ## Manual
@@ -16,42 +18,9 @@ The vm16 mod comes with a computer, a lamp, and a switch block for training purp
 
 
 
-## VM16 Programmer (C)
+## VM16 Programmer/Editor/Debugger
 
-tbd.
-
-
-
-
-## VM16 Programmer (ASM)
-
-The programmer block is the core of the system. The block has a menu that shows the assembler code and the CPU internal registers and memory.
-
-- Enter the edit mode with the "Edit" button. You can add you own code on the left side.
-- Your code can be stored in the computer block with the "Save" button. If you remove the block, the program is lost.
-- "Assemble" translates the code on the left into machine code and copies it into CPU memory on the right.
-- Execute the code with "step" (single instruction), "Step 10", or "Run". The next instruction to be executed is highlighted on the left.
-- A running CPU can be  stopped with the "Stop" button. 
-- The program counter is set to zero using the "Reset" button (CPU must be stopped for this).
-- With the '+' and '-' button the text size can be changed, which can be useful for smaller displays.
-- With the text field / "Breakp." breakpoints can be set/reset at the entered memory addresses.
-
-A newly placed computer comes with the following default program:
-
-```asm
-; ASCII output example
-
-move A, #$41   ; load A with 'A'
-
-loop:
-  out #00, A   ; output char
-  add  A, #01  ; increment char
-  jump loop
-```
-
-This program outputs characters ("ABCDE...") as a text message in the computer menu. Execute this program step by step to see the output results and the changing register values.  The output address '0' is used internally for text output within the computer menu and cannot be used for external I/O blocks. 
-
-
+See [Beduino](https://github.com/joe7575/beduino).
 
 ### VM16 On/Off Switch
 

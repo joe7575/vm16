@@ -113,12 +113,14 @@ Licensed under the GNU GPLv3 (See LICENSE.txt)
 ## ToDo
 
 - Improve compiler (switch/case, functional blocks, ...)
-- Adapt manuals
-- ...
 
 
 
 ## History
+
+### API v3.5 / Core v2.7.4 / ASM v2.5 / Compiler v1.10 / Debugger v1.4 (2023-01-08)
+
+- Programmer: Add SD Card functionality
 
 ### API v3.5 / Core v2.7.4 / ASM v2.5 / Compiler v1.10 / Debugger v1.4 (2023-01-08)
 
