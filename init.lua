@@ -32,6 +32,7 @@ vm16lib = nil
 
 vm16.cpu = {}
 dofile(MP.."/asm/asm.lua")
+dofile(MP.."/asm/tools.lua")
 dofile(MP.."/bcomp/bgenerator.lua")
 dofile(MP.."/bcomp/bscanner.lua")
 dofile(MP.."/bcomp/bsymbols.lua")

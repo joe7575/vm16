@@ -19,11 +19,11 @@ function vm16.sdcard.get_data(pos, list, idx)
 	local name = stack:get_name()
 	if name == "vm16:sdcard" then
 		local data = stack:get_meta():to_table().fields
-		return data.description, data.fname or "sdcard.txt", data.text or "<new>"
+		return data.description, data.text or "<new>"
 	end
 end
 
-function vm16.sdcard.set_data(pos, list, idx, descr, fname, text)
+function vm16.sdcard.set_data(pos, list, idx, descr, text)
 	local inv = M(pos):get_inventory()
 	local stack = inv:get_stack(list, idx)
 	local name = stack:get_name()
@@ -31,9 +31,6 @@ function vm16.sdcard.set_data(pos, list, idx, descr, fname, text)
 		local meta = stack:get_meta()
 		if descr then
 			meta:set_string("description", descr)
-		end
-		if fname then
-			meta:set_string("fname", fname)
 		end
 		if text then
 			meta:set_string("text", text)

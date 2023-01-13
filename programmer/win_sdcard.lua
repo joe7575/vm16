@@ -35,14 +35,12 @@ function vm16.sdcard.formspec(pos, mem, textsize)
 			vm16.files.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize)
 	elseif mem.card_edited then
 		local descr = mem.sdcard_descr or ""
-		local fname = mem.sdcard_fname or ""
 		vm16.menubar.add_button("cancel", "Cancel")
 		vm16.menubar.add_button("save", "Save")
 		return "box[" .. WIN_SIZE .. ";#145]" ..
 			"box[5.5,2;1,1;#222]" ..
 			"item_image[5.5,2;1,1;vm16:sdcard]" .. 
 			"textarea[3,3.5;6,1.2;descr;Description:;" .. descr .. "]" ..
-			"field[3,5.5;6,0.7;fname;File Name:;" .. fname  .. "]" ..
 			vm16.files.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize)
 	else
 		vm16.menubar.add_button("back", "Back")
@@ -58,23 +56,25 @@ end
 function vm16.sdcard.on_receive_fields(pos, fields, mem)
 	if fields.mount then
 		mem.card_mounted = true
-		mem.sdcard_descr, mem.sdcard_fname, mem.sdcard_text = vm16.sdcard.get_data(pos, "vm16_sdcard", 1)
-		vm16.files.create_file(mem, "mnt/" .. mem.sdcard_fname, mem.sdcard_text)
+		mem.card_edited = false
+		mem.sdcard_descr, mem.sdcard_text = vm16.sdcard.get_data(pos, "vm16_sdcard", 1)
+		if mem.sdcard_descr then
+			vm16.files.create_file(mem, "mnt/sdcard", mem.sdcard_text)
+		end
 	elseif fields.unmount then
 		mem.card_mounted = false
 		mem.card_edited = nil
-		local text = vm16.files.read_file(mem, "mnt/" .. mem.sdcard_fname)
-		vm16.sdcard.set_data(pos, "vm16_sdcard", 1, nil, mem.sdcard_fname, text or "")
-		vm16.files.remove_file(mem, "mnt/" .. mem.sdcard_fname)
+		local text = vm16.files.read_file(mem, "mnt/sdcard")
+		vm16.sdcard.set_data(pos, "vm16_sdcard", 1, nil, text or "")
+		vm16.files.remove_file(mem, "mnt/sdcard")
 	elseif fields.edit then
 		mem.card_edited = true
-		mem.sdcard_descr, mem.sdcard_fname, mem.sdcard_text = vm16.sdcard.get_data(pos, "vm16_sdcard", 1)
+		mem.sdcard_descr, mem.sdcard_text = vm16.sdcard.get_data(pos, "vm16_sdcard", 1)
 	elseif fields.cancel then
 		mem.card_edited = nil
 	elseif fields.save then
 		mem.card_edited = nil
-		vm16.sdcard.set_data(pos, "vm16_sdcard", 1, fields.descr, fields.fname, nil)
-		vm16.files.rename_file(mem, "mnt/" .. mem.sdcard_fname, "mnt/" .. fields.fname)
+		vm16.sdcard.set_data(pos, "vm16_sdcard", 1, fields.descr)
 	elseif fields.back then
 		mem.sdcard_active = nil
 		mem.card_edited = nil

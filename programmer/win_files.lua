@@ -124,6 +124,7 @@ function vm16.files.on_receive_fields(pos, fields, mem)
 		if evt.type == "DCL" then
 			open_file(mem, tonumber(evt.row))
 			mem.selected_file = nil
+			mem.sdcard_active = nil
 			return true
 		elseif evt.type == "CHG" then
 			set_cursor(mem, tonumber(evt.row))

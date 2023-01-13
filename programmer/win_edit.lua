@@ -37,8 +37,9 @@ editor, debugger, file server and more.
 Instructions:
  - First click on "Init" to initialize the computer
  - Double-click on a file on the right to open the editor
- - Click "Execute" to start the program
+ - Click "Execute" to directly start the program
  - or click "Debug" to single-step the program
+ - or click "Build" to generate a h16-file for a SD Card
  - Use "+", "-" buttons to change the font size
  - Enter a file name and click "New" to generate a new file
  - Copy/paste code from given (read-only) examples
@@ -95,23 +96,32 @@ function vm16.edit.formspec(pos, mem, textsize)
 			mem.status = "Edit"
 			vm16.menubar.add_button("cancel", "Close File", 2.2)
 			if not server.is_ro_file(mem.server_pos, mem.file_name) then
-				vm16.menubar.add_button("save", "Save")
+				vm16.menubar.add_button("save", "Save", 1.6)
 			end
+			vm16.menubar.add_button("build", "Build", 1.6)
 			vm16.menubar.add_button("execute", "Execute")
 			vm16.menubar.add_button("asmdbg", "Debug")
 		elseif mem.file_ext == "c" then
 			mem.status = "Edit"
 			vm16.menubar.add_button("cancel", "Close File", 2.2)
 			if not server.is_ro_file(mem.server_pos, mem.file_name) then
-				vm16.menubar.add_button("save", "Save")
+				vm16.menubar.add_button("save", "Save", 1.6)
 			end
+			vm16.menubar.add_button("compile", "Compile")
+			vm16.menubar.add_button("build", "Build", 1.6)
 			vm16.menubar.add_button("execute", "Execute")
 			vm16.menubar.add_button("debug", "Debug")
-			vm16.menubar.add_button("compile", "Compile")
+		elseif mem.file_ext == "h16" then
+			mem.status = "Edit"
+			vm16.menubar.add_button("cancel", "Close File", 2.2)
+			if not server.is_ro_file(mem.server_pos, mem.file_name) then
+				vm16.menubar.add_button("save", "Save", 1.6)
+			end
+			vm16.menubar.add_button("exe_h16", "Execute")
 		else
 			vm16.menubar.add_button("cancel", "Close File", 2.2)
 			if not server.is_ro_file(mem.server_pos, mem.file_name) then
-				vm16.menubar.add_button("save", "Save")
+				vm16.menubar.add_button("save", "Save", 1.6)
 			end
 		end
 		return fs_editor(pos, mem, textsize, mem.file_name, mem.file_text, background_color) ..
@@ -136,17 +146,19 @@ local function start_cpu(pos, mem, obj)
 	local mem_size = mem.cpu_def and mem.cpu_def.on_mem_size(mem.cpu_pos) or 3
 	vm16.create(mem.cpu_pos, mem_size)
 	if vm16.is_loaded(mem.cpu_pos) then
-		for _, item in ipairs(obj.lCode) do
-			local ctype, lineno, address, opcodes = unpack(item)
-			if ctype == "code" then
-				for i, opc in pairs(opcodes or {}) do
-					vm16.poke(mem.cpu_pos, address + i - 1, opc)
+		if obj then
+			for _, item in ipairs(obj.lCode) do
+				local ctype, lineno, address, opcodes = unpack(item)
+				if ctype == "code" then
+					for i, opc in pairs(opcodes or {}) do
+						vm16.poke(mem.cpu_pos, address + i - 1, opc)
+					end
 				end
 			end
+		elseif mem.file_text then
+			vm16.write_h16(mem.cpu_pos, mem.file_text)
 		end
-
 		vm16.set_pc(mem.cpu_pos, 0)
-
 		local def = prog.get_cpu_def(mem.cpu_pos)
 		def.on_start(mem.cpu_pos)
 		mem.executing = true
@@ -233,6 +245,42 @@ function vm16.edit.on_receive_fields(pos, fields, mem)
 					end
 					if sts then
 						start_cpu(pos, mem, res)
+						mem.error = nil
+					else
+						mem.error = res
+					end
+				end
+			end
+		elseif fields.exe_h16 then
+			local def = prog.get_cpu_def(mem.cpu_pos)
+			if def then
+				local prog_pos = def.on_check_connection(mem.cpu_pos)
+				if prog_pos and vector.equals(pos, prog_pos) then
+					start_cpu(pos, mem)
+					mem.error = nil
+				end
+			end
+		elseif fields.build then
+			local def = prog.get_cpu_def(mem.cpu_pos)
+			if def then
+				local prog_pos = def.on_check_connection(mem.cpu_pos)
+				if prog_pos and vector.equals(pos, prog_pos) then
+					local options = {
+						startup_code = def.startup_code
+					}
+					local sts, res
+					if mem.file_ext == "asm" then
+						sts, res = vm16.assemble(mem.server_pos, mem.file_name, server.read_file)
+					else
+						sts, res = vm16.compile(mem.server_pos, mem.file_name, server.read_file, options)
+					end
+					if sts then
+						local first, last, size, h16 = vm16.Asm.generate_h16(res.lCode)
+						mem.file_text = h16
+						mem.file_name = "out.h16"
+						mem.file_ext = "h16"
+						server.write_file(mem.server_pos, mem.file_name, mem.file_text)
+						vm16.files.init(pos, mem)
 						mem.error = nil
 					else
 						mem.error = res

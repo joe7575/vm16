@@ -19,6 +19,7 @@ print("vm16 version = " .. vm16lib.version())
 assert(loadfile(MP.."/api.lua"))(vm16lib)
 dofile(MP.."/lib.lua")
 dofile(MP.."/asm/asm.lua")
+dofile(MP.."/asm/tools.lua")
 
 dofile(MP.."/bcomp/bgenerator.lua")
 dofile(MP.."/bcomp/bscanner.lua")
@@ -220,6 +221,12 @@ local function beduino_compile(filename)
 		print(res)
 		return
 	end
+	
+	local first, last, size, h16 = vm16.Asm.generate_h16(res.lCode)
+	print("Code start address: " .. string.format("$%04X", first))
+	print("Last used address:  " .. string.format("$%04X", last))
+	print("Code size [words]:  " .. string.format("$%04X", size))
+    print(h16)
 end
 
 --assemble("test2.asm")
