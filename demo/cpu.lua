@@ -107,7 +107,9 @@ local cpu_def = {
 	end,
 	-- Called when the programmers info/splash screen is displayed
 	on_init = function(pos, prog_pos, server_pos)
-		M(pos):set_string("prog_pos", P2S(prog_pos))
+		if prog_pos then
+			M(pos):set_string("prog_pos", P2S(prog_pos))
+		end
 		if server_pos then
 			local s = find_io_nodes(pos)
 			vm16.write_file(server_pos, "info.txt", Info .. s)

@@ -253,6 +253,9 @@ end
 
 function vm16.debug.formspec(pos, mem, textsize)
 	local popup = ""
+	-- CPU can be started by SD card (without debugging data)
+	mem.lut = mem.lut or vm16.Lut:new()
+	
 	if mem.running then
 		vm16.menubar.add_button("stop", "Stop")
 		vm16.menubar.add_button("term", "Terminal", 2.4)

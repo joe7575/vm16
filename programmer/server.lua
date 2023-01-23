@@ -43,8 +43,11 @@ end
 local ReadOnlyFiles = {}   -- [cpu_type][file_name] = text
 
 local function get_ro_files(pos)
-	local cpu_type = M(pos):get_string("cpu_type")
-	return ReadOnlyFiles[cpu_type] or {}
+	if pos then
+		local cpu_type = M(pos):get_string("cpu_type")
+		return ReadOnlyFiles[cpu_type] or {}
+	end
+	return {}
 end
 
 local function get_filelist(pos)

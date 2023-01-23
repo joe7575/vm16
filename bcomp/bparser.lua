@@ -605,7 +605,7 @@ function BPars:and_condition(lbl_then, lbl_else)
 	if val == "and" then
 		self:tk_match()
 		self:add_instr("jump", lbl_else)
-		self:and_condition(lbl)
+		self:and_condition(lbl_then)
 	elseif val == "&&" then
 		self:tk_match()
 		self:add_instr("jump", lbl_else)

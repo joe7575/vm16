@@ -19,7 +19,7 @@ function vm16.sdcard.get_data(pos, list, idx)
 	local name = stack:get_name()
 	if name == "vm16:sdcard" then
 		local data = stack:get_meta():to_table().fields
-		return data.description, data.text or "<new>"
+		return data.description or "VM16 SD Card", data.text or "<new>"
 	end
 end
 

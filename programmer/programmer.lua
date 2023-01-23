@@ -285,3 +285,15 @@ function vm16.unload_cpu(cpu_pos, prog_pos)
 		vm16.destroy(cpu_pos)
 	end
 end
+
+function vm16.cpu_started(prog_pos, pos)
+	-- CPU is started from extern => Reset programmer
+	local mem = prog.get_mem(prog_pos)
+	mem.executing = true
+	mem.term_active = false
+	mem.sdcard_active = false
+	mem.file_name = nil
+	mem.file_text = nil
+	mem.file_ext = nil
+	mem.error = nil
+end
