@@ -118,64 +118,64 @@ Licensed under the GNU GPLv3 (See LICENSE.txt)
 
 ## History
 
-### API v3.5 / Core v2.7.4 / ASM v2.5 / Compiler v1.10 / Debugger v1.4 (2023-01-08)
+#### API v3.6 / Core v2.7.4 / ASM v2.5 / Compiler v1.10 / Debugger v1.4 (2023-01-23)
 
 - Programmer: Add SD Card functionality
 
-### API v3.5 / Core v2.7.4 / ASM v2.5 / Compiler v1.10 / Debugger v1.4 (2023-01-08)
+#### API v3.5 / Core v2.7.4 / ASM v2.5 / Compiler v1.10 / Debugger v1.4 (2023-01-08)
 
 - Compiler: Enable jump tables via: `var tbl[] = {func1, func2}; ... tbl[idx]();`
 
-### API v3.5 / Core v2.7.4 / ASM v2.5 / Compiler v1.09 / Debugger v1.3 (2022-08-06)
+#### API v3.5 / Core v2.7.4 / ASM v2.5 / Compiler v1.09 / Debugger v1.3 (2022-08-06)
 
 - Compiler: Add >= and <= operators
 
-### API v3.5 / Core v2.7.4 / ASM v2.5 / Compiler v1.8 / Debugger v1.3 (2022-07-08)
+#### API v3.5 / Core v2.7.4 / ASM v2.5 / Compiler v1.8 / Debugger v1.3 (2022-07-08)
 
 - Compiler: Add constant expressions
 - Compiler: Add sizeof operator
 - Compiler: Add static constants
 
-### API v3.5 / Core v2.7.4 / ASM v2.5 / Compiler v1.7 / Debugger v1.3 (2022-07-08)
+#### API v3.5 / Core v2.7.4 / ASM v2.5 / Compiler v1.7 / Debugger v1.3 (2022-07-08)
 
 - Add file popup menu to the debugger
 - Fix some debugger bugs
 
-### API v3.5 / Core v2.7.4 / ASM v2.5 / Compiler v1.7 / Debugger v1.3 (2022-06-12)
+#### API v3.5 / Core v2.7.4 / ASM v2.5 / Compiler v1.7 / Debugger v1.3 (2022-06-12)
 
 - Add support for function-local arrays (core, asm, compiler, debugger)
 - Improve standard library (memset, itoa, halt,...)
 - Fix some minor bugs
 
-### API v3.5 / Core v2.7.3 / ASM v2.4 / Compiler v1.6 / Debugger v1.2 (2022-05-31)
+#### API v3.5 / Core v2.7.3 / ASM v2.4 / Compiler v1.6 / Debugger v1.2 (2022-05-31)
 
 - Compiler: Add support for the '&' reference operator
 - Add core functions `write_ascii_16` for 16-bit/compact strings
 
-### API v3.5/Core v2.7.2/ASM v2.4/Compiler v1.5/Debugger v1.2 (2022-05-22)
+#### API v3.5/Core v2.7.2/ASM v2.4/Compiler v1.5/Debugger v1.2 (2022-05-22)
 
 - Compiler: Add octal number and string escape sequence support
 
-### API v3.5/Core v2.7.2/ASM v2.4/Compiler v1.4/Debugger v1.2 (2022-05-14)
+#### API v3.5/Core v2.7.2/ASM v2.4/Compiler v1.4/Debugger v1.2 (2022-05-14)
 
 - Add break, continue, and goto statements to the compiler
 
-### API v3.5/Core v2.7.2/ASM v2.4/Compiler v1.4/Debugger v1.2 (2022-05-01)
+#### API v3.5/Core v2.7.2/ASM v2.4/Compiler v1.4/Debugger v1.2 (2022-05-01)
 
 - Add storage compatible `hash_node_position`/`get_position_from_hash` functions
 
-### API v3.4/Core v2.7.1/ASM v2.4/Compiler v1.4/Debugger v1.2 (2022-04-28)
+#### API v3.4/Core v2.7.1/ASM v2.4/Compiler v1.4/Debugger v1.2 (2022-04-28)
 
 - Add terminal mode to the debugger
 - Fix server2 bug
 
-### API v3.4/Core v2.7.1/ASM v2.4/Compiler v1.4/Debugger v1.1 (2022-04-24)
+#### API v3.4/Core v2.7.1/ASM v2.4/Compiler v1.4/Debugger v1.1 (2022-04-24)
 
 - Add 'if ... else if' functionality to the compiler
 - Add branch detection to compiler and debugger
 - Fix some debugger bugs
 
-### API v3.4/Core v2.7.1/asm v2.4/Compiler v1.4 (2022-04-23)
+#### API v3.4/Core v2.7.1/asm v2.4/Compiler v1.4 (2022-04-23)
 
 - Add core functions `vm16_read_mem_as_str` and `vm16_write_mem_as_str`
 - Add register C to `get_io_reg()`
@@ -184,20 +184,20 @@ Licensed under the GNU GPLv3 (See LICENSE.txt)
 - Prepare for the beduino mod
 - Fix some bugs
 
-### API v3.3/Core v2.6.5/asm v2.4/Compiler v1.4 (2022-04-16)
+#### API v3.3/Core v2.6.5/asm v2.4/Compiler v1.4 (2022-04-16)
 
 - Add static variables and functions
 - Add strcmp and memcmp functions
 - Fix some bugs
 
-### API v3.3/Core v2.6.5/asm v2.3/Compiler v1.3 (2022-04-08)
+#### API v3.3/Core v2.6.5/asm v2.3/Compiler v1.3 (2022-04-08)
 
 - Change stdout from output(0,...) to system(0,...)
 - Add logical 'and' and 'or' operators
 - Add 's[]' type for strings
 - Fix some bugs and improve demo CPU
 
-### API v3.3/Core v2.6.5/asm v2.3/Compiler v1.2 (2022-04-03)
+#### API v3.3/Core v2.6.5/asm v2.3/Compiler v1.2 (2022-04-03)
 
 **Work in progress!**
 
@@ -207,7 +207,7 @@ Licensed under the GNU GPLv3 (See LICENSE.txt)
 - Add more example code to the demo CPU
 - Many improvements and bug fixes
 
-### API v3.3/Core v2.6.5/asm v2.2/Compiler v1.1 (2022-03-26)
+#### API v3.3/Core v2.6.5/asm v2.2/Compiler v1.1 (2022-03-26)
 
 **Work in progress!**
 
@@ -217,7 +217,7 @@ Licensed under the GNU GPLv3 (See LICENSE.txt)
 - Update debugger
 - Bug fixes
 
-### API v3.3/Core v2.6.5/asm v2.2 (2022-03-19)
+#### API v3.3/Core v2.6.5/asm v2.2 (2022-03-19)
 
 **Work in progress!**
 
@@ -225,13 +225,13 @@ Licensed under the GNU GPLv3 (See LICENSE.txt)
 - Add VM16 Programmer and VM16 File Server
 - Programmer provides compiler, debugger, and variable watch window
 
-### API v3.2/Core v2.6.4/asm v2.2 (2022-03-09)
+#### API v3.2/Core v2.6.4/asm v2.2 (2022-03-09)
 
 - Core: Add BP register and [X+n], [Y+1] opernand types
 - ASM: Adapt assembler for the new instructions
 - Doc: Adapt manuals for the new instructions
 
-### API v3.1/Core v2.6.2 (2022-03-07)
+#### API v3.1/Core v2.6.2 (2022-03-07)
 
 - Add BLL compiler prototype (B like language),
   is unused so far
@@ -239,20 +239,20 @@ Licensed under the GNU GPLv3 (See LICENSE.txt)
 - ASM: Allow 3-word instructions (needed by BLL)
 - Core: Fix bug in branch instructions
 
-### API v3.0/Core v2.6.1 (2022-02-26)
+#### API v3.0/Core v2.6.1 (2022-02-26)
 
 - Core: Change memory size calculation
 - Rework the I/O API and blocks
 - Docu: Update vm16_api.md
 
-### v2.6 (2022-02-25)
+#### v2.6 (2022-02-25)
 
 - Core: Change BRK instruction
 - API: Add breakpoint functionality
 - CPU: Add breakpoint functionality
 
 
-### v2.5 (2022-02-22)
+#### v2.5 (2022-02-22)
 
 - C-core: Add REL2 addressing mode (as replacement for wrong REL implementation)
 - Asm: Fix RIP addressing bug (reported by DS)
@@ -261,7 +261,7 @@ Licensed under the GNU GPLv3 (See LICENSE.txt)
 
 
 
-### Older Versions
+#### Older Versions
 
 - 2022-02-19  v2.4  * Allow 0 for memory size (= 512 words), add computer demo blocks
 - 2021-08-30  v2.3  * Improve documentation

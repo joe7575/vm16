@@ -25,7 +25,7 @@ if storage:get_int("version") ~= 2 then
 end
 
 -------------------------------------------------------------------------------
-local VERSION     = 3.5  -- See readme.md
+local VERSION     = 3.6  -- See readme.md
 -------------------------------------------------------------------------------
 local VM16_OK     = 0  -- run to the end
 local VM16_NOP    = 1  -- nop command
