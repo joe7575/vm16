@@ -33,7 +33,7 @@ function prog.formspec(pos, mem)
 	elseif mem.term_active or mem.executing then
 		mem.status = "Running..."
 		windows = vm16.term.formspec(pos, mem, textsize) or ""
-	elseif vm16.is_loaded(mem.cpu_pos) then
+	elseif vm16.is_loaded(mem.cpu_pos) and mem.file_text then
 		mem.status = "Debug"
 		windows = vm16.debug.formspec(pos, mem, textsize) or ""
 	elseif mem.sdcard_active then
@@ -70,12 +70,17 @@ function prog.on_receive_fields(pos, formname, fields, player)
 	end
 	if mem.term_active or mem.executing then
 		vm16.term.on_receive_fields(pos, fields, mem)
-	elseif mem.cpu_pos and vm16.is_loaded(mem.cpu_pos) then
+	elseif mem.cpu_pos and vm16.is_loaded(mem.cpu_pos) and mem.file_text then
 		vm16.debug.on_receive_fields(pos, fields, mem)
 		vm16.watch.on_receive_fields(pos, fields, mem)
 	elseif mem.sdcard_active then
 		vm16.sdcard.on_receive_fields(pos, fields, mem)
 	else
+		if mem.cpu_pos then
+			minetest.get_node_timer(mem.cpu_pos):stop()
+			vm16.destroy(mem.cpu_pos)
+		end
+		mem.error = nil
 		mem.running = nil
 		mem.sdcard_active = nil
 		mem.executing = nil
