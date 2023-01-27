@@ -46,6 +46,7 @@ end
 
 local function init(pos, mem)
 	if mem.cpu_pos and mem.server_pos then
+		mem.executing = M(pos):get_int("executing") == 1
 		local def = prog.get_cpu_def(mem.cpu_pos)
 		if def then
 			vm16.server.init(mem.server_pos, def.cpu_type)
@@ -290,6 +291,7 @@ function vm16.cpu_started(prog_pos, pos)
 	-- CPU is started from extern => Reset programmer
 	local mem = prog.get_mem(prog_pos)
 	mem.executing = true
+	M(pos):set_int("executing", 1)
 	mem.term_active = false
 	mem.sdcard_active = false
 	mem.file_name = nil

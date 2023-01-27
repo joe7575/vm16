@@ -132,5 +132,6 @@ function vm16.term.on_receive_fields(pos, fields, mem)
 		minetest.get_node_timer(mem.cpu_pos):stop()
 		vm16.destroy(mem.cpu_pos)
 		mem.executing = nil
+		M(pos):set_int("executing", 0)
 	end
 end

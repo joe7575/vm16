@@ -162,6 +162,7 @@ local function start_cpu(pos, mem, obj)
 		local def = prog.get_cpu_def(mem.cpu_pos)
 		def.on_start(mem.cpu_pos)
 		mem.executing = true
+		M(pos):set_int("executing", 1)
 		vm16.term.init(pos, mem)
 		minetest.get_node_timer(mem.cpu_pos):start(mem.cpu_def.cycle_time)
 		vm16.run(mem.cpu_pos, mem.cpu_def, mem.breakpoints)

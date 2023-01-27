@@ -84,6 +84,7 @@ function prog.on_receive_fields(pos, formname, fields, player)
 		mem.running = nil
 		mem.sdcard_active = nil
 		mem.executing = nil
+		M(pos):set_int("executing", 0)
 		vm16.edit.on_receive_fields(pos, fields, mem)
 	end
 	M(pos):set_string("formspec", vm16.prog.formspec(pos, mem))
