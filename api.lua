@@ -11,8 +11,8 @@
 ]]--
 
 local vm16lib = ...
-if vm16lib.version() ~= "2.7.4" then
-	minetest.log("error", "[vm16] Install Lua library v2.7.4 (see readme.md)!")
+if vm16lib.version() ~= "2.7.5" then
+	minetest.log("error", "[vm16] Install Lua library v2.7.5 (see readme.md)!")
 end
 
 local M = minetest.get_meta
@@ -25,7 +25,7 @@ if storage:get_int("version") ~= 2 then
 end
 
 -------------------------------------------------------------------------------
-local VERSION     = 3.6  -- See readme.md
+local VERSION     = 3.7  -- See readme.md
 -------------------------------------------------------------------------------
 local VM16_OK     = 0  -- run to the end
 local VM16_NOP    = 1  -- nop command
@@ -148,6 +148,20 @@ local function vm_store(pos, vm)
 	local hash = vm16lib.hash_node_position(pos)
 	local s = vm16lib.get_vm(vm)
 	storage:set_string(hash, s)
+end
+
+-- Read VM memory and return the data as ASCII string
+function vm16.get_vm(pos)
+	local hash = vm16lib.hash_node_position(pos)
+	local vm = VMList[hash]
+	return vm and vm16lib.get_vm(vm)
+end
+
+-- Write given data string to the VM memory
+function vm16.set_vm(pos, s)
+	local hash = vm16lib.hash_node_position(pos)
+	local vm = VMList[hash]
+	return vm and vm16lib.set_vm(vm, s)
 end
 
 function vm16.on_power_on(pos, ram_size)
@@ -325,6 +339,7 @@ function vm16.run(pos, cpu_def, breakpoints, steps)
 	while cycles > 0 do
 		resp, ran = vm16lib.run(vm, cycles)
 		cycles = cycles - ran
+		print("run", resp)
 
 		if resp == VM16_NOP then
 			return VM16_NOP

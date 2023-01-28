@@ -105,7 +105,7 @@ Optional: default, basic_materials (for demo CPU and blocks)
 
 ## License
 
-Copyright (C) 2019-2022 Joachim Stolberg
+Copyright (C) 2019-2023 Joachim Stolberg
 Licensed under the GNU GPLv3 (See LICENSE.txt)
 
 
@@ -117,6 +117,11 @@ Licensed under the GNU GPLv3 (See LICENSE.txt)
 
 
 ## History
+
+#### API v3.7 / Core v2.7.5 / ASM v2.5 / Compiler v1.10 / Debugger v1.4 (2023-01-28)
+
+- Core VM: Fix buffer size check bug
+- API: Add functions `vm16.get_vm` and `vm16.set_vm`
 
 #### API v3.6 / Core v2.7.4 / ASM v2.5 / Compiler v1.10 / Debugger v1.4 (2023-01-23)
 

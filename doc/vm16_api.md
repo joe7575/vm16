@@ -59,6 +59,22 @@ vm16.vm_restore(pos)
 Move stored VM back to active. Typically called from the node LBM function. 
 (The `vm_store` function is called automatically when the block gets unloaded)
 
+## get_vm
+
+```lua
+vm16.get_vm(pos)
+```
+
+Read VM memory and return the data as ASCII string.
+
+## set_vm
+
+```lua
+vm16.set_vm(pos, s)
+```
+
+Write given data string back to the VM memory.
+
 ## mem_size
 
 ```lua
