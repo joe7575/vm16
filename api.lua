@@ -339,7 +339,6 @@ function vm16.run(pos, cpu_def, breakpoints, steps)
 	while cycles > 0 do
 		resp, ran = vm16lib.run(vm, cycles)
 		cycles = cycles - ran
-		print("run", resp)
 
 		if resp == VM16_NOP then
 			return VM16_NOP
