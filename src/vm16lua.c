@@ -1,6 +1,6 @@
 /*
 VM16
-Copyright (C) 2019-2020 Joe <iauit@gmx.de>
+Copyright (C) 2019-2023 Joe <iauit@gmx.de>
 
 This file is part of VM16.
 
@@ -221,7 +221,7 @@ static int write_mem_as_str(lua_State *L) {
         size_t size;
         char *p_data = (char*)lua_tolstring(L, 3, &size);
         if((C != NULL) && (p_data != NULL) && (size > 0)) {
-            uint16_t words = vm16_write_mem_as_str(C, addr, size, p_data);
+            uint16_t words = vm16_write_mem_as_str(C, addr, size/4, p_data);
             lua_pushboolean(L, words/4 == size);
             return 1;
         }
