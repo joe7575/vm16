@@ -21,6 +21,7 @@ local term = vm16.term
 
 local CpuTime = 0
 local RunTime = 0
+local SCREENSAVER_TIME = 60 * 5
 
 local function cpu_server_pos(pos, mem)
 	mem.cpu_pos = mem.cpu_pos or S2P(M(pos):get_string("cpu_pos"))
@@ -71,6 +72,7 @@ end
 
 local function on_rightclick(pos)
 	local mem = prog.get_mem(pos)
+	mem.ttl = minetest.get_gametime() + SCREENSAVER_TIME
 	M(pos):set_string("formspec", vm16.prog.formspec(pos, mem))
 end
 
@@ -78,6 +80,7 @@ local function on_receive_fields(pos, formname, fields, player)
 	local mem = prog.get_mem(pos)
 	if cpu_server_pos(pos, mem) then
 		mem.cpu_def = mem.cpu_def or prog.get_cpu_def(mem.cpu_pos)
+		mem.ttl = minetest.get_gametime() + SCREENSAVER_TIME
 		vm16.prog.on_receive_fields(pos, formname, fields, player)
 	end
 end

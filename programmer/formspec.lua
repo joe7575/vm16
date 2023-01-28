@@ -14,8 +14,6 @@
 local M = minetest.get_meta
 local prog = vm16.prog
 
-local SCREENSAVER_TIME = 60 * 5
-
 function prog.formspec(pos, mem)
 	local textsize = M(pos):get_int("textsize")
 	if textsize >= 0 then
@@ -62,7 +60,6 @@ function prog.on_receive_fields(pos, formname, fields, player)
 	end
 
 	local mem = prog.get_mem(pos)
-	mem.ttl = minetest.get_gametime() + SCREENSAVER_TIME
 	if fields.larger then
 		M(pos):set_int("textsize", math.min(M(pos):get_int("textsize") + 1, 8))
 	elseif fields.smaller then
