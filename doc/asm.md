@@ -135,3 +135,74 @@ For symbols  the characters 'A' - 'Z', 'a' - 'z',  '_' and '0' - '9' are allowed
 
 Of course, symbols must be defined before they can be used.
 
+## Compiler Conventions
+
+### Startup Code
+
+The compiler for the Beduino controller uses the following startup code:
+
+```assembly
+; Reserved area 0002 - 0007:
+  jump 8
+
+.org 8
+  call @init  ; Iinitialize variables
+  call init   ; call the user function 'init'
+
+@loop:
+  call loop   ; call the user function 'loop'
+  nop         ; Interrupt execution for one cycle
+  jump @loop
+```
+
+Assembler programs should follow the same conventions:
+
+- address 0002 - 0007 is a reserved area
+- 'nop' is used to interrupt the program execution for one cycle
+
+### Passing parameters to functions
+
+The compiler make from this function:
+
+```c
+func foo(a, b) {
+ return a * 2 + b;
+}
+
+```
+
+The following assembler code:
+
+```assembly
+foo:
+  move A, [SP+2]
+  mul A, #2
+  add A, [SP+1]
+  ret
+```
+
+That means:
+
+- `foo(a)`: parameter 'a' is at [SP+1] 
+- `foo(a, b)`: parameter 'a' is at [SP+2], parameter 'b' is at [SP+1] 
+- `foo(a, b, c)`: parameter 'a' is at [SP+3], parameter 'b' is at [SP+2], parameter 'c' is at [SP+1] 
+
+### Output characters to the terminal
+
+Please note that the CPU does not support 8-bit characters.  Therefore, up to 2 characters are always stored in a word. The length of the string "test" is two words, the length of the string "hello" is 3 words.
+
+The programmer uses the following function to output  2 character words (simplyfied):
+
+```lua
+function putchar(val)
+	if val > 255 then
+		_putchar(val / 256)  -- high byte
+        _putchar(val % 256)  -- low byte
+	else
+		_putchar(val)
+	end
+end
+```
+
+**Rule: If the passed value is greater than 255, the high-byte part of the value is output first, followed by the low-byte part.**
+
