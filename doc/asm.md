@@ -166,7 +166,7 @@ The compiler make from this function:
 
 ```c
 func foo(a, b) {
- return a * 2 + b;
+     return a * 2 + b;
 }
 
 ```
@@ -195,12 +195,12 @@ The programmer uses the following function to output  2 character words (simplif
 
 ```lua
 function putchar(val)
-	if val > 255 then
-		_putchar(val / 256)  -- high byte
+    if val > 255 then
+        _putchar(val / 256)  -- high byte
         _putchar(val % 256)  -- low byte
-	else
-		_putchar(val)
-	end
+    else
+        _putchar(val)
+    end
 end
 ```
 
