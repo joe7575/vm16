@@ -191,7 +191,7 @@ That means:
 
 Please note that the CPU does not support 8-bit characters.  Therefore, up to 2 characters are always stored in a word. The length of the string "test" is two words, the length of the string "hello" is 3 words.
 
-The programmer uses the following function to output  2 character words (simplyfied):
+The programmer uses the following function to output  2 character words (simplified):
 
 ```lua
 function putchar(val)
