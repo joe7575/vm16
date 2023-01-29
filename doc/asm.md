@@ -146,11 +146,11 @@ The compiler for the Beduino controller uses the following startup code:
   jump 8
 
 .org 8
-  call @init  ; Iinitialize variables
-  call init   ; call the user function 'init'
+  call @init  ; Initialize variables
+  call init   ; Call the user function 'init'
 
 @loop:
-  call loop   ; call the user function 'loop'
+  call loop   ; Call the user function 'loop'
   nop         ; Interrupt execution for one cycle
   jump @loop
 ```
