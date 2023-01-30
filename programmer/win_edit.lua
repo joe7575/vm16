@@ -190,7 +190,7 @@ function vm16.edit.on_receive_fields(pos, fields, mem)
 	elseif fields.edit then
 		mem.error = nil
 	elseif mem.file_name and mem.file_text then
-		if fields.compile then
+		if mem.cpu_pos and fields.compile then
 			local def = prog.get_cpu_def(mem.cpu_pos)
 			if def then
 				local prog_pos = def.on_check_connection(mem.cpu_pos)
@@ -212,7 +212,7 @@ function vm16.edit.on_receive_fields(pos, fields, mem)
 					end
 				end
 			end
-		elseif fields.debug then
+		elseif mem.cpu_pos and fields.debug then
 			local def = prog.get_cpu_def(mem.cpu_pos)
 			if def then
 				local prog_pos = def.on_check_connection(mem.cpu_pos)
@@ -230,7 +230,7 @@ function vm16.edit.on_receive_fields(pos, fields, mem)
 					end
 				end
 			end
-		elseif fields.execute then
+		elseif mem.cpu_pos and fields.execute then
 			local def = prog.get_cpu_def(mem.cpu_pos)
 			if def then
 				local prog_pos = def.on_check_connection(mem.cpu_pos)
@@ -252,7 +252,7 @@ function vm16.edit.on_receive_fields(pos, fields, mem)
 					end
 				end
 			end
-		elseif fields.exe_h16 then
+		elseif mem.cpu_pos and fields.exe_h16 then
 			local def = prog.get_cpu_def(mem.cpu_pos)
 			if def then
 				local prog_pos = def.on_check_connection(mem.cpu_pos)
@@ -261,7 +261,7 @@ function vm16.edit.on_receive_fields(pos, fields, mem)
 					mem.error = nil
 				end
 			end
-		elseif fields.build then
+		elseif mem.cpu_pos and fields.build then
 			local def = prog.get_cpu_def(mem.cpu_pos)
 			if def then
 				local prog_pos = def.on_check_connection(mem.cpu_pos)
@@ -288,7 +288,7 @@ function vm16.edit.on_receive_fields(pos, fields, mem)
 					end
 				end
 			end
-		elseif fields.asmdbg then
+		elseif mem.cpu_pos and fields.asmdbg then
 			local def = prog.get_cpu_def(mem.cpu_pos)
 			if def then
 				local prog_pos = def.on_check_connection(mem.cpu_pos)

@@ -23,6 +23,12 @@ local CpuTime = 0
 local RunTime = 0
 local SCREENSAVER_TIME = 60 * 5
 
+local function server_pos(pos, mem)
+	mem.cpu_pos = mem.cpu_pos or S2P(M(pos):get_string("cpu_pos"))
+	mem.server_pos = mem.server_pos or S2P(M(pos):get_string("server_pos"))
+	return mem.server_pos
+end
+
 local function cpu_server_pos(pos, mem)
 	mem.cpu_pos = mem.cpu_pos or S2P(M(pos):get_string("cpu_pos"))
 	mem.server_pos = mem.server_pos or S2P(M(pos):get_string("server_pos"))
@@ -64,10 +70,8 @@ local function after_place_node(pos, placer, itemstack, pointed_thing)
 	preserve_cpu_server_pos(pos, itemstack)
 	local meta = M(pos)
 	meta:set_string("infotext", "VM16 Programmer")
-	if cpu_server_pos(pos, mem) then
-		init(pos, mem)
-		meta:set_string("formspec", prog.formspec(pos, mem))
-	end
+	init(pos, mem)
+	meta:set_string("formspec", prog.formspec(pos, mem))
 end
 
 local function on_rightclick(pos)
@@ -78,9 +82,11 @@ end
 
 local function on_receive_fields(pos, formname, fields, player)
 	local mem = prog.get_mem(pos)
-	if cpu_server_pos(pos, mem) then
-		mem.cpu_def = mem.cpu_def or prog.get_cpu_def(mem.cpu_pos)
-		mem.ttl = minetest.get_gametime() + SCREENSAVER_TIME
+	if server_pos(pos, mem) then
+		if mem.cpu_pos then
+			mem.cpu_def = mem.cpu_def or prog.get_cpu_def(mem.cpu_pos)
+			mem.ttl = minetest.get_gametime() + SCREENSAVER_TIME
+		end
 		vm16.prog.on_receive_fields(pos, formname, fields, player)
 	end
 end
@@ -197,7 +203,7 @@ minetest.register_lbm({
 	run_at_every_load = true,
 	action = function(pos, node)
 		local mem = prog.get_mem(pos)
-		if cpu_server_pos(pos, mem) then
+		if server_pos(pos, mem) then
 			init(pos, mem)
 			M(pos):set_string("formspec", vm16.prog.formspec(pos, mem))
 		end
