@@ -1,10 +1,6 @@
 func init() {
 }
 
-func foo(a, b) {
-  return a *2 + b;
-}
-
 func loop() {
   var addr = &&mark3;
 

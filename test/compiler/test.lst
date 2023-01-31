@@ -4292,7 +4292,6 @@ brnch  45 0080: "@lbl1"
 newfile test18.c
   .code
   global init
-  global foo
   global loop
   jump 8
   .org 8
@@ -4309,110 +4308,93 @@ init:
   move A, A
   ret
 ;   2: }
-;   4: func foo(a, b) {
-foo:
-;   5:   return a *2 + b;
-  move A, [SP+2]
-  mul A, #2
-  add A, [SP+1]
-  ret
-;   6: }
-;   8: func loop() {
+;   4: func loop() {
 loop:
-;   9:   var addr = &&mark3;
+;   5:   var addr = &&mark3;
   push #mark3
-;  11:   // 	https://gcc.gnu.org/onlinedocs/gcc/Labels-as-Values.html
-;  12:   goto *addr;
+;   7:   // 	https://gcc.gnu.org/onlinedocs/gcc/Labels-as-Values.html
+;   8:   goto *addr;
   jump [SP+0]
-;  14:   goto mark1;
+;  10:   goto mark1;
   jump mark1
-;  15:   
-;  16:   while(1) {
+;  11:   
+;  12:   while(1) {
 @lbl1:
   move A, #1
   skgt A, #00
   jump @lbl2
-;  17:     mark1:
+;  13:     mark1:
 mark1:
-;  18:       system(0, 0x31);
+;  14:       system(0, 0x31);
   move A, #49
+  sys #0
+;  15:       break;
+  jump @lbl2
+;  17:     mark2:
+mark2:
+;  18:       system(0, 0x32);
+  move A, #50
   sys #0
 ;  19:       break;
   jump @lbl2
-;  21:     mark2:
-mark2:
-;  22:       system(0, 0x32);
-  move A, #50
-  sys #0
-;  23:       break;
-  jump @lbl2
-;  25:     mark3:
+;  21:     mark3:
 mark3:
-;  26:       system(0, 0x33);
+;  22:       system(0, 0x33);
   move A, #51
   sys #0
-;  27:       goto mark2;
+;  23:       goto mark2;
   jump mark2
-;  28:       break;
+;  24:       break;
   jump @lbl2
   jump @lbl1
 @lbl2:
-;  29:   }
+;  25:   }
   add SP, #1
   ret
-;  30: }
+;  26: }
 #### Code ####
  file   0 0000: test18.c
  code   0 0000: 1200 0008
  code   0 0008: 1600 0011
  code   0 000A: 1600 0012
- code   0 000C: 1600 001B
+ code   0 000C: 1600 0014
  code   0 000E: 0000
  code   0 000F: 1200 000C
  code   0 0011: 1800
  code   1 0012: 2000
  code   1 0013: 1800
- code   5 0014: 2013 0002
- code   5 0016: 3810 0002
- code   5 0018: 3013 0001
- code   5 001A: 1800
- code   9 001B: 6A00 0030
- code  12 001D: 1260 0000
- code  14 001F: 1200 0026
- code  16 0021: 200D
- code  16 0022: 9810 0000
- code  16 0024: 1200 0039
- code  18 0026: 2010 0031
- code  18 0028: 0800
- code  19 0029: 1200 0039
- code  22 002B: 2010 0032
- code  22 002D: 0800
- code  23 002E: 1200 0039
- code  26 0030: 2010 0033
- code  26 0032: 0800
- code  27 0033: 1200 002B
- code  28 0035: 1200 0039
- code  28 0037: 1200 0021
- code  29 0039: 30ED
- code  29 003A: 1800
+ code   5 0014: 6A00 0029
+ code   8 0016: 1260 0000
+ code  10 0018: 1200 001F
+ code  12 001A: 200D
+ code  12 001B: 9810 0000
+ code  12 001D: 1200 0032
+ code  14 001F: 2010 0031
+ code  14 0021: 0800
+ code  15 0022: 1200 0032
+ code  18 0024: 2010 0032
+ code  18 0026: 0800
+ code  19 0027: 1200 0032
+ code  22 0029: 2010 0033
+ code  22 002B: 0800
+ code  23 002C: 1200 0024
+ code  24 002E: 1200 0032
+ code  24 0030: 1200 001A
+ code  25 0032: 30ED
+ code  25 0033: 1800
 #### Debug ####
  file   0 0000: "test18.c"
  func   1 0012: "init"
  svar   1    0: "@num_stack_var@"
- func   4 0014: "foo"
-  ret   5 0000: "0"
- svar   5    2: "a"
- svar   5    1: "b"
- svar   5    0: "@num_stack_var@"
- func   8 001B: "loop"
-brnch  12 0000: "[SP+0]"
-brnch  14 0026: "mark1"
-brnch  16 0039: "@lbl2"
-brnch  19 0039: "@lbl2"
-brnch  23 0039: "@lbl2"
-brnch  27 002B: "mark2"
-brnch  28 0039: "@lbl2"
-brnch  28 0021: "@lbl1"
- svar  29   -1: "addr"
- svar  29    1: "@num_stack_var@"
- endf  31 003B: "test18.c"
+ func   4 0014: "loop"
+brnch   8 0000: "[SP+0]"
+brnch  10 001F: "mark1"
+brnch  12 0032: "@lbl2"
+brnch  15 0032: "@lbl2"
+brnch  19 0032: "@lbl2"
+brnch  23 0024: "mark2"
+brnch  24 0032: "@lbl2"
+brnch  24 001A: "@lbl1"
+ svar  25   -1: "addr"
+ svar  25    1: "@num_stack_var@"
+ endf  27 0034: "test18.c"
