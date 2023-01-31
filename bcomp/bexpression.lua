@@ -138,6 +138,7 @@ unary:
     | '~' postfix
     | '*' postfix
     | '&' postfix
+    | '&&' label
     | 'sizeof' '(' variable ')'
 ]]--
 function BExpr:unary()
@@ -157,6 +158,10 @@ function BExpr:unary()
 		local reg = self:next_free_indexreg()
 		self:add_instr("move", reg, opnd)
 		return "[" .. reg .. "]"
+	elseif val == "&&" then
+		self:tk_match("&&")
+		local lbl = self:ident()
+		return '#' .. lbl
 	elseif val == "&" then
 		self:tk_match("&")
 		self.stack_offs = nil

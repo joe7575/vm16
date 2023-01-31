@@ -361,6 +361,7 @@ statement:
     | asm_declaration
     | assignment ";"
     | expression ";"
+    | "goto" label ";"
     | "goto" ident ";"
     | "break" ";"
     | "continue" ";"
@@ -381,7 +382,9 @@ function BPars:statement()
 		self:add_debugger_info("ret", tok.lineno)
 		if self:tk_peek().val ~= ";" then
 			local right = self:expression()
-			self:add_instr("move", "A", right)
+			if right ~= "A" then
+				self:add_instr("move", "A", right)
+			end
 			self:reset_reg_use()
 		else
 			self:add_instr("move", "A", "#0")
@@ -392,7 +395,10 @@ function BPars:statement()
 	elseif val == "goto" then
 		self:tk_match("goto")
 		local lbl = self:ident()
-		self:sym_add_local(lbl)
+		local var = self:sym_get_local(lbl)
+		if var then
+			lbl = var
+		end
 		self:tk_match(";")
 		self:reset_reg_use()
 		self:add_instr("jump", lbl)

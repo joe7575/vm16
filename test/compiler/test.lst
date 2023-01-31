@@ -1,4 +1,4 @@
-vm16 version = 2.7.4
+vm16 version = 2.7.5
 
  #### Compile 'main': test01.c ####
 ;##### test01.c #####
@@ -40,7 +40,6 @@ foo:
 ;  12:   return c * d;
   move A, [SP+1]
   mul A, [SP+0]
-  move A, A
   add SP, #2
   ret
 ;  13: }
@@ -105,7 +104,6 @@ test_expr2:
   div C, [SP+1]
   mul B, C
   add A, B
-  move A, A
   ret
 ;  33: }
 ;  35: func main() {
@@ -223,12 +221,12 @@ var2: 0
 var3: 0
 #### Code ####
  file   0 0000: test01.c
- code   0 0000: 1600 005C
+ code   0 0000: 1600 005A
  code   0 0002: 1C00
- code   2 0003: 2230 00F4 0002
- code   3 0006: 2011 00F4
+ code   2 0003: 2230 00F2 0002
+ code   3 0006: 2011 00F2
  code   3 0008: 3810 0002
- code   3 000A: 2220 00F5
+ code   3 000A: 2220 00F3
  code   0 000C: 1800
  code   6 000D: 2010 0005
  code   6 000F: 1800
@@ -236,137 +234,135 @@ var3: 0
  code  11 0012: 6A60 0002
  code  12 0014: 2013 0001
  code  12 0016: 3813 0000
- code  12 0018: 2000
- code  12 0019: 30F0 0002
- code  12 001B: 1800
- code  16 001C: 6A00 0004
- code  17 001E: 2013 0000
- code  17 0020: 9813 0002
- code  17 0022: 1200 0027
- code  18 0024: 200C
- code  18 0025: 30ED
- code  18 0026: 1800
- code  20 0027: 2010 000F
- code  20 0029: 30ED
- code  20 002A: 1800
- code  24 002B: 2013 0002
- code  24 002D: 3013 0001
- code  24 002F: 2033 0003
- code  24 0031: 3020
- code  24 0032: 2053 0004
- code  24 0034: 3041
- code  24 0035: 2002
- code  24 0036: 1800
- code  28 0037: 1600 000D
- code  28 0039: 2033 0004
- code  28 003B: 3820
- code  28 003C: 2053 0003
- code  28 003E: 3450 0002
- code  28 0040: 2073 0002
- code  28 0042: 3C73 0001
- code  28 0044: 3843
- code  28 0045: 3022
- code  28 0046: 2001
- code  28 0047: 1800
- code  32 0048: 2013 0004
- code  32 004A: 3013 0003
- code  32 004C: 6800
- code  32 004D: 1600 001C
- code  32 004F: 30ED
- code  32 0050: 2033 0003
- code  32 0052: 3430 0002
- code  32 0054: 2053 0002
- code  32 0056: 3C53 0001
- code  32 0058: 3822
- code  32 0059: 3001
- code  32 005A: 2000
- code  32 005B: 1800
- code  36 005C: 2011 00F3
- code  36 005E: 300D
- code  36 005F: 6800
- code  37 0060: 6980
- code  39 0061: 6A00 000E
- code  39 0063: 1600 001C
- code  39 0065: 30ED
- code  39 0066: 6600 000F
- code  40 0068: 65B3 0001
- code  41 006A: 2013 0001
- code  41 006C: 3010 0003
- code  41 006E: 3810 0002
- code  41 0070: 2260 0001
- code  42 0072: 6613 0008 0001
- code  43 0075: 2011 00F3
- code  43 0077: 202C
- code  43 0078: 0802
- code  44 0079: 2011 00F3
- code  44 007B: 3010 0003
- code  44 007D: 202C
- code  44 007E: 0802
- code  45 007F: 6010 0003
- code  45 0081: 2220 00F4
- code  46 0083: 6611 000C 00F4
- code  47 0086: 2010 0005
- code  47 0088: 0000
- code  47 0089: 7414 FFFF
- code  48 008B: 1600 000D
- code  48 008D: 6600 0005
- code  50 008F: 6A00 000E
- code  50 0091: 1600 001C
- code  50 0093: 30ED
- code  50 0094: 6600 000F
- code  51 0096: 2270 0001 0008
- code  52 0099: 2230 00F4 000C
- code  53 009C: 6A60 0001
- code  53 009E: 6A60 0002
- code  53 00A0: 6A60 0003
- code  53 00A2: 6A20 00F4
- code  53 00A4: 1600 002B
- code  53 00A6: 30F0 0004
- code  53 00A8: 2260 0000
- code  54 00AA: 6613 0024 0000
- code  55 00AD: 69A0
- code  55 00AE: 6A60 0002
- code  55 00B0: 6A60 0003
- code  55 00B2: 6A20 00F4
- code  55 00B4: 1600 002B
- code  55 00B6: 30F0 0004
- code  55 00B8: 2260 0000
- code  56 00BA: 6613 001D 0000
- code  58 00BD: 69A0
- code  58 00BE: 1600 000D
- code  58 00C0: 6800
- code  58 00C1: 6A60 0003
- code  58 00C3: 6A20 00F4
- code  58 00C5: 1600 002B
- code  58 00C7: 30F0 0004
- code  58 00C9: 2260 0001
- code  59 00CB: 6613 001A 0001
- code  62 00CE: 6A00 0002
+ code  12 0018: 30F0 0002
+ code  12 001A: 1800
+ code  16 001B: 6A00 0004
+ code  17 001D: 2013 0000
+ code  17 001F: 9813 0002
+ code  17 0021: 1200 0026
+ code  18 0023: 200C
+ code  18 0024: 30ED
+ code  18 0025: 1800
+ code  20 0026: 2010 000F
+ code  20 0028: 30ED
+ code  20 0029: 1800
+ code  24 002A: 2013 0002
+ code  24 002C: 3013 0001
+ code  24 002E: 2033 0003
+ code  24 0030: 3020
+ code  24 0031: 2053 0004
+ code  24 0033: 3041
+ code  24 0034: 2002
+ code  24 0035: 1800
+ code  28 0036: 1600 000D
+ code  28 0038: 2033 0004
+ code  28 003A: 3820
+ code  28 003B: 2053 0003
+ code  28 003D: 3450 0002
+ code  28 003F: 2073 0002
+ code  28 0041: 3C73 0001
+ code  28 0043: 3843
+ code  28 0044: 3022
+ code  28 0045: 2001
+ code  28 0046: 1800
+ code  32 0047: 2013 0004
+ code  32 0049: 3013 0003
+ code  32 004B: 6800
+ code  32 004C: 1600 001B
+ code  32 004E: 30ED
+ code  32 004F: 2033 0003
+ code  32 0051: 3430 0002
+ code  32 0053: 2053 0002
+ code  32 0055: 3C53 0001
+ code  32 0057: 3822
+ code  32 0058: 3001
+ code  32 0059: 1800
+ code  36 005A: 2011 00F1
+ code  36 005C: 300D
+ code  36 005D: 6800
+ code  37 005E: 6980
+ code  39 005F: 6A00 000E
+ code  39 0061: 1600 001B
+ code  39 0063: 30ED
+ code  39 0064: 6600 000F
+ code  40 0066: 65B3 0001
+ code  41 0068: 2013 0001
+ code  41 006A: 3010 0003
+ code  41 006C: 3810 0002
+ code  41 006E: 2260 0001
+ code  42 0070: 6613 0008 0001
+ code  43 0073: 2011 00F1
+ code  43 0075: 202C
+ code  43 0076: 0802
+ code  44 0077: 2011 00F1
+ code  44 0079: 3010 0003
+ code  44 007B: 202C
+ code  44 007C: 0802
+ code  45 007D: 6010 0003
+ code  45 007F: 2220 00F2
+ code  46 0081: 6611 000C 00F2
+ code  47 0084: 2010 0005
+ code  47 0086: 0000
+ code  47 0087: 7414 FFFF
+ code  48 0089: 1600 000D
+ code  48 008B: 6600 0005
+ code  50 008D: 6A00 000E
+ code  50 008F: 1600 001B
+ code  50 0091: 30ED
+ code  50 0092: 6600 000F
+ code  51 0094: 2270 0001 0008
+ code  52 0097: 2230 00F2 000C
+ code  53 009A: 6A60 0001
+ code  53 009C: 6A60 0002
+ code  53 009E: 6A60 0003
+ code  53 00A0: 6A20 00F2
+ code  53 00A2: 1600 002A
+ code  53 00A4: 30F0 0004
+ code  53 00A6: 2260 0000
+ code  54 00A8: 6613 0024 0000
+ code  55 00AB: 69A0
+ code  55 00AC: 6A60 0002
+ code  55 00AE: 6A60 0003
+ code  55 00B0: 6A20 00F2
+ code  55 00B2: 1600 002A
+ code  55 00B4: 30F0 0004
+ code  55 00B6: 2260 0000
+ code  56 00B8: 6613 001D 0000
+ code  58 00BB: 69A0
+ code  58 00BC: 1600 000D
+ code  58 00BE: 6800
+ code  58 00BF: 6A60 0003
+ code  58 00C1: 6A20 00F2
+ code  58 00C3: 1600 002A
+ code  58 00C5: 30F0 0004
+ code  58 00C7: 2260 0001
+ code  59 00C9: 6613 001A 0001
+ code  62 00CC: 6A00 0002
+ code  62 00CE: 6A00 0004
  code  62 00D0: 6A00 0004
  code  62 00D2: 6A00 0004
- code  62 00D4: 6A00 0004
- code  62 00D6: 1600 0037
- code  62 00D8: 30F0 0004
- code  62 00DA: 2260 0000
- code  63 00DC: 6613 000C 0000
- code  66 00DF: 6A00 0002
+ code  62 00D4: 1600 0036
+ code  62 00D6: 30F0 0004
+ code  62 00D8: 2260 0000
+ code  63 00DA: 6613 000C 0000
+ code  66 00DD: 6A00 0002
+ code  66 00DF: 6A00 0004
  code  66 00E1: 6A00 0004
  code  66 00E3: 6A00 0004
- code  66 00E5: 6A00 0004
- code  66 00E7: 1600 0048
- code  66 00E9: 30F0 0004
- code  66 00EB: 2260 0000
- code  67 00ED: 6613 0011 0000
- code  67 00F0: 30F0 0002
- code  67 00F2: 1800
- code   1 00F3: 0000
- code   2 00F4: 0000
- code   3 00F5: 0000
+ code  66 00E5: 1600 0047
+ code  66 00E7: 30F0 0004
+ code  66 00E9: 2260 0000
+ code  67 00EB: 6613 0011 0000
+ code  67 00EE: 30F0 0002
+ code  67 00F0: 1800
+ code   1 00F1: 0000
+ code   2 00F2: 0000
+ code   3 00F3: 0000
 #### Debug ####
  file   0 0000: "test01.c"
- gvar   1 00F3: "var1"
- gvar   2 00F4: "var2"
- gvar   3 00F5: "var3"
+ gvar   1 00F1: "var1"
+ gvar   2 00F2: "var2"
+ gvar   3 00F3: "var3"
  func   5 000D: "get_five"
   ret   6 0000: "0"
  svar   6    0: "@num_stack_var@"
@@ -377,21 +373,21 @@ var3: 0
  svar  12    1: "b"
  svar  12   -2: "d"
  svar  12    2: "@num_stack_var@"
- func  15 001C: "test_basic"
-brnch  17 0027: "@lbl2"
+ func  15 001B: "test_basic"
+brnch  17 0026: "@lbl2"
   ret  18 0000: "0"
   ret  20 0000: "0"
  svar  20    1: "a"
  svar  20   -1: "d"
  svar  20    1: "@num_stack_var@"
- func  23 002B: "test_4_param"
+ func  23 002A: "test_4_param"
   ret  24 0000: "0"
  svar  24    4: "a"
  svar  24    2: "c"
  svar  24    3: "b"
  svar  24    1: "d"
  svar  24    0: "@num_stack_var@"
- func  27 0037: "test_expr"
+ func  27 0036: "test_expr"
   ret  28 0000: "0"
  call  28 000D: "get_five"
  svar  28    4: "a"
@@ -399,28 +395,28 @@ brnch  17 0027: "@lbl2"
  svar  28    3: "b"
  svar  28    1: "d"
  svar  28    0: "@num_stack_var@"
- func  31 0048: "test_expr2"
+ func  31 0047: "test_expr2"
   ret  32 0000: "0"
- call  32 001C: "test_basic"
+ call  32 001B: "test_basic"
  svar  32    4: "a"
  svar  32    2: "c"
  svar  32    3: "b"
  svar  32    1: "d"
  svar  32    0: "@num_stack_var@"
- func  35 005C: "main"
- call  39 001C: "test_basic"
+ func  35 005A: "main"
+ call  39 001B: "test_basic"
  call  48 000D: "get_five"
- call  50 001C: "test_basic"
- call  53 002B: "test_4_param"
- call  55 002B: "test_4_param"
+ call  50 001B: "test_basic"
+ call  53 002A: "test_4_param"
+ call  55 002A: "test_4_param"
  call  58 000D: "get_five"
- call  58 002B: "test_4_param"
- call  62 0037: "test_expr"
- call  66 0048: "test_expr2"
+ call  58 002A: "test_4_param"
+ call  62 0036: "test_expr"
+ call  66 0047: "test_expr2"
  svar  67   -2: "res"
  svar  67   -1: "c"
  svar  67    2: "@num_stack_var@"
- endf  70 00F6: "test01.c"
+ endf  70 00F4: "test01.c"
 
  #### Compile 'main': test02.c ####
 ;##### test02.c #####
@@ -636,7 +632,6 @@ get_char:
 ;   9:     return 65 + c;
   move A, #65
   add A, [SP+1]
-  move A, A
   ret
 @lbl3:
 ;  10:   }
@@ -713,88 +708,87 @@ var1: 0
 Drehzahl: 0
 #### Code ####
  file   0 0000: test03.c
- code   0 0000: 1600 0036
+ code   0 0000: 1600 0035
  code   0 0002: 1C00
- code   1 0003: 222C 0058
+ code   1 0003: 222C 0057
  code   0 0005: 1800
- code   5 0006: 2233 0058 0001
+ code   5 0006: 2233 0057 0001
  code   6 0009: 2013 0001
  code   6 000B: 9810 0014
  code   6 000D: 1200 0013
  code   7 000F: 200D
  code   7 0010: 1800
- code   8 0011: 1200 0019
+ code   8 0011: 1200 0018
  code   9 0013: 2010 0041
  code   9 0015: 3013 0001
- code   9 0017: 2000
- code   9 0018: 1800
- code  11 0019: 2011 0058
- code  11 001B: 300D
- code  11 001C: 2220 0058
- code  11 001E: 1800
- code  15 001F: 200D
- code  15 0020: 4C00
- code  15 0021: 300D
- code  15 0022: 6800
- code  16 0023: 6A00 0002
- code  18 0025: 2010 FFFF
- code  18 0027: 4C00
- code  18 0028: 2033 0001
- code  18 002A: 9020
- code  18 002B: 1200 0031
- code  19 002D: 6590 0041
- code  20 002F: 1200 0033
- code  21 0031: 6590 0042
- code  22 0033: 30F0 0002
- code  22 0035: 1800
- code  26 0036: 69A0
- code  27 0037: 6980
- code  29 0038: 2010 0005
- code  29 003A: 0000
- code  29 003B: 7414 FFFF
- code  30 003D: 1600 001F
- code  31 003F: 2013 0001
- code  31 0041: 9410 0020
- code  31 0043: 1200 0055
- code  32 0045: 6A60 0001
- code  32 0047: 1600 0006
- code  32 0049: 30ED
- code  32 004A: 2260 0000
- code  33 004C: 6593 0000
- code  34 004E: 2013 0001
- code  34 0050: 300D
- code  34 0051: 2260 0001
- code  34 0053: 1200 003F
- code  35 0055: 30F0 0002
- code  35 0057: 1800
- code   1 0058: 0000
- code   2 0059: 0000
+ code   9 0017: 1800
+ code  11 0018: 2011 0057
+ code  11 001A: 300D
+ code  11 001B: 2220 0057
+ code  11 001D: 1800
+ code  15 001E: 200D
+ code  15 001F: 4C00
+ code  15 0020: 300D
+ code  15 0021: 6800
+ code  16 0022: 6A00 0002
+ code  18 0024: 2010 FFFF
+ code  18 0026: 4C00
+ code  18 0027: 2033 0001
+ code  18 0029: 9020
+ code  18 002A: 1200 0030
+ code  19 002C: 6590 0041
+ code  20 002E: 1200 0032
+ code  21 0030: 6590 0042
+ code  22 0032: 30F0 0002
+ code  22 0034: 1800
+ code  26 0035: 69A0
+ code  27 0036: 6980
+ code  29 0037: 2010 0005
+ code  29 0039: 0000
+ code  29 003A: 7414 FFFF
+ code  30 003C: 1600 001E
+ code  31 003E: 2013 0001
+ code  31 0040: 9410 0020
+ code  31 0042: 1200 0054
+ code  32 0044: 6A60 0001
+ code  32 0046: 1600 0006
+ code  32 0048: 30ED
+ code  32 0049: 2260 0000
+ code  33 004B: 6593 0000
+ code  34 004D: 2013 0001
+ code  34 004F: 300D
+ code  34 0050: 2260 0001
+ code  34 0052: 1200 003E
+ code  35 0054: 30F0 0002
+ code  35 0056: 1800
+ code   1 0057: 0000
+ code   2 0058: 0000
 #### Debug ####
  file   0 0000: "test03.c"
- gvar   1 0058: "var1"
- gvar   2 0059: "Drehzahl"
+ gvar   1 0057: "var1"
+ gvar   2 0058: "Drehzahl"
  func   4 0006: "get_char"
 brnch   6 0013: "@lbl2"
   ret   7 0000: "0"
-brnch   8 0019: "@lbl3"
+brnch   8 0018: "@lbl3"
   ret   9 0000: "0"
  svar  11    1: "c"
  svar  11    0: "@num_stack_var@"
- func  14 001F: "foo"
-brnch  18 0031: "@lbl5"
-brnch  20 0033: "@lbl6"
+ func  14 001E: "foo"
+brnch  18 0030: "@lbl5"
+brnch  20 0032: "@lbl6"
  svar  22   -1: "a"
  svar  22   -2: "b"
  svar  22    2: "@num_stack_var@"
- func  25 0036: "main"
- call  30 001F: "foo"
-brnch  31 0055: "@lbl8"
+ func  25 0035: "main"
+ call  30 001E: "foo"
+brnch  31 0054: "@lbl8"
  call  32 0006: "get_char"
-brnch  34 003F: "@lbl7"
+brnch  34 003E: "@lbl7"
  svar  35   -1: "i"
  svar  35   -2: "c"
  svar  35    2: "@num_stack_var@"
- endf  38 005A: "test03.c"
+ endf  38 0059: "test03.c"
 
  #### Compile 'main': test04.c ####
 ;##### test04.c #####
@@ -2676,8 +2670,7 @@ brnch  26 007E: "@lbl11"
  call  35 0048: "test1"
 brnch  37 00A3: "exit"
  call  38 0097: "test2"
- svar  39   -1: "exit"
- svar  39    1: "@num_stack_var@"
+ svar  39    0: "@num_stack_var@"
  endf  42 00B2: "test10.c"
 
  #### Compile 'main': test11.c ####
