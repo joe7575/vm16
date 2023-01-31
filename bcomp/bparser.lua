@@ -394,10 +394,16 @@ function BPars:statement()
 		self:reset_reg_use()
 	elseif val == "goto" then
 		self:tk_match("goto")
-		local lbl = self:ident()
-		local var = self:sym_get_local(lbl)
-		if var then
-			lbl = var
+		local lbl
+		if self:tk_peek().val == "*" then
+			self:tk_match("*")
+			local ident = self:ident()
+			lbl = self:sym_get_local(ident)
+			if not lbl then
+				self:error_msg(string.format("Unknown identifier '%s'", ident))
+			end
+		else
+			lbl = self:ident()
 		end
 		self:tk_match(";")
 		self:reset_reg_use()

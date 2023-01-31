@@ -236,4 +236,4 @@ end
 --compile_and_assemble("test01.c")
 --beduino_compile("test09.c")
 --beduino_compile("test_test.c")
-beduino_compile("test17.c")
+beduino_compile("test18.c")

@@ -108,3 +108,4 @@ compile2("test14.c")  -- Function local arrays
 compile2("test15.c")  -- comparison vs. expression
 compile2("test16.c")  -- const-expr, sizeof
 compile2("test17.c")  -- array, function, call
+compile2("test18.c")  -- goto label/value
