@@ -84,6 +84,14 @@ function BConstEx:const_factor()
 		local res = self:const_expression()
 		self:tk_match(")")
 		return res
+	elseif tok.val == "&&" then
+		self:tk_match("&&")
+		local lbl = self:ident()
+		if lbl then
+			return lbl
+		else
+			self:error_msg(string.format("Syntax error at '%s'", lbl or ""))
+		end
 	else
 		self:error_msg(string.format("Syntax error at '%s'", tok.val or ""))
 		return tok.val or ""

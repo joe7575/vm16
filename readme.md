@@ -118,6 +118,11 @@ Licensed under the GNU GPLv3 (See LICENSE.txt)
 
 ## History
 
+#### API v3.7 / Core v2.7.5 / ASM v2.5 / Compiler v1.11 / Debugger v1.4 (2023-02-03)
+
+- Compiler: Improve 'goto' support
+  (according to: https://gcc.gnu.org/onlinedocs/gcc/Labels-as-Values.html)
+
 #### API v3.7 / Core v2.7.5 / ASM v2.5 / Compiler v1.10 / Debugger v1.4 (2023-01-28)
 
 - Core VM: Fix buffer size check bug

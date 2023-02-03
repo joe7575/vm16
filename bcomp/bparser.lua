@@ -397,11 +397,7 @@ function BPars:statement()
 		local lbl
 		if self:tk_peek().val == "*" then
 			self:tk_match("*")
-			local ident = self:ident()
-			lbl = self:sym_get_local(ident)
-			if not lbl then
-				self:error_msg(string.format("Unknown identifier '%s'", ident))
-			end
+			lbl = self:postfix()
 		else
 			lbl = self:ident()
 		end

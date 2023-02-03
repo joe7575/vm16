@@ -1,14 +1,20 @@
+// Labels and Values
+// https://gcc.gnu.org/onlinedocs/gcc/Labels-as-Values.html
+
 func init() {
 }
+
+static var arr[] = {&&mark1, &&mark2, &&mark3};
+
 
 func loop() {
   var addr = &&mark3;
 
-  // 	https://gcc.gnu.org/onlinedocs/gcc/Labels-as-Values.html
+  goto *arr[2];
   goto *addr;
 
   goto mark1;
-  
+
   while(1) {
     mark1:
       system(0, 0x31);
