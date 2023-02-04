@@ -280,7 +280,8 @@ function vm16.debug.formspec(pos, mem, textsize)
 	if mem.file_text then
 		if mem.file_ext == "asm" then
 			return fs_window(pos, mem, 0.2, 0.6, 8.4, 9.6, textsize, mem.file_text) ..
-				vm16.memory.fs_window(pos, mem, 8.8, 0.6, 6, 9.6, textsize)
+				vm16.memory.fs_window(pos, mem, 8.8, 0.6, 6, 9.6, textsize) ..
+				popup
 		elseif mem.file_ext == "c" then
 			return fs_window(pos, mem, 0.2, 0.6, 11.4, 9.6, textsize, mem.file_text) ..
 				vm16.watch.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize) ..
