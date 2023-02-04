@@ -475,3 +475,14 @@ skgt  A, #$100   	; skip the next 2 word instruction
 skgt  A, B      	; skip the next 2 word instruction
 skgt  [X], $100    	; skip the next 2 word instruction
 ```
+
+### msb - Most Significant Bit
+
+Determine the most significant bit (MSB) of operand2. The most significant bit is the bit which has the largest value in a word.
+The result (value from 0 to 16) is stored in operand1. 
+
+```
+msb  A, #$100
+msb  A, B
+msb  [X], A
+```

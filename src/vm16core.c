@@ -116,6 +116,7 @@ along with VM16.  If not, see <https://www.gnu.org/licenses/>.
 #define  SKLT   (0x25)
 #define  SKGT   (0x26)
 
+#define  MSB    (0x27)
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
@@ -133,6 +134,19 @@ along with VM16.  If not, see <https://www.gnu.org/licenses/>.
 // byte nibble vs ASCII char
 #define NTOA(n)                 ((n) > 9   ? (n) + 55 : (n) + 48)
 #define ATON(a)                 ((a) > '9' ? (a) - 55 : (a) - 48)
+
+
+static uint16_t most_significant_bit(uint16_t val)
+{
+  uint16_t cnt = 0;
+
+  while(val != 0)
+  {
+    val = val >> 1;
+    cnt++;
+  }
+  return cnt;
+}
 
 static inline char ascii(uint16_t val) {
     return ((val > 126 || val < 32) ? '.' : (char)val);
@@ -753,6 +767,12 @@ int vm16_run(vm16_t *C, uint32_t num_cycles, uint32_t *ran) {
                 if(opd1 > opd2) {
                     C->pcnt += 2;
                 }
+                break;
+            }
+            case MSB: {
+                uint16_t *p_opd1 = getaddr(C, addr_mode1);
+                uint16_t opd2 = getoprnd(C, addr_mode2);
+                *p_opd1 = most_significant_bit(opd2);
                 break;
             }
             default: {

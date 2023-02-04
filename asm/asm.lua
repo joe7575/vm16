@@ -37,6 +37,7 @@ local Opcodes = {[0] =
 	"swap:DST:-", "dbnz:DST:ADR", "mod:DST:SRC",
 	"shl:DST:SRC", "shr:DST:SRC", "addc:DST:SRC", "mulc:DST:SRC",
 	"skne:SRC:SRC", "skeq:SRC:SRC", "sklt:SRC:SRC", "skgt:SRC:SRC",
+	"msb:DST:SRC",
 }
 
 --

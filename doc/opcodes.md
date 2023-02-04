@@ -56,6 +56,7 @@ The Instruction Set table below uses mainly the following two addressing groups:
 | skeq   | SRC    | SRC    | 9000 + Opnd1 + Opnd2  |
 | sklt   | SRC    | SRC    | 9400 + Opnd1 + Opnd2  |
 | skgt   | SRC    | SRC    | 9800 + Opnd1 + Opnd2  |
+| msb    | DST    | SRC    | 9C00 + Opnd1 + Opnd2  |
 
 
 ### Opcodes
@@ -77,6 +78,12 @@ The Instruction Set table below uses mainly the following two addressing groups:
 | in   | out  | push | pop  | swap | dbnz | mod  | shl  |
 |------|------|------|------|------|------|------|------|
 | 6000 | 6400 | 6800 | 6C00 | 7000 | 7400 | 7800 | 7C00 |
+
+| shr  | addc | mulc | skne | skeq | sklt | skgt | msb  |
+| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
+| 8000 | 8400 | 8800 | 8C00 | 9000 | 9400 | 9800 | 9C00 |
+
+
 
 #### Operand 1 (Opnd1)
 
