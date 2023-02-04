@@ -12,7 +12,8 @@
 
 -- for lazy programmers
 local M = minetest.get_meta
-local DBG = function() end --print
+local DBG = function() end
+--local DBG = print
 local Lut = {}
 
 function Lut:new(o)
