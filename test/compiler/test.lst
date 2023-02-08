@@ -4292,6 +4292,7 @@ brnch  45 0080: "@lbl1"
 newfile test18.c
   .code
   global init
+  global arr@2
   global loop
   jump 8
   .org 8
@@ -4303,55 +4304,63 @@ newfile test18.c
   jump @loop
 @init:
   ret
-;   1: func init() {
+;   1: // Labels and Values
+;   2: // https://gcc.gnu.org/onlinedocs/gcc/Labels-as-Values.html
+;   4: func init() {
 init:
   move A, A
   ret
-;   2: }
-;   4: func loop() {
+;   5: }
+;   7: static var arr[] = {&&mark1, &&mark2, &&mark3};
+;  10: func loop() {
 loop:
-;   5:   var addr = &&mark3;
+;  11:   var addr = &&mark3;
   push #mark3
-;   7:   // 	https://gcc.gnu.org/onlinedocs/gcc/Labels-as-Values.html
-;   8:   goto *addr;
+;  13:   goto *arr[2];
+  move A, #arr@2
+  add A, #2
+  move X, A
+  jump [X]
+;  14:   goto *addr;
   jump [SP+0]
-;  10:   goto mark1;
+;  16:   goto mark1;
   jump mark1
-;  11:   
-;  12:   while(1) {
+;  18:   while(1) {
 @lbl1:
   move A, #1
   skgt A, #00
   jump @lbl2
-;  13:     mark1:
+;  19:     mark1:
 mark1:
-;  14:       system(0, 0x31);
+;  20:       system(0, 0x31);
   move A, #49
   sys #0
-;  15:       break;
+;  21:       break;
   jump @lbl2
-;  17:     mark2:
+;  23:     mark2:
 mark2:
-;  18:       system(0, 0x32);
+;  24:       system(0, 0x32);
   move A, #50
   sys #0
-;  19:       break;
+;  25:       break;
   jump @lbl2
-;  21:     mark3:
+;  27:     mark3:
 mark3:
-;  22:       system(0, 0x33);
+;  28:       system(0, 0x33);
   move A, #51
   sys #0
-;  23:       goto mark2;
+;  29:       goto mark2;
   jump mark2
-;  24:       break;
+;  30:       break;
   jump @lbl2
   jump @lbl1
 @lbl2:
-;  25:   }
+;  31:   }
   add SP, #1
   ret
-;  26: }
+;  32: }
+  .data
+arr@2: mark1,mark2,mark3
 #### Code ####
  file   0 0000: test18.c
  code   0 0000: 1200 0008
@@ -4361,40 +4370,121 @@ mark3:
  code   0 000E: 0000
  code   0 000F: 1200 000C
  code   0 0011: 1800
- code   1 0012: 2000
- code   1 0013: 1800
- code   5 0014: 6A00 0029
- code   8 0016: 1260 0000
- code  10 0018: 1200 001F
- code  12 001A: 200D
- code  12 001B: 9810 0000
- code  12 001D: 1200 0032
- code  14 001F: 2010 0031
- code  14 0021: 0800
- code  15 0022: 1200 0032
- code  18 0024: 2010 0032
- code  18 0026: 0800
- code  19 0027: 1200 0032
- code  22 0029: 2010 0033
- code  22 002B: 0800
- code  23 002C: 1200 0024
- code  24 002E: 1200 0032
- code  24 0030: 1200 001A
- code  25 0032: 30ED
- code  25 0033: 1800
+ code   4 0012: 2000
+ code   4 0013: 1800
+ code  11 0014: 6A00 002F
+ code  13 0016: 2010 003A
+ code  13 0018: 3010 0002
+ code  13 001A: 2080
+ code  13 001B: 1100
+ code  14 001C: 1260 0000
+ code  16 001E: 1200 0025
+ code  18 0020: 200D
+ code  18 0021: 9810 0000
+ code  18 0023: 1200 0038
+ code  20 0025: 2010 0031
+ code  20 0027: 0800
+ code  21 0028: 1200 0038
+ code  24 002A: 2010 0032
+ code  24 002C: 0800
+ code  25 002D: 1200 0038
+ code  28 002F: 2010 0033
+ code  28 0031: 0800
+ code  29 0032: 1200 002A
+ code  30 0034: 1200 0038
+ code  30 0036: 1200 0020
+ code  31 0038: 30ED
+ code  31 0039: 1800
+ code   7 003A: 0025 002A 002F
 #### Debug ####
  file   0 0000: "test18.c"
- func   1 0012: "init"
- svar   1    0: "@num_stack_var@"
- func   4 0014: "loop"
-brnch   8 0000: "[SP+0]"
-brnch  10 001F: "mark1"
-brnch  12 0032: "@lbl2"
-brnch  15 0032: "@lbl2"
-brnch  19 0032: "@lbl2"
-brnch  23 0024: "mark2"
-brnch  24 0032: "@lbl2"
-brnch  24 001A: "@lbl1"
- svar  25   -1: "addr"
- svar  25    1: "@num_stack_var@"
- endf  27 0034: "test18.c"
+ func   4 0012: "init"
+ svar   4    0: "@num_stack_var@"
+ lvar   7 003A: "arr[]"
+ func  10 0014: "loop"
+brnch  13 0000: "[X]"
+brnch  14 0000: "[SP+0]"
+brnch  16 0025: "mark1"
+brnch  18 0038: "@lbl2"
+brnch  21 0038: "@lbl2"
+brnch  25 0038: "@lbl2"
+brnch  29 002A: "mark2"
+brnch  30 0038: "@lbl2"
+brnch  30 0020: "@lbl1"
+ svar  31   -1: "addr"
+ svar  31    1: "@num_stack_var@"
+ endf  33 003D: "test18.c"
+
+ #### Compile 'loop': test19.c ####
+;##### test19.c #####
+newfile test19.c
+  .code
+  global buff
+  global a
+  global init
+  global loop
+  jump 8
+  .org 8
+  call @init
+  call init
+@loop:
+  call loop
+  nop
+  jump @loop
+@init:
+  ret
+;   1: /**
+;   2:  * This is a commment
+;   3:  */
+;   5: var buff[] = {65, 66, 67};
+;   6: var a;
+;   8: /* func init() {
+;   9:   var p = buff;
+;  10:   var b;
+;  11:   var c;
+;  13:   system(0, *p);
+;  14:   system(0, p[1]);
+;  15:   system(0, p[2]);
+;  16:   system(0, &a);
+;  17:   system(0, &b);
+;  19: } */
+;  21: /**/
+;  22: func init() {
+init:
+  move A, A
+  ret
+;  23: }
+;  25: /* glkdjtgdlgkjdfglj */
+;  26: func loop() {
+loop:
+  move A, A
+  ret
+;  27: }
+;  28: /*****************************/
+  .data
+buff: 65,66,67
+a: 0
+#### Code ####
+ file   0 0000: test19.c
+ code   0 0000: 1200 0008
+ code   0 0008: 1600 0011
+ code   0 000A: 1600 0012
+ code   0 000C: 1600 0014
+ code   0 000E: 0000
+ code   0 000F: 1200 000C
+ code   0 0011: 1800
+ code  22 0012: 2000
+ code  22 0013: 1800
+ code  26 0014: 2000
+ code  26 0015: 1800
+ code   5 0016: 0041 0042 0043
+ code   6 0019: 0000
+#### Debug ####
+ file   0 0000: "test19.c"
+ gvar   5 0016: "buff[]"
+ gvar   6 0019: "a"
+ func  22 0012: "init"
+ svar  22    0: "@num_stack_var@"
+ func  26 0014: "loop"
+ svar  26    0: "@num_stack_var@"
+ endf  29 001A: "test19.c"

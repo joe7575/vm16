@@ -19,7 +19,7 @@ local IDENT2   = "[A-Za-z_][A-Za-z_0-9]*"
 local NUMBER   = "[0-9]+"
 local HEXNUM   = "[0-9a-fA-F]+"
 local OCTNUM   = "[0-7]+"
-local OPERAND  = "[%+%-/%*%%=<>!;,&|!~%^:][%+%-/=<>&|]*"
+local OPERAND  = "[%+%-/%*%%=<>!;,&|!~%^:][%+%-=<>&|]*"
 local BRACE    = "[{}%(%)%[%]]"
 local SPACE    = "[%s]"
 local CHAR     = "'([^'][^']?)'"
@@ -116,6 +116,13 @@ function BScan:tokenize(text)
 		if ch:match(SPACE) then
 			local space = text:match(SPACE, idx)
 			idx = idx + #space
+		elseif self.is_comment then
+			if ch == "*" and nxt == "/" then
+				self.is_comment = false
+				idx = idx + 2
+			else
+				idx = idx + 1
+			end
 		elseif ch:match(IDENT1) then
 			local ident = text:match(IDENT2, idx)
 			if ident == "import" then
@@ -127,6 +134,11 @@ function BScan:tokenize(text)
 				table.insert(lToken, {type = T_IDENT, val = ident, lineno = self.lineno})
 			end
 			idx = idx + #ident
+		elseif ch == "/" and nxt == "/" then -- EOL comment
+				break
+		elseif ch == "/" and nxt == "*" then -- comment
+				self.is_comment = true
+				idx = idx + 2
 		elseif ch == "0" and nxt == "x" then
 			idx = idx + 2
 			local number = text:match(HEXNUM, idx)
@@ -143,9 +155,6 @@ function BScan:tokenize(text)
 			idx = idx + #number
 		elseif ch:match(OPERAND) then
 			local operand = text:match(OPERAND, idx)
-			if operand:sub(1, 2) == "//" then -- EOL comment
-				break
-			end
 			if InvalidOperands[operand] then
 				table.insert(lToken, {type = T_OPERAND, val = ch, lineno = self.lineno})
 				idx = idx + 1
@@ -197,6 +206,7 @@ function BScan:scanner(filename, gen_asm_code)
 		self:error_msg(string.format("Can't open file '%s'", filename))
 	end
 
+	self.is_comment = false
 	for lineno, line in ipairs(vm16.splitlines(text)) do
 		self.lineno = lineno
 		if self.is_asm_code then
