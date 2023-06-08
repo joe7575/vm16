@@ -685,7 +685,8 @@ main:
 @lbl7:
   move A, [SP+1]
   sklt A, #32
-  jump @lbl8
+  jump @lbl9
+@lbl8:
 ;  32:     c = get_char(i);
   push [SP+1]
   call get_char
@@ -698,7 +699,7 @@ main:
   add A, #1
   move [SP+1], A
   jump @lbl7
-@lbl8:
+@lbl9:
 ;  35:   }
   add SP, #2
   ret
@@ -782,7 +783,7 @@ brnch  20 0032: "@lbl6"
  svar  22    2: "@num_stack_var@"
  func  25 0035: "main"
  call  30 001E: "foo"
-brnch  31 0054: "@lbl8"
+brnch  31 0054: "@lbl9"
  call  32 0006: "get_char"
 brnch  34 003E: "@lbl7"
  svar  35   -1: "i"
@@ -815,7 +816,8 @@ main:
 @lbl1:
   move A, [SP+1]
   sklt A, #32
-  jump @lbl2
+  jump @lbl3
+@lbl2:
 ;  11:     i = i + 1;
   move A, [SP+1]
   add A, #1
@@ -833,7 +835,7 @@ main:
 ;  18:       xor $100, [X]++
   xor $100, [X]++
   jump @lbl1
-@lbl2:
+@lbl3:
 ;  19:     }
 ;  20:   }
   add SP, #2
@@ -870,7 +872,7 @@ cnt: 0
  file   0 0000: "test04.c"
  gvar   3 0027: "cnt"
  func   5 0006: "main"
-brnch  10 0024: "@lbl2"
+brnch  10 0024: "@lbl3"
 brnch  18 000B: "@lbl1"
  svar  20   -1: "i"
  svar  20   -2: "ptr"
@@ -906,7 +908,8 @@ memcpy:
 @lbl1:
   move A, [SP+1]
   skgt A, #0
-  jump @lbl2
+  jump @lbl3
+@lbl2:
 ;   8:     *dst = *src;
   move X, [SP+2]
   move Y, [SP+3]
@@ -918,7 +921,7 @@ memcpy:
 ;  11:     num--;
   dec [SP+1]
   jump @lbl1
-@lbl2:
+@lbl3:
 ;  12:   }
   ret
 ;  13: }
@@ -933,8 +936,8 @@ putval:
 ;  20:   if(val == 0) {
   move A, [SP+4]
   skeq A, #0
-  jump @lbl4
-@lbl3:
+  jump @lbl5
+@lbl4:
 ;  21:     output(0, 0x30);
   out #0, #48
 ;  22:     return;
@@ -942,12 +945,13 @@ putval:
   add SP, #3
   ret
 ;  23:   }
-@lbl4:
-;  25:   while(r > 0) {
 @lbl5:
+;  25:   while(r > 0) {
+@lbl6:
   move A, [SP+1]
   skgt A, #0
-  jump @lbl6
+  jump @lbl8
+@lbl7:
 ;  26:     c = r % 10;
   move A, [SP+1]
   mod A, #10
@@ -965,14 +969,15 @@ putval:
   move [X], A
 ;  29:     i++;
   inc [SP+0]
-  jump @lbl5
-@lbl6:
+  jump @lbl6
+@lbl8:
 ;  30:   }
 ;  31:   for(; i > 0; i--) {
-@lbl7:
+@lbl9:
   move A, [SP+0]
   skgt A, #0
-  jump @lbl8
+  jump @lbl11
+@lbl10:
 ;  32:     output(0, out[i-1]);
   move A, [SP+0]
   sub A, #1
@@ -980,10 +985,10 @@ putval:
   add B, A
   move X, B
   out #0, [X]
-@lbl9:
+@lbl12:
   dec [SP+0]
-  jump @lbl7
-@lbl8:
+  jump @lbl9
+@lbl11:
 ;  33:   }
   add SP, #3
   ret
@@ -993,13 +998,14 @@ putstr:
 ;  37:   var i;
   push #0
 ;  39:   while(s[i] != 0) {
-@lbl10:
+@lbl13:
   move A, [SP+2]
   add A, [SP+0]
   move X, A
   move B, [X]
   skne B, #0
-  jump @lbl11
+  jump @lbl15
+@lbl14:
 ;  40:     output(0, s[i]);
   move A, [SP+2]
   add A, [SP+0]
@@ -1007,8 +1013,8 @@ putstr:
   out #0, [X]
 ;  41:     i++;
   inc [SP+0]
-  jump @lbl10
-@lbl11:
+  jump @lbl13
+@lbl15:
 ;  42:   }
   add SP, #1
   ret
@@ -1033,10 +1039,11 @@ main:
   add SP, #3
 ;  53:   for(i = 0; i < 4; i++) {
   move [SP+3], #0
-@lbl12:
+@lbl16:
   move A, [SP+3]
   sklt A, #4
-  jump @lbl13
+  jump @lbl18
+@lbl17:
 ;  54:     putval(arr1[i]);
   move A, #arr1
   add A, [SP+3]
@@ -1044,10 +1051,10 @@ main:
   push [X]
   call putval
   add SP, #1
-@lbl14:
+@lbl19:
   inc [SP+3]
-  jump @lbl12
-@lbl13:
+  jump @lbl16
+@lbl18:
 ;  55:   }
 ;  56:   output(0, '  ');
   out #0, #8224
@@ -1207,35 +1214,35 @@ str: 0
  gvar   3 00BF: "out[]"
  gvar   4 00C5: "str"
  func   6 0007: "memcpy"
-brnch   7 0019: "@lbl2"
+brnch   7 0019: "@lbl3"
 brnch  11 0007: "@lbl1"
  svar  12    3: "dst"
  svar  12    2: "src"
  svar  12    1: "num"
  svar  12    0: "@num_stack_var@"
  func  15 001A: "putval"
-brnch  20 0029: "@lbl4"
+brnch  20 0029: "@lbl5"
   ret  22 0000: "0"
-brnch  25 0048: "@lbl6"
-brnch  29 0029: "@lbl5"
-brnch  31 0059: "@lbl8"
-brnch  32 0048: "@lbl7"
+brnch  25 0048: "@lbl8"
+brnch  29 0029: "@lbl6"
+brnch  31 0059: "@lbl11"
+brnch  32 0048: "@lbl9"
  svar  33   -3: "i"
  svar  33   -1: "c"
  svar  33   -2: "r"
  svar  33    1: "val"
  svar  33    3: "@num_stack_var@"
  func  36 005C: "putstr"
-brnch  39 0070: "@lbl11"
-brnch  41 005D: "@lbl10"
+brnch  39 0070: "@lbl15"
+brnch  41 005D: "@lbl13"
  svar  42   -1: "i"
  svar  42    1: "s"
  svar  42    1: "@num_stack_var@"
  func  45 0072: "main"
  call  51 0007: "memcpy"
-brnch  53 009A: "@lbl13"
+brnch  53 009A: "@lbl18"
  call  54 001A: "putval"
-brnch  54 0087: "@lbl12"
+brnch  54 0087: "@lbl16"
  call  57 001A: "putval"
  call  59 005C: "putstr"
  call  61 005C: "putstr"
@@ -2435,13 +2442,15 @@ test1:
 @lbl1:
   move A, [SP+0]
   sklt A, #5
-  jump @lbl2
+  jump @lbl3
+@lbl2:
 ;   8:     for(i = 0; i < 5; i++) {
   move [SP+1], #0
-@lbl4:
+@lbl5:
   move A, [SP+1]
   sklt A, #5
-  jump @lbl5
+  jump @lbl7
+@lbl6:
 ;   9:       putnum(i);
   push [SP+1]
   call putnum
@@ -2449,12 +2458,12 @@ test1:
 ;  10:       if(i < 2) {
   move A, [SP+1]
   sklt A, #2
-  jump @lbl8
-@lbl7:
+  jump @lbl10
+@lbl9:
 ;  11:         continue;
-  jump @lbl6
+  jump @lbl8
 ;  12:       }
-@lbl8:
+@lbl10:
 ;  13:       putstr("i >= 2");
   push #@s1
   call putstr
@@ -2462,46 +2471,47 @@ test1:
 ;  14:       if(i == 4) {
   move A, [SP+1]
   skeq A, #4
-  jump @lbl10
-@lbl9:
+  jump @lbl12
+@lbl11:
 ;  15:         break;
-  jump @lbl5
+  jump @lbl7
 ;  16:       }
-@lbl10:
-@lbl6:
+@lbl12:
+@lbl8:
   inc [SP+1]
-  jump @lbl4
-@lbl5:
+  jump @lbl5
+@lbl7:
 ;  17:     }
-@lbl3:
+@lbl4:
   inc [SP+0]
   jump @lbl1
-@lbl2:
+@lbl3:
 ;  18:   }
 ;  20:   i = 0;
   move [SP+1], #0
 ;  21:   while(1) {
-@lbl11:
+@lbl13:
   move A, #1
   skgt A, #00
-  jump @lbl12
+  jump @lbl15
+@lbl14:
 ;  22:     if(i>3) {
   move A, [SP+1]
   skgt A, #3
-  jump @lbl14
-@lbl13:
+  jump @lbl17
+@lbl16:
 ;  23:       break;
-  jump @lbl12
+  jump @lbl15
 ;  24:     }
-@lbl14:
+@lbl17:
 ;  25:     putnum(i);
   push [SP+1]
   call putnum
   add SP, #1
 ;  26:     i++;
   inc [SP+1]
-  jump @lbl11
-@lbl12:
+  jump @lbl13
+@lbl15:
 ;  27:   }
   add SP, #2
   ret
@@ -2645,21 +2655,21 @@ exit:
  endf 101 0047: "stdio.asm"
  file   1 0048: "test10.c"
  func   3 0048: "test1"
-brnch   7 007C: "@lbl2"
-brnch   8 0078: "@lbl5"
+brnch   7 007C: "@lbl3"
+brnch   8 0078: "@lbl7"
  call   9 0017: "putnum"
-brnch  10 0067: "@lbl8"
-brnch  11 0074: "@lbl6"
+brnch  10 0067: "@lbl10"
+brnch  11 0074: "@lbl8"
  call  13 0008: "putstr"
-brnch  14 0074: "@lbl10"
-brnch  15 0078: "@lbl5"
-brnch  16 0054: "@lbl4"
+brnch  14 0074: "@lbl12"
+brnch  15 0078: "@lbl7"
+brnch  16 0054: "@lbl5"
 brnch  17 004C: "@lbl1"
-brnch  21 0094: "@lbl12"
-brnch  22 008B: "@lbl14"
-brnch  23 0094: "@lbl12"
+brnch  21 0094: "@lbl15"
+brnch  22 008B: "@lbl17"
+brnch  23 0094: "@lbl15"
  call  25 0017: "putnum"
-brnch  26 007E: "@lbl11"
+brnch  26 007E: "@lbl13"
  svar  27   -1: "i"
  svar  27   -2: "j"
  svar  27    2: "@num_stack_var@"
@@ -4128,7 +4138,8 @@ loop:
 @lbl1:
   move A, [SP+0]
   sklt A, #3
-  jump @lbl2
+  jump @lbl3
+@lbl2:
 ;  44:     res = res + tbl[i]();
   move A, #tbl
   add A, [SP+0]
@@ -4141,10 +4152,10 @@ loop:
   add C, B
   move [SP+1], C
 ;  45:     ; // dbg line
-@lbl3:
+@lbl4:
   inc [SP+0]
   jump @lbl1
-@lbl2:
+@lbl3:
 ;  46:   }
 ;  47:   ; // dbg line
   add SP, #3
@@ -4278,7 +4289,7 @@ tbl: test1,test2,test3,0,100
  call  35 0000: "val"
  call  38 0000: "val"
  call  41 0000: "val"
-brnch  43 0098: "@lbl2"
+brnch  43 0098: "@lbl3"
  call  44 0000: "X"
 brnch  45 0080: "@lbl1"
  svar  47   -3: "i"
@@ -4329,21 +4340,22 @@ loop:
 @lbl1:
   move A, #1
   skgt A, #00
-  jump @lbl2
+  jump @lbl3
+@lbl2:
 ;  19:     mark1:
 mark1:
 ;  20:       system(0, 0x31);
   move A, #49
   sys #0
 ;  21:       break;
-  jump @lbl2
+  jump @lbl3
 ;  23:     mark2:
 mark2:
 ;  24:       system(0, 0x32);
   move A, #50
   sys #0
 ;  25:       break;
-  jump @lbl2
+  jump @lbl3
 ;  27:     mark3:
 mark3:
 ;  28:       system(0, 0x33);
@@ -4352,9 +4364,9 @@ mark3:
 ;  29:       goto mark2;
   jump mark2
 ;  30:       break;
-  jump @lbl2
+  jump @lbl3
   jump @lbl1
-@lbl2:
+@lbl3:
 ;  31:   }
   add SP, #1
   ret
@@ -4405,11 +4417,11 @@ arr@2: mark1,mark2,mark3
 brnch  13 0000: "[X]"
 brnch  14 0000: "[SP+0]"
 brnch  16 0025: "mark1"
-brnch  18 0038: "@lbl2"
-brnch  21 0038: "@lbl2"
-brnch  25 0038: "@lbl2"
+brnch  18 0038: "@lbl3"
+brnch  21 0038: "@lbl3"
+brnch  25 0038: "@lbl3"
 brnch  29 002A: "mark2"
-brnch  30 0038: "@lbl2"
+brnch  30 0038: "@lbl3"
 brnch  30 0020: "@lbl1"
  svar  31   -1: "addr"
  svar  31    1: "@num_stack_var@"
@@ -4488,3 +4500,116 @@ a: 0
  func  26 0014: "loop"
  svar  26    0: "@num_stack_var@"
  endf  29 001A: "test19.c"
+
+ #### Compile 'loop': test20.c ####
+;##### test20.c #####
+newfile test20.c
+  .code
+  global init
+  global loop
+  jump 8
+  .org 8
+  call @init
+  call init
+@loop:
+  call loop
+  nop
+  jump @loop
+@init:
+  ret
+;   1: func init() {
+init:
+  move A, A
+  ret
+;   2: }
+;   4: func loop() {
+loop:
+;   5:   var i;
+  push #0
+;   6:   for(i=1;i<=8;i++)  {
+  move [SP+0], #1
+@lbl1:
+  move A, [SP+0]
+  sklt A, #8
+  skne A, #8
+  jump @lbl2
+  jump @lbl3
+@lbl2:
+;   7:     system(0, i+48);
+  move A, [SP+0]
+  add A, #48
+  sys #0
+@lbl4:
+  inc [SP+0]
+  jump @lbl1
+@lbl3:
+;   8:   }
+;  10:   while(i <= 16)  {
+@lbl5:
+  move A, [SP+0]
+  sklt A, #16
+  skne A, #16
+  jump @lbl6
+  jump @lbl7
+@lbl6:
+;  11:     system(0, i+56);
+  move A, [SP+0]
+  add A, #56
+  sys #0
+;  12:     i++;
+  inc [SP+0]
+  jump @lbl5
+@lbl7:
+;  13:   }
+  add SP, #1
+  ret
+;  14: }
+#### Code ####
+ file   0 0000: test20.c
+ code   0 0000: 1200 0008
+ code   0 0008: 1600 0011
+ code   0 000A: 1600 0012
+ code   0 000C: 1600 0014
+ code   0 000E: 0000
+ code   0 000F: 1200 000C
+ code   0 0011: 1800
+ code   1 0012: 2000
+ code   1 0013: 1800
+ code   5 0014: 6980
+ code   6 0015: 226D 0000
+ code   6 0017: 2013 0000
+ code   6 0019: 9410 0008
+ code   6 001B: 8C10 0008
+ code   6 001D: 1200 0021
+ code   6 001F: 1200 002A
+ code   7 0021: 2013 0000
+ code   7 0023: 3010 0030
+ code   7 0025: 0800
+ code   6 0026: 2A60 0000
+ code   7 0028: 1200 0017
+ code  10 002A: 2013 0000
+ code  10 002C: 9410 0010
+ code  10 002E: 8C10 0010
+ code  10 0030: 1200 0034
+ code  10 0032: 1200 003D
+ code  11 0034: 2013 0000
+ code  11 0036: 3010 0038
+ code  11 0038: 0800
+ code  12 0039: 2A60 0000
+ code  12 003B: 1200 002A
+ code  13 003D: 30ED
+ code  13 003E: 1800
+#### Debug ####
+ file   0 0000: "test20.c"
+ func   1 0012: "init"
+ svar   1    0: "@num_stack_var@"
+ func   4 0014: "loop"
+brnch   6 0021: "@lbl2"
+brnch   6 002A: "@lbl3"
+brnch   7 0017: "@lbl1"
+brnch  10 0034: "@lbl6"
+brnch  10 003D: "@lbl7"
+brnch  12 002A: "@lbl5"
+ svar  13   -1: "i"
+ svar  13    1: "@num_stack_var@"
+ endf  15 003F: "test20.c"

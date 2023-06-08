@@ -110,3 +110,4 @@ compile2("test16.c")  -- const-expr, sizeof
 compile2("test17.c")  -- array, function, call
 compile2("test18.c")  -- goto label/value
 compile2("test19.c")  -- comments
+compile2("test20.c")  -- for/while loops with '<='
