@@ -105,7 +105,7 @@ end
 
 -- ram_size is from 0 for 64 words, 1 for 128 words, up to 10 for 64 Kwords
 function vm16.create(pos, ram_size)
-	print("vm_create")
+	--print("vm_create")
 	local hash = vm16lib.hash_node_position(pos)
 	VMList[hash] = vm16lib.init(ram_size)
 	local meta = minetest.get_meta(pos)
@@ -116,7 +116,7 @@ function vm16.create(pos, ram_size)
 end
 
 function vm16.destroy(pos)
-	print("vm_destroy")
+	--print("vm_destroy")
 	minetest.get_meta(pos):set_string("vm16", "")
 	local hash = vm16lib.hash_node_position(pos)
 	VMList[hash] = nil
@@ -129,7 +129,7 @@ end
 
 -- move VM from storage string to active
 function vm16.vm_restore(pos)
-	print("vm_restore")
+	--print("vm_restore")
 	local meta = minetest.get_meta(pos)
 	local hash = vm16lib.hash_node_position(pos)
 	if not VMList[hash] then
@@ -144,7 +144,7 @@ end
 
 -- move VM from active to storage string
 local function vm_store(pos, vm)
-	print("vm_store")
+	--print("vm_store")
 	local hash = vm16lib.hash_node_position(pos)
 	local s = vm16lib.get_vm(vm)
 	storage:set_string(hash, s)
@@ -165,7 +165,7 @@ function vm16.set_vm(pos, s)
 end
 
 function vm16.on_power_on(pos, ram_size)
-	print("on_power_on")
+	--print("on_power_on")
 	if not vm16.is_loaded(pos) then
 		if vm16.create(pos, ram_size) then
 			return true
@@ -174,7 +174,7 @@ function vm16.on_power_on(pos, ram_size)
 end
 
 function vm16.on_power_off(pos)
-	print("on_power_off")
+	--print("on_power_off")
 	if vm16.is_loaded(pos) then
 		vm16.destroy(pos)
 		return true
@@ -182,7 +182,7 @@ function vm16.on_power_off(pos)
 end
 
 function vm16.on_load(pos)
-	print("on_load")
+	--print("on_load")
 	if not vm16.is_loaded(pos) then
 		vm16.vm_restore(pos)
 		return true
@@ -379,12 +379,12 @@ function vm16.run(pos, cpu_def, breakpoints, steps)
 end
 
 minetest.register_on_shutdown(function()
-	print("register_on_shutdown2")
+	--print("register_on_shutdown2")
 	for hash, vm in pairs(VMList) do
 		local pos = vm16.get_position_from_hash(hash)
 		vm_store(pos, vm)
 	end
-	print("done")
+	--print("done")
 end)
 
 local function remove_unloaded_vms()
