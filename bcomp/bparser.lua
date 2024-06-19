@@ -182,6 +182,10 @@ function BPars:array_def(ident)
 		size = self:const_expression()
 	end
 	self:tk_match("]")
+	if size > 2048 then
+		self:error_msg(string.format("Array '%s' is too large", ident))
+		size = 1
+	end
 	if self:tk_peek().val ~= '=' and size > 0 then
 		self:add_data(ident)
 		local num = size

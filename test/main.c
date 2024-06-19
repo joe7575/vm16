@@ -253,7 +253,7 @@ char *hash_node_position(int16_t x, int16_t y, int16_t z, char *s) {
 int main() {
     //char buffer[80];
 
-    //test1();
+    test1();
     //test2();
     //test3();
     //test4();
@@ -262,6 +262,6 @@ int main() {
     //hash_node_position(10000, 20000, 30000, buffer);
     //printf("%s", buffer);
 
-    test6();
+    //test6();
     return 0;
 }
