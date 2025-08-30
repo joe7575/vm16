@@ -129,6 +129,8 @@ function vm16.term.on_receive_fields(pos, fields, mem)
 	if fields.close then
 		mem.term_active = false
 	elseif fields.stop then
+		local def = prog.get_cpu_def(mem.cpu_pos)
+		def.on_stop(mem.cpu_pos)
 		minetest.get_node_timer(mem.cpu_pos):stop()
 		vm16.destroy(mem.cpu_pos)
 		mem.executing = nil

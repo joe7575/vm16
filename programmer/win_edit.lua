@@ -129,6 +129,7 @@ function vm16.edit.formspec(pos, mem, textsize)
 	else
 		vm16.menubar.add_button("init", "Init")
 		vm16.menubar.add_button("sdcard", "SD Card")
+		vm16.menubar.add_button("open", "Open File")
 		return fs_editor(pos, mem, textsize, "-", Splashscreen, "#145") ..
 			vm16.files.fs_window(pos, mem, 11.8, 0.6, 6, 9.6, textsize)
 	end

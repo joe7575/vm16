@@ -128,9 +128,16 @@ function vm16.files.on_receive_fields(pos, fields, mem)
 			return true
 		elseif evt.type == "CHG" then
 			set_cursor(mem, tonumber(evt.row))
+			mem.row = tonumber(evt.row)
 			mem.selected_file = get_file_name(mem, tonumber(evt.row))
 			return true
 		end
+	elseif fields.open and mem.row then
+		open_file(mem, mem.row)
+		mem.selected_file = nil
+		mem.sdcard_active = nil
+		mem.row = nil
+		return true
 	elseif fields.name and fields.name ~= "" then
 		mem.selected_file = nil
 		if fields.new or fields.key_enter_field == "name" then

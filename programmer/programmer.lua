@@ -70,6 +70,7 @@ local function after_place_node(pos, placer, itemstack, pointed_thing)
 	preserve_cpu_server_pos(pos, itemstack)
 	local meta = M(pos)
 	meta:set_string("infotext", "VM16 Programmer")
+	server_pos(pos, mem)
 	init(pos, mem)
 	meta:set_string("formspec", prog.formspec(pos, mem))
 end
